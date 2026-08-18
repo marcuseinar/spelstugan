@@ -4,6 +4,9 @@ A social-first gaming platform. Discord-shaped servers and channels, where the
 channels are game tables — built on the bet that the social layer is the
 product and the games live inside it, rather than the other way round.
 
+**[Play the demo](https://marcuseinar.github.io/spelstugan/)** — hot-seat Ludo,
+running entirely in your browser.
+
 **Status: Ludo is playable.** The plugin contract, the rules and a clickable
 board all work; there is no server, no persistence and no accounts yet, so
 everyone plays hot-seat on one screen.

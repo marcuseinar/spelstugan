@@ -44,6 +44,7 @@ npm run test:mutation   # the rigour gate
 - [x] `@spelstugan/ludo` — full rules, plus a playable board
 - [x] Framework-neutral plugin UI contract (decision 017)
 - [x] Ludo playground at `apps/playground` — hot-seat, runs in the browser
+- [x] Public demo on GitHub Pages (`docs/DEPLOYMENT.md`)
 
 ### In progress
 

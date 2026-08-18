@@ -1,11 +1,38 @@
 # Deployment
 
-**Current status: nothing is deployed.** This file records where we intend to
-run, why, and what to watch out for — written for someone without cloud
-operations experience.
+**Current status: the demo is live on GitHub Pages; the product is not
+deployed anywhere**, because there is no server to deploy yet. This file
+records where we intend to run, why, and what to watch out for — written for
+someone without cloud operations experience.
 
 The short version: **don't start on AWS** (decision 016). Start on a
 platform-as-a-service, move to AWS when there's a concrete reason.
+
+## The demo (live)
+
+The Ludo playground deploys to **GitHub Pages** on every push to the default
+branch, via `.github/workflows/pages.yml`:
+
+<https://marcuseinar.github.io/spelstugan/>
+
+This works because the playground is genuinely static — the rules run in the
+browser and there is no server to host. It is a demo, not the product:
+hot-seat only, nothing persists, and a refresh loses the game.
+
+Two things worth knowing if it ever breaks:
+
+- **Pages must be enabled** at Settings -> Pages -> Source: **GitHub Actions**.
+  It is a repository setting, not something a workflow can turn on.
+- **The site is served from `/<repo>/`, not the domain root.** The workflow
+  passes `BASE_PATH` so Vite rewrites asset URLs; without it every asset 404s
+  while the page itself still loads. That is the usual way a Pages deploy of a
+  bundled app fails.
+
+The workflow runs `npm run check` before building, because a broken demo is
+worse than no demo.
+
+Once there is a server, Pages stops being enough — it can only serve files.
+That is when the section below starts to matter.
 
 ## Why not AWS first
 

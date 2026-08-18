@@ -1,0 +1,59 @@
+name: Demo
+
+# Publishes the playground to GitHub Pages. The demo is entirely static — the
+# rules run in the browser and there is no server — so a static host is all it
+# needs.
+on:
+  push:
+    branches: [claude/social-gaming-platform-tc0r6q]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; a queued one supersedes an older one, but don't
+# cancel a deploy already in flight.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # A broken demo is worse than none, so the gates run before it ships.
+      - name: Check
+        run: npm run check
+
+      - name: Build
+        env:
+          # Project sites live under /<repo>/, not the domain root.
+          BASE_PATH: /${{ github.event.repository.name }}/
+        run: npm run build --workspace @spelstugan/playground
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/playground/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
