@@ -14,11 +14,18 @@ Last updated: 2026-08-18
 
 ## Current state
 
-**First code has landed.** The game plugin contract and Ludo are implemented
-and tested; nothing is wired to a server, a UI, or a database yet.
+**Ludo is playable.** The plugin contract, the rules, and a board you can
+click are all in place and verified in a browser. There is still no server,
+no persistence and no accounts — everyone plays hot-seat on one screen.
 
-Run `npm run check` for the standard gates, `npm run test:mutation` for the
-rigour gate.
+```bash
+npm install
+npm run dev             # play Ludo at localhost:5173
+npm run check           # lint, typecheck, tests, coverage gate
+npm run test:mutation   # the rigour gate
+```
+
+212 tests; 91.7% mutation score.
 
 ### Done
 
@@ -34,7 +41,9 @@ rigour gate.
 - [x] Quality gates wired: branch coverage 85%, mutation score 85%
       (decision 014)
 - [x] `@spelstugan/game-kit` — the plugin contract, seeded RNG, replay
-- [x] `@spelstugan/ludo` — full rules, 133 tests, 92.5% mutation score
+- [x] `@spelstugan/ludo` — full rules, plus a playable board
+- [x] Framework-neutral plugin UI contract (decision 017)
+- [x] Ludo playground at `apps/playground` — hot-seat, runs in the browser
 
 ### In progress
 
@@ -42,8 +51,6 @@ Nothing currently in flight.
 
 ### Next up (not started)
 
-- [ ] A playable Ludo UI — the rules work, but nobody can see them. The
-      fastest proof the contract is usable end to end
 - [ ] Data model + migrations for User / Server / Channel / Session / Move,
       including the reserved `kind` and `parent_channel_id` fields
 - [ ] Server: apply moves, persist the log, serve views
@@ -60,7 +67,7 @@ different games are used deliberately, so the plugin API is stressed before
 social scaffolding is built on top of it.
 
 1. **Ludo** as the first plugin — 2–4 players, async, move log persisted
-   *(rules done; needs persistence and a UI)*
+   *(rules and board done; needs persistence and real players)*
 2. Guest play by room code, so a game can be started with no signup
 3. Invite-gated accounts
 4. A single shared server, with a general text channel
@@ -106,7 +113,9 @@ global lobbies, multi-server, DMs, moderation tooling, plugin sandboxing.
 
 Not yet decided. Don't assume an answer — raise them with the owner.
 
-- Frontend framework (TypeScript is settled; the framework is not)
+- Frontend framework for the platform shell. The plugin UI contract is
+  framework-neutral and settled (decision 017); what the shell itself uses —
+  channels, chat, sidebar — is still open
 - Which solo high-score game to build
 - Which hidden-information game to build
 - Hosting: PaaS first, AWS deferred (decision 016, `docs/DEPLOYMENT.md`).

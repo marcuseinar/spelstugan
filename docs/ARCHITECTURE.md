@@ -1,9 +1,12 @@
 # Architecture
 
-Status: **design agreed, not yet implemented.** Nothing in `crates/`, `src/`,
-or equivalent exists yet — this describes the shape we are building toward.
-Update this file as reality arrives; do not let it describe a system that
-isn't what got built.
+Status: **partly built.** The plugin contract, the reducer, replay, seeded
+randomness and the UI boundary all exist and are exercised by a playable Ludo
+(`packages/`, `apps/playground`). The platform around them — persistence,
+identity, channels, chat, realtime — does not exist yet.
+
+Sections below mark which is which. Update this file as reality arrives; do
+not let it describe a system that isn't what got built.
 
 ## The central idea: the platform owns everything except the rules
 
@@ -12,7 +15,7 @@ persistence, turn scheduling, chat, presence, notifications, and the move log.
 This split is what makes third-party games possible later without rewriting the
 platform.
 
-## The plugin contract
+## The plugin contract *(built)*
 
 A game is two separable pieces:
 
@@ -74,7 +77,7 @@ Ludo has empty private state, so this costs nothing now — but retrofitting it
 after games and persistence exist would be expensive. It is what later enables
 hidden-hand games and second-screen play.
 
-## Platform services
+## Platform services *(only seeded RNG built)*
 
 Services every plugin gets rather than reimplementing:
 
@@ -84,7 +87,7 @@ Services every plugin gets rather than reimplementing:
 - **Shared pointer** — the one BGA feature worth stealing outright. A
   platform-level cursor games opt into, not something each game rebuilds.
 
-## Domain model
+## Domain model *(not built)*
 
 Provisional; see `docs/GLOSSARY.md` for exact term meanings.
 
@@ -118,7 +121,7 @@ Note that the persistent-chat-with-the-same-people problem is solved by the
 server's general channel, not by the game channel. A game table's chat is
 play-by-play for that one game; the relationship lives in the server.
 
-## Realtime
+## Realtime *(not built)*
 
 Not in the first slice. The MVP can be turn-based with refresh-to-see-state.
 
@@ -127,7 +130,33 @@ second-screen play arrives — a board on a TV updating as players act on their
 phones cannot be poll-based by definition. Don't build it before then; don't
 pretend it can be avoided after.
 
-## Guests and room codes
+## The UI boundary *(built)*
+
+A game ships two things: rules and a way to draw them. The rules are a pure
+reducer; the UI implements `GameUi`:
+
+```
+mount(container, { view, viewerId, dispatch }) -> { update, destroy }
+```
+
+Plain DOM in, plain data out, no framework in the contract (decision 017). A
+plugin author may use React, Svelte, or none — and the platform shell can pick
+its own framework independently, since hosting a plugin means handing it an
+element.
+
+The UI reports intent and never decides legality. It asks the rules what is
+movable so it can show the player their options, but a client that lied about
+that still could not make an illegal move: the reducer re-checks everything and
+is the only authority.
+
+**Decisions live in pure modules, drawing does not.** In the Ludo UI, *which
+square a token is on* (`geometry.ts`) and *where it sits when several share a
+square* (`placement.ts`) are pure functions with tests and a mutation score.
+What is left in `board.ts` only sets colours and radii. This split is what
+lets presentation be excluded from mutation testing honestly (decision 018) —
+if drawing code starts deciding something, that decision moves out.
+
+## Guests and room codes *(not built)*
 
 An earlier version of this document argued that persistent accounts made
 Jackbox-style room codes unnecessary. That was wrong, and decision 015 revises
@@ -159,7 +188,7 @@ Room codes are a public entry point onto live games, so they need care: short
 and unambiguous when read aloud (no O/0, I/1/l), rate-limited against
 guessing, and expiring with the Session.
 
-## Second screen (deferred, designed for)
+## Second screen *(not built)*
 
 A TV joining a game is a guest spectator — the same mechanism as above, with
 no seat, receiving `view(state, null)`. That's the whole feature: shared state

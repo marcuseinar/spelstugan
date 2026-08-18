@@ -11,3 +11,4 @@ export {
   trackCell,
 } from './board.js';
 export { canMoveToken, destinationFor, legalTokenIndices } from './moves.js';
+export { ludoUi } from './ui/index.js';

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "description": "A social-first gaming platform",
-  "workspaces": ["packages/*", "packages/games/*"],
+  "workspaces": ["packages/*", "packages/games/*", "apps/*"],
   "scripts": {
     "check": "npm run lint && npm run typecheck && npm run test:coverage",
     "lint": "biome check .",
@@ -14,7 +14,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:mutation": "stryker run"
+    "test:mutation": "stryker run",
+    "dev": "npm run dev --workspace @spelstugan/playground"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
@@ -23,7 +24,9 @@
     "@types/node": "^22.20.1",
     "@vitest/coverage-v8": "^2.1.8",
     "fast-check": "^3.23.2",
+    "jsdom": "^30.0.1",
     "typescript": "^5.7.2",
+    "vite": "^5.4.21",
     "vitest": "^2.1.8"
   },
   "engines": {

@@ -4,12 +4,13 @@ A social-first gaming platform. Discord-shaped servers and channels, where the
 channels are game tables — built on the bet that the social layer is the
 product and the games live inside it, rather than the other way round.
 
-**Status: early.** The game plugin contract and the first game (Ludo) are
-implemented and tested; nothing is wired to a server or a UI yet. Documentation
-set below, UI mockup under `design/mockup/`.
+**Status: Ludo is playable.** The plugin contract, the rules and a clickable
+board all work; there is no server, no persistence and no accounts yet, so
+everyone plays hot-seat on one screen.
 
 ```bash
 npm install
+npm run dev             # play Ludo at localhost:5173
 npm run check           # lint, typecheck, tests, coverage gate
 npm run test:mutation   # the rigour gate — see CLAUDE.md
 ```
@@ -48,4 +49,5 @@ asynchronous play come out of that design rather than being built separately.
 | Package | What it is |
 |---|---|
 | `packages/game-kit` | The contract every game implements: a pure reducer, seeded randomness, replay from the move log |
-| `packages/games/ludo` | Ludo — the first game, and the proof the contract works |
+| `packages/games/ludo` | Ludo — the first game: rules, board geometry, and UI |
+| `apps/playground` | A hot-seat harness for playing Ludo without a server |

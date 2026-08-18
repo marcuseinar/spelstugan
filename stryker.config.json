@@ -8,9 +8,23 @@
     "packages/**/src/**/*.ts",
     "!packages/**/src/**/*.test.ts",
     "!packages/**/src/index.ts",
-    "!packages/games/ludo/src/testing.ts"
+    "!packages/games/ludo/src/testing.ts",
+    "!packages/game-kit/src/ui.ts",
+    "!packages/games/ludo/src/ui/board.ts"
   ],
-  "//": "Rules code is where a surviving mutant means a real rule is unverified. Raise these as the suite gets stronger; lowering one needs a decision entry.",
+  "//": [
+    "Rules code is where a surviving mutant means a real rule is unverified.",
+    "Raise these as the suite gets stronger; lowering one needs a decision entry.",
+    "",
+    "Two files are deliberately not mutated, and the reasons differ:",
+    "  game-kit/src/ui.ts is type declarations — there is no runtime code in it.",
+    "  ludo/src/ui/board.ts only sets SVG colours, radii and opacities. Mutating",
+    "  those yields a board that looks slightly different and behaves the same,",
+    "  so the tests that would kill them could only restate the constants back.",
+    "  Every DECISION the board makes lives in geometry.ts and placement.ts,",
+    "  which are pure, mutated, and near 100%. Keep it that way: if drawing code",
+    "  starts deciding something, that decision belongs in a mutated module."
+  ],
   "thresholds": {
     "high": 95,
     "low": 90,

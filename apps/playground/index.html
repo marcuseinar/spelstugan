@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Spelstugan — Ludo playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <main class="page">
+      <header class="page__header">
+        <div>
+          <h1 class="page__title">Ludo playground</h1>
+          <p class="page__subtitle">
+            Hot seat — everyone plays on one screen. No server yet; the rules run in the browser.
+          </p>
+        </div>
+        <button id="new-game" class="button" type="button">New game</button>
+      </header>
+
+      <div class="layout">
+        <div id="board"></div>
+        <section class="log-panel">
+          <h2 class="log-panel__title">What happened</h2>
+          <ul id="log" class="log"></ul>
+        </section>
+      </div>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

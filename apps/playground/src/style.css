@@ -1,0 +1,287 @@
+/*
+ * Every colour is a semantic token (decision 013) — user-selectable themes are
+ * planned, and a theme must be a set of token values and nothing more.
+ *
+ * Seat colours are the deliberate exception: they carry game meaning, so they
+ * are defined once and kept distinguishable. A theme must never be able to
+ * make two players' pieces look alike.
+ */
+:root {
+  --bg: #1e1e2e;
+  --bg-elevated: #181825;
+  --surface: #313244;
+  --surface-hover: #45475a;
+  --border: #3e4059;
+  --text: #cdd6f4;
+  --text-dim: #a6adc8;
+  --text-faint: #7f849c;
+  --accent: #cba6f7;
+  --accent-strong: #ddbdff;
+  --accent-contrast: #1e1e2e;
+  --live: #a6e3a1;
+  --warn: #f38ba8;
+
+  --board-bg: #20202e;
+  --board-line: #4b4d68;
+  --track: #3b3d55;
+  --token-edge: #16161f;
+
+  --seat-0: #f38ba8;
+  --seat-1: #89b4fa;
+  --seat-2: #fab387;
+  --seat-3: #94e2d5;
+
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Manrope", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+a {
+  color: var(--accent);
+}
+a:hover {
+  color: var(--accent-strong);
+}
+
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+.page__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.page__title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.page__subtitle {
+  color: var(--text-faint);
+  font-size: 13.5px;
+  margin: 4px 0 0;
+}
+
+.button {
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+.button:hover {
+  background: var(--accent-strong);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ludo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  .ludo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ludo__board {
+  min-width: 0;
+}
+
+.ludo-board {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+
+.token {
+  transition: cx 180ms ease, cy 180ms ease;
+}
+
+.token--movable {
+  cursor: pointer;
+  stroke: var(--text);
+  stroke-width: 1.4;
+}
+.token--movable:hover {
+  r: 4;
+}
+
+.ludo__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.status {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.die-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.die {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.roll-button {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+.roll-button:hover {
+  background: var(--accent-strong);
+}
+
+.seats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.seat {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: var(--surface);
+  border: 1px solid transparent;
+  font-size: 13px;
+}
+
+.seat--active {
+  border-color: var(--seat-colour);
+  background: var(--surface-hover);
+}
+
+.seat--winner {
+  border-color: var(--live);
+}
+
+.seat__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--seat-colour);
+  flex: 0 0 auto;
+}
+
+.seat__name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.seat__home {
+  color: var(--text-faint);
+  font-size: 11.5px;
+}
+
+.log-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.log-panel__title {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 460px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.log__line {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+
+.log__line--rejected {
+  color: var(--warn);
+}
+
+.log__line--win {
+  color: var(--live);
+  font-weight: 700;
+}

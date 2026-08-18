@@ -13,3 +13,4 @@ export type { Rng } from './rng.js';
 export { createRng } from './rng.js';
 export type { LoggedMove, ReplayResult } from './replay.js';
 export { replay, seedForMove } from './replay.js';
+export type { GameUi, GameUiContext, MountedGameUi } from './ui.js';

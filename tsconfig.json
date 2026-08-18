@@ -1,4 +1,14 @@
 {
   "files": [],
-  "references": [{ "path": "./packages/game-kit" }, { "path": "./packages/games/ludo" }]
+  "references": [
+    {
+      "path": "./packages/game-kit"
+    },
+    {
+      "path": "./packages/games/ludo"
+    },
+    {
+      "path": "./apps/playground"
+    }
+  ]
 }

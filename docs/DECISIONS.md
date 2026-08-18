@@ -359,3 +359,63 @@ migration path and the cost traps that catch beginners are written up in
 
 **Revisit when:** there is measured traffic a PaaS struggles with, a hard
 requirement for an AWS-only service, or AWS credits worth the switching cost.
+
+---
+
+## 017 — The plugin UI contract is framework-neutral
+
+**Status:** accepted
+
+**Context:** Decision 011 settled TypeScript but left the frontend framework
+open. Building the first game UI forced the question. A plugin's UI is not the
+same problem as the platform shell: the shell is ours, but a game UI may be
+written by someone else (decision 002), and requiring them to adopt our
+framework is the same barrier as requiring them to adopt our language.
+
+**Decision:** A game UI implements `GameUi` — `mount(container, { view,
+viewerId, dispatch })` returning `{ update, destroy }`. Plain DOM in, plain
+data out. No framework appears in the contract.
+
+The platform shell may still use any framework it likes; hosting a plugin is
+then a matter of handing it an element. The first-party Ludo UI is written in
+plain TypeScript and SVG, which proves the contract is honestly usable without
+a framework rather than merely claiming to be.
+
+**Consequences:** A plugin author can use React, Svelte, or nothing at all. The
+UI reports intent and never decides legality — it asks the rules what is
+movable and the reducer stays the authority, so a client that lies still cannot
+make an illegal move. The frontend framework for the *shell* remains open.
+
+---
+
+## 018 — Presentation code is excluded from mutation, by name and with reasons
+
+**Status:** accepted, refines 014
+
+**Context:** Adding the Ludo UI dropped the mutation score from 92.5% to
+76.3%. Nearly all survivors were in SVG drawing code: mutating `opacity: 0.55`
+to `0.56`, or a radius from `0.34` to `0.35`, yields a board that looks
+marginally different and behaves identically. The only tests that would kill
+them would restate the constants back — precisely the number-chasing tests
+`CLAUDE.md` forbids.
+
+**Decision:** Exclude presentation-only modules from mutation, listed
+individually in `stryker.config.json` with the reason written next to them.
+Never lower the threshold to accommodate them.
+
+The exclusion is earned, not assumed: every *decision* the UI makes was first
+moved out of the drawing code into pure modules — `geometry.ts` (where a square
+is) and `placement.ts` (where a token sits, and how tokens sharing a square
+are arranged) — which are mutated and score 99% and 87%. What remains in
+`board.ts` genuinely only sets attributes.
+
+**Consequences:** The rule for future UI work: if drawing code starts deciding
+something, that decision moves to a mutated module. Correctness of the drawing
+itself is verified by running it — the board was played in a real browser, not
+just asserted about.
+
+Mutation testing paid for itself again here. Alongside the cosmetic survivors
+it found three real defects: the board would still have invited a move after
+the game was won, the "you rolled N" status text was never asserted by any
+test, and two defensive fallbacks existed for states the rules make
+impossible — now deleted rather than tested.
