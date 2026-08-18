@@ -4,8 +4,15 @@ A social-first gaming platform. Discord-shaped servers and channels, where the
 channels are game tables — built on the bet that the social layer is the
 product and the games live inside it, rather than the other way round.
 
-**Status: design phase.** No application code yet. What exists is the
-documentation set below and a UI mockup under `design/mockup/`.
+**Status: early.** The game plugin contract and the first game (Ludo) are
+implemented and tested; nothing is wired to a server or a UI yet. Documentation
+set below, UI mockup under `design/mockup/`.
+
+```bash
+npm install
+npm run check           # lint, typecheck, tests, coverage gate
+npm run test:mutation   # the rigour gate — see CLAUDE.md
+```
 
 ## Start here
 
@@ -17,6 +24,7 @@ documentation set below and a UI mockup under `design/mockup/`.
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | What's done, what's next, what's deferred |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Decisions already made, and why |
 | [`docs/GLOSSARY.md`](docs/GLOSSARY.md) | The project's vocabulary — use these words exactly |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Where this will run, and the cloud cost traps to avoid |
 
 Picking the work up cold? Read them in that order. `docs/ROADMAP.md` is the
 handoff point and should always reflect reality.
@@ -34,3 +42,10 @@ individual game.
 Games are plugins, not hardcoded features — a pure rules function plus a UI
 bundle — so anyone can eventually add one, and replay, spectating, and
 asynchronous play come out of that design rather than being built separately.
+
+## Packages
+
+| Package | What it is |
+|---|---|
+| `packages/game-kit` | The contract every game implements: a pure reducer, seeded randomness, replay from the move log |
+| `packages/games/ludo` | Ludo — the first game, and the proof the contract works |

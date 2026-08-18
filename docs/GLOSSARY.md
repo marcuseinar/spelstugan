@@ -12,6 +12,14 @@ thing.
 
 **User** — a person with an account. Not "player" — see below.
 
+**Guest** — someone playing without an account, joined to one Session by room
+code (decision 015). Scoped to that Session: no server ownership, no invites,
+no global leaderboard entries. May later claim an account and keep their
+history.
+
+**Room code** — the short, read-aloud-friendly code that admits a Guest to a
+Session. Expires with the Session.
+
 **Player** — a User *seated in a specific Session*. A User browsing a lobby is
 not a player. Use `playerId` only where seat identity is meant.
 

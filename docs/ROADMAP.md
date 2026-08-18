@@ -14,8 +14,11 @@ Last updated: 2026-08-18
 
 ## Current state
 
-Design and planning phase. **No application code exists yet.** The repository
-contains documentation and a UI mockup.
+**First code has landed.** The game plugin contract and Ludo are implemented
+and tested; nothing is wired to a server, a UI, or a database yet.
+
+Run `npm run check` for the standard gates, `npm run test:mutation` for the
+rigour gate.
 
 ### Done
 
@@ -25,8 +28,13 @@ contains documentation and a UI mockup.
 - [x] Decision log started (`docs/DECISIONS.md`)
 - [x] UI mockup — four screens, published as a design canvas
       (`design/mockup/`)
-
 - [x] Visual direction chosen — pastel-on-dark, provisionally (decision 012)
+- [x] Stack chosen: TypeScript throughout (decision 011)
+- [x] Workspace scaffolded — npm workspaces, Biome, Vitest, CI
+- [x] Quality gates wired: branch coverage 85%, mutation score 85%
+      (decision 014)
+- [x] `@spelstugan/game-kit` — the plugin contract, seeded RNG, replay
+- [x] `@spelstugan/ludo` — full rules, 133 tests, 92.5% mutation score
 
 ### In progress
 
@@ -34,12 +42,14 @@ Nothing currently in flight.
 
 ### Next up (not started)
 
-- [ ] Choose the stack per layer, record in `docs/DECISIONS.md`
-- [ ] Scaffold the project: formatter, linter, test runner, CI gates
-      (see "CI gates" in `CLAUDE.md`) — before feature code
+- [ ] A playable Ludo UI — the rules work, but nobody can see them. The
+      fastest proof the contract is usable end to end
 - [ ] Data model + migrations for User / Server / Channel / Session / Move,
       including the reserved `kind` and `parent_channel_id` fields
-- [ ] Invite-gated auth
+- [ ] Server: apply moves, persist the log, serve views
+- [ ] Guest join by room code (decision 015) — reaches a playable game
+      sooner than building accounts first
+- [ ] Invite-gated accounts
 - [ ] One server, general text channel, persistent chat
 
 ## Phase 1 — prove the core loop
@@ -49,11 +59,13 @@ The goal is to validate the two riskiest, least-proven parts of the system:
 different games are used deliberately, so the plugin API is stressed before
 social scaffolding is built on top of it.
 
-1. Invite-gated auth
-2. A single shared server, with a general text channel
-3. Game-table channels with text chat
-4. **Ludo** as the first plugin — 2–4 players, async, move log persisted
-5. A **solo high-score game** as the second plugin — leaderboard scoped to the
+1. **Ludo** as the first plugin — 2–4 players, async, move log persisted
+   *(rules done; needs persistence and a UI)*
+2. Guest play by room code, so a game can be started with no signup
+3. Invite-gated accounts
+4. A single shared server, with a general text channel
+5. Game-table channels with text chat
+6. A **solo high-score game** as the second plugin — leaderboard scoped to the
    channel, tied into a global board, with replay
 
 Out of scope for phase 1: voice/video, realtime transport, second screen,
@@ -61,42 +73,43 @@ global lobbies, multi-server, DMs, moderation tooling, plugin sandboxing.
 
 ## Phase 2 — the third proof point
 
-6. A **hidden-information game** (Codenames-shaped, or a card game with a
+7. A **hidden-information game** (Codenames-shaped, or a card game with a
    hand) — the first real exercise of `privateState` and of second-screen
    play. Neither Ludo nor a solo game touches that path, so until this exists
    the public/private split is unproven.
-7. Realtime transport — mandatory here, since a board on a TV updating from
+8. Realtime transport — mandatory here, since a board on a TV updating from
    phone actions cannot be poll-based (see decision 005)
 
 ## Phase 3 — open it up
 
-8. Multiple servers; DMs as two-person servers
-9. Global per-game lobbies, with casual/competitive kept separate (decision
-   009)
-10. Async notification story: push/email for "it's your turn", turn timers,
+9. Multiple servers; DMs as two-person servers
+10. Global per-game lobbies, with casual/competitive kept separate (decision
+    009)
+11. Async notification story: push/email for "it's your turn", turn timers,
     handling of players who go silent
-11. Moderation: blocking, reporting, muting — required before any public
+12. Moderation: blocking, reporting, muting — required before any public
     opening (decision 008)
 
 ## Phase 4 — the promised depth
 
-12. Voice and video via a hosted service (decision 006)
-13. Shared pointer, as a platform service
-14. Third-party plugin authoring: real sandbox isolation, an authoring SDK,
+13. Voice and video via a hosted service (decision 006)
+14. Shared pointer, as a platform service
+15. Third-party plugin authoring: real sandbox isolation, an authoring SDK,
     and publishing
-15. **User-selectable theme palettes** (decision 013) — users pick their own
+16. **User-selectable theme palettes** (decision 013) — users pick their own
     theme rather than us settling on one everyone tolerates. Cheap to build
     *if* colors stay behind semantic tokens throughout, which is a rule from
     now, not a later cleanup
-16. iOS, if the web product has proven itself
+17. iOS, if the web product has proven itself
 
 ## Open questions
 
 Not yet decided. Don't assume an answer — raise them with the owner.
 
-- Stack per layer (frontend framework, backend, database) — nothing chosen yet
+- Frontend framework (TypeScript is settled; the framework is not)
 - Which solo high-score game to build
 - Which hidden-information game to build
-- Hosting and deployment target
+- Hosting: PaaS first, AWS deferred (decision 016, `docs/DEPLOYMENT.md`).
+  Which PaaS is still open
 - Whether to build on `boardgame.io` or an equivalent rather than inventing the
   plugin runtime from scratch

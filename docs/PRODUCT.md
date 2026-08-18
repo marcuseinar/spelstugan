@@ -35,7 +35,9 @@ Discord/Slack-shaped, in Discord's vocabulary:
 ## Non-negotiables
 
 1. **No install, no heavy process.** Open a link, set up a game, play. Setup
-   friction is the thing we're competing on — protect it.
+   friction is the thing we're competing on — protect it. This extends to
+   signup: a Guest can join a game by room code with no account at all, the
+   way Jackbox and codenames.game work (decision 015).
 2. **Asynchronous play is first-class.** Turn-based games must work when
    players are hours apart, not only when everyone is online at once. That
    implies notifications and turn timers, not just stored state.

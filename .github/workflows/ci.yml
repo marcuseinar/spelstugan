@@ -32,3 +32,29 @@ jobs:
 
       - name: Tests and coverage
         run: npm run test:coverage
+
+  # Mutation testing is the real rigour gate — it asks whether the tests would
+  # actually catch a bug, not merely whether they executed the line. It is slow
+  # enough to deserve its own job, but it is required, not advisory.
+  mutation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Mutation score
+        run: npm run test:mutation
+
+      - name: Keep the report when the score drops
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: reports/mutation/
+          retention-days: 7

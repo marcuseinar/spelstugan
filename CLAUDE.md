@@ -132,34 +132,66 @@ property testing. Assert invariants, not just examples:
 - A move rejected as illegal leaves state completely unchanged — no partial
   application.
 
-### MC/DC — a discipline, not a tool claim
+### Mutation testing is the real rigour gate
 
-Automated MC/DC checkers are avionics/automotive tooling and aren't broadly
-available for the languages we're likely to use. So don't claim MC/DC from a
-tool that isn't measuring it. Instead, apply it by hand where it matters:
+Coverage answers "did a test execute this line?" — a much weaker question than
+"would a test notice if this line were wrong?". Mutation testing asks the
+second one: it breaks the code in hundreds of small ways and checks that some
+test fails each time. A surviving mutant is a rule nothing verifies.
 
-- For any compound boolean condition in rules-critical code (turn validity,
-  win detection, scoring), write cases so that **each individual condition is
-  shown to independently flip the outcome** while the others are held fixed.
-- Name and group those tests so a reviewer can see the discipline was followed
-  without re-deriving the truth table.
-- If real MC/DC tooling becomes worth adopting later, that's a deliberate
-  decision with an ADR — not an assumption baked in silently here.
+This is not theoretical here. The first Ludo suite reached **99.29% branch
+coverage but only 84.49% mutation score** — 29 ways to break the rules that no
+test noticed, in code coverage called fully tested.
 
-### Coverage as a floor
+- `npm run test:mutation` runs it; CI gates on the score.
+- Floor: **85%**, aiming at 90–95% for rules code. Raise it as the suite
+  strengthens; lowering it needs a decision entry saying why.
+- When a mutant survives, fix the *test* — then ask whether the code was doing
+  something nothing needed. Never weaken the config to make a survivor go away.
+- Some survivors are genuinely equivalent mutants, where the change has no
+  observable effect. Say so explicitly rather than quietly tolerating them.
 
-- CI gates on **branch/region coverage**, not line coverage. Default floor:
-  85% per module. Change the number deliberately, with an ADR — don't let it
-  drift.
-- Coverage detects untested code; it is not a goal to maximize. Never write a
-  test whose only purpose is moving the number. If you can't say what behavior
-  a test pins down, delete it.
+### Coverage as a cheap early signal
+
+- CI also gates on **branch coverage**, floor 85%. It runs in about a second,
+  so it catches "you forgot to test this at all" long before the slower
+  mutation run does.
+- Treat it as a smoke alarm, not a goal. Never write a test whose only purpose
+  is moving the number. High coverage proves nothing on its own — see above.
+
+### Applying the MC/DC idea by hand
+
+Automated MC/DC checkers are avionics/automotive tooling, unavailable for this
+stack, and mutation testing now covers most of what MC/DC was wanted for. The
+underlying test-design discipline is still worth applying to compound boolean
+conditions in rules-critical code:
+
+- Write cases so **each condition is shown to independently flip the outcome**
+  while the others are held fixed.
+- Name and group them so a reviewer sees the discipline without re-deriving
+  the truth table. The extra-turn rule tests in the Ludo package are the
+  pattern to copy.
 
 ### Integration tests
 
 Public interfaces (the plugin boundary, the server API) get tests that
 exercise them from the outside only. Never reach into private internals to
 make a test pass.
+
+A package tests its own code. Exercising game-kit only through the Ludo
+package's tests looked fine by coverage and scored **0%** on mutation — the
+tests were never really testing it. Keep tests next to what they verify.
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `npm run check` | Everything CI runs except mutation. Run before committing. |
+| `npm run lint` / `npm run lint:fix` | Biome: formatting and lint rules |
+| `npm run typecheck` | `tsc --build` across the workspace, tests included |
+| `npm test` / `npm run test:watch` | Vitest |
+| `npm run test:coverage` | Vitest with the branch-coverage gate |
+| `npm run test:mutation` | Stryker mutation score (~1 min) |
 
 ## Definition of Done
 

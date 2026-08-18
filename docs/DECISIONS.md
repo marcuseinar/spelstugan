@@ -260,3 +260,102 @@ else. This also applies to game plugins: a plugin's UI should draw its chrome
 from platform tokens, while colors that carry game meaning (player seat colors,
 board regions) stay under the game's control — a theme must not be able to make
 two players' pieces indistinguishable.
+
+---
+
+## 014 — Mutation testing replaces MC/DC as the rigour gate
+
+**Status:** accepted, supersedes the MC/DC-only position in 010
+
+**Context:** MC/DC was the requested rigour standard. Decision 010 settled for
+applying it by hand, since no checker exists for this stack. With latitude to
+pick a better metric, the question became: what actually measures whether the
+tests would catch a bug?
+
+Coverage does not. It answers "did a test execute this line?", not "would a
+test notice if this line were wrong?". The first Ludo suite made the gap
+concrete: **99.29% branch coverage, 84.49% mutation score** — 29 ways to break
+the rules that no test caught, in code that coverage called fully tested.
+
+**Decision:** Gate CI on **mutation score** (StrykerJS), floor 85%, aiming at
+90–95% for rules code. Keep branch coverage at 85% as a fast smoke alarm — it
+runs in a second and catches whole untested files early. Keep property-based
+testing for invariants. Keep the MC/DC *test-design* discipline for compound
+boolean conditions, since naming each condition's independent effect makes
+rules readable to a reviewer — but stop treating it as the measured standard.
+
+**Consequences:** Mutation runs take about a minute, so it is a separate CI
+job. It found two real weaknesses immediately: `board.ts` was only tested
+indirectly through the rules, and `replay.ts` scored **0%** because its tests
+lived in a different package — it had never really been tested at all. Both
+are now covered, and the score is 92.52%.
+
+**Revisit if:** the mutation run grows slow enough to hurt the feedback loop —
+the answer then is to scope it to changed packages, not to drop the gate.
+
+---
+
+## 015 — Anonymous guests can play without an account
+
+**Status:** accepted, revises the position in `docs/ARCHITECTURE.md` on
+second-screen play
+
+**Context:** The "no install, jump in and play" non-negotiable was previously
+read as "persistent accounts make room codes unnecessary" — a TV or a phone
+would open a channel already logged in. That assumed everyone at the table
+already has an account, which is exactly the friction the product is supposed
+to remove. Jackbox and codenames.game demonstrate the alternative: a short
+room code, no signup, playing within seconds.
+
+**Decision:** Support anonymous guests. A guest joins a specific session by
+short code or link, picks a display name, and plays. No account, no email.
+
+**Consequences:** Identity can no longer be assumed to imply a User.
+
+- `PlayerId` is already opaque to games, so game plugins need no change — the
+  reducer cannot tell a guest from an account holder, and shouldn't.
+- A guest identity is ephemeral but must survive a page refresh, or a
+  reconnecting player loses their seat mid-game.
+- Guests are scoped to one session: they cannot own servers, invite others, or
+  post in persistent channels.
+- Guest results stay off global leaderboards. Unauthenticated scores are
+  trivially farmable, and the global board is only worth having if it means
+  something. Session and channel leaderboards are fine.
+- A guest must be able to claim an account afterwards and keep their history,
+  or the good first game is wasted.
+- Room codes are a public entry point: short and unambiguous to read aloud
+  (no O/0, I/1/l), rate-limited, and expiring with the session — otherwise
+  they are an enumeration surface onto live games.
+
+This strengthens rather than complicates the second-screen design: a TV that
+joins as a guest spectator is the same mechanism.
+
+---
+
+## 016 — Don't start on AWS
+
+**Status:** accepted
+
+**Context:** AWS is wanted for the server side eventually, by an owner with no
+AWS experience and a low cost ceiling.
+
+**Decision:** Do not build on AWS now. Deploy the first version to a
+platform-as-a-service (Fly.io, Render, or Railway) and revisit AWS when there
+is a concrete reason — real traffic, a service only AWS offers, or credits.
+
+**Reasoning:** AWS is not the cheap or easy option at this stage; it is the
+option that assumes an operator. The pieces this product needs — a small
+always-on server, a database, static hosting, later a websocket layer — are
+one config file on a PaaS and a multi-week learning project on AWS, at
+comparable or higher cost. Learning AWS while also designing a plugin runtime
+and a social platform means doing two hard things at once, and the
+infrastructure one produces no product.
+
+**Consequences:** Nothing in the architecture leans on a provider: the rules
+are pure functions, state is a move log, and there is no framework lock-in. So
+this is reversible, which is exactly why it does not need deciding now. The
+migration path and the cost traps that catch beginners are written up in
+`docs/DEPLOYMENT.md` so the eventual move is informed rather than improvised.
+
+**Revisit when:** there is measured traffic a PaaS struggles with, a hard
+requirement for an AWS-only service, or AWS credits worth the switching cost.

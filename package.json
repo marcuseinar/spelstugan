@@ -13,10 +13,13 @@
     "typecheck": "tsc --build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:mutation": "stryker run"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@stryker-mutator/core": "^10.0.0",
+    "@stryker-mutator/vitest-runner": "^10.0.0",
     "@types/node": "^22.20.1",
     "@vitest/coverage-v8": "^2.1.8",
     "fast-check": "^3.23.2",

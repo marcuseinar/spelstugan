@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "packageManager": "npm",
+  "testRunner": "vitest",
+  "reporters": ["html", "clear-text", "progress"],
+  "coverageAnalysis": "perTest",
+  "mutate": [
+    "packages/**/src/**/*.ts",
+    "!packages/**/src/**/*.test.ts",
+    "!packages/**/src/index.ts",
+    "!packages/games/ludo/src/testing.ts"
+  ],
+  "//": "Rules code is where a surviving mutant means a real rule is unverified. Raise these as the suite gets stronger; lowering one needs a decision entry.",
+  "thresholds": {
+    "high": 95,
+    "low": 90,
+    "break": 85
+  },
+  "tempDirName": ".stryker-tmp",
+  "cleanTempDir": true
+}

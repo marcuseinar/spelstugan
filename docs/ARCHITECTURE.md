@@ -127,13 +127,43 @@ second-screen play arrives — a board on a TV updating as players act on their
 phones cannot be poll-based by definition. Don't build it before then; don't
 pretend it can be avoided after.
 
+## Guests and room codes
+
+An earlier version of this document argued that persistent accounts made
+Jackbox-style room codes unnecessary. That was wrong, and decision 015 revises
+it: requiring an account to sit down is exactly the setup friction the product
+exists to remove.
+
+A **Guest** joins one Session by short room code, picks a display name, and
+plays. The important property is that this costs the game plugins nothing:
+`PlayerId` is opaque, so a reducer cannot tell a guest from an account holder
+and has no business knowing. The distinction lives entirely in the platform.
+
+What the platform owes a guest:
+
+- **Survival across a refresh.** A guest identity is ephemeral but must be
+  held in a client-side token, or a reconnecting player loses their seat
+  mid-game.
+- **A path to an account.** Claiming an account after a good first game must
+  carry the guest's history with it.
+
+What the platform withholds from a guest:
+
+- Server ownership, invites, and posting in persistent channels — a guest is
+  scoped to the one Session.
+- Global leaderboard entries. Unauthenticated scores are trivially farmable,
+  and a global board is only worth having if it means something. Session and
+  channel boards are fine.
+
+Room codes are a public entry point onto live games, so they need care: short
+and unambiguous when read aloud (no O/0, I/1/l), rate-limited against
+guessing, and expiring with the Session.
+
 ## Second screen (deferred, designed for)
 
-Because there are persistent accounts, no Jackbox-style room-code pairing is
-needed: a TV opens the channel URL logged in as some identity, and if that
-identity isn't a seated player it naturally receives the public-only view. A
-no-login guest "watch this game" link is a later nice-to-have for shared
-living-room devices.
+A TV joining a game is a guest spectator — the same mechanism as above, with
+no seat, receiving `view(state, null)`. That's the whole feature: shared state
+on the big screen, private state on each phone.
 
 ## Stack
 
