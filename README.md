@@ -1,5 +1,8 @@
 # Spelstugan
 
+[![CI](https://github.com/marcuseinar/spelstugan/actions/workflows/ci.yml/badge.svg)](https://github.com/marcuseinar/spelstugan/actions/workflows/ci.yml)
+[![Demo](https://github.com/marcuseinar/spelstugan/actions/workflows/pages.yml/badge.svg)](https://github.com/marcuseinar/spelstugan/actions/workflows/pages.yml)
+
 A social-first gaming platform. Discord-shaped servers and channels, where the
 channels are game tables — built on the bet that the social layer is the
 product and the games live inside it, rather than the other way round.
