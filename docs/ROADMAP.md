@@ -7,6 +7,11 @@ Update it in the same commit as the work it describes.
 
 Last updated: 2026-08-18
 
+> Visual direction is provisional (decision 012). One rule follows from it and
+> applies to all UI work starting now: **no literal colors in components** —
+> every color goes through a semantic token, because user-selectable themes
+> (decision 013) are planned.
+
 ## Current state
 
 Design and planning phase. **No application code exists yet.** The repository
@@ -21,10 +26,11 @@ contains documentation and a UI mockup.
 - [x] UI mockup — four screens, published as a design canvas
       (`design/mockup/`)
 
+- [x] Visual direction chosen — pastel-on-dark, provisionally (decision 012)
+
 ### In progress
 
-- [ ] Mockup revision: warmer, table-like palette instead of the current
-      neon/futuristic one
+Nothing currently in flight.
 
 ### Next up (not started)
 
@@ -78,7 +84,11 @@ global lobbies, multi-server, DMs, moderation tooling, plugin sandboxing.
 13. Shared pointer, as a platform service
 14. Third-party plugin authoring: real sandbox isolation, an authoring SDK,
     and publishing
-15. iOS, if the web product has proven itself
+15. **User-selectable theme palettes** (decision 013) — users pick their own
+    theme rather than us settling on one everyone tolerates. Cheap to build
+    *if* colors stay behind semantic tokens throughout, which is a rule from
+    now, not a later cleanup
+16. iOS, if the web product has proven itself
 
 ## Open questions
 

@@ -209,3 +209,54 @@ language-agnostic. One place a compiled-to-WASM module is genuinely attractive
 is running the *same* game reducer client-side for optimistic local moves and
 replay scrubbing, with no risk of the client's rules drifting from the
 server's — that's code reuse, not a UI framework decision.
+
+---
+
+## 012 — Pastel-on-dark palette, provisionally
+
+**Status:** provisional — good enough to keep working against, not settled
+
+**Context:** Four directions were tried in the mockup: a neon/futuristic
+scheme (too futuristic), a warm wood-toned scheme (background lost what was
+good about the first), a Cobalt2-derived navy-and-gold, and a Swedish cabin
+scheme drawn from the project's name. The chosen direction returns to the
+original cool dark background with the neon accents replaced by pastels.
+
+**Decision:** Use a pastel-on-dark palette: cool dark violet base, with soft
+mauve as the primary accent and rose / periwinkle / peach / teal for player
+colors. Text is a soft blue-white rather than stark white. Board surfaces keep
+a subtle limed-oak grain so a game table reads as a table without warming the
+rest of the interface.
+
+This is close to **Catppuccin Mocha**, which is a mature, accessibility-tested
+pastel-on-dark palette. Current values are hand-picked approximations of it.
+Pinning Catppuccin exactly — and gaining its ready-made component and editor
+themes — is an open option, not yet taken.
+
+**Consequences:** Colors are already expressed as semantic tokens
+(`--bg`, `--surface`, `--accent`, `--text`, per-player colors) rather than
+literal values scattered through markup. Keep it that way: it is what makes
+both a palette swap and the user-selectable theming below cheap.
+
+**Revisit when:** theming work starts (below), or if the palette proves to
+have contrast problems in real use.
+
+---
+
+## 013 — User-selectable theme palettes are a planned feature
+
+**Status:** accepted as direction; not scheduled
+
+**Context:** The palette above is one choice among several the owner wanted to
+see. Rather than searching for a single palette everyone likes, let users pick.
+
+**Decision:** Users will eventually choose their own theme palette. Not built
+now, and not on the near roadmap — but it constrains how styling is written
+from the start.
+
+**Consequences:** Never hardcode a literal color in a component. Every color
+goes through a semantic token, so a theme is a set of token values and nothing
+else. This also applies to game plugins: a plugin's UI should draw its chrome
+from platform tokens, while colors that carry game meaning (player seat colors,
+board regions) stay under the game's control — a theme must not be able to make
+two players' pieces indistinguishable.
