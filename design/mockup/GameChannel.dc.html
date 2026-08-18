@@ -1,0 +1,267 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:oklch(0.16 0.02 280);
+      --bg-elevated:oklch(0.185 0.02 280);
+      --surface:oklch(0.225 0.02 280);
+      --surface-hover:oklch(0.27 0.025 280);
+      --border:oklch(0.30 0.02 280);
+      --text:oklch(0.95 0.01 280);
+      --text-dim:oklch(0.68 0.02 280);
+      --text-faint:oklch(0.48 0.02 280);
+      --accent:oklch(0.72 0.19 320);
+      --accent-strong:oklch(0.80 0.20 320);
+      --accent-wash:oklch(0.72 0.19 320 / 0.16);
+      --live:oklch(0.80 0.19 128);
+      --live-wash:oklch(0.80 0.19 128 / 0.16);
+      --amber:oklch(0.78 0.14 70);
+      --font-display:'Space Grotesk', system-ui, sans-serif;
+      --font-body:'Manrope', system-ui, sans-serif;
+      --c-sam:oklch(0.6 0.15 30);
+      --c-priya:oklch(0.65 0.14 200);
+      --c-mia:oklch(0.72 0.15 95);
+      --c-you:oklch(0.68 0.15 250);
+    }
+    *{box-sizing:border-box;}
+    body{margin:0;}
+    a{color:var(--accent);text-decoration:none;}
+    .scroll::-webkit-scrollbar{width:8px;}
+    .scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+    .rail-btn{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;flex:0 0 auto;}
+    .chan-row{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;cursor:pointer;}
+    .chan-row:hover{background:var(--surface-hover);}
+    .token{width:17px;height:17px;border-radius:50%;position:absolute;box-shadow:0 2px 5px rgba(0,0,0,.4);border:2px solid oklch(0.16 0.02 280 / .6);}
+  </style>
+</helmet>
+
+<div style="width:1440px;height:900px;display:flex;background:var(--bg);color:var(--text);font-family:var(--font-body);overflow:hidden;border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,.5);border:1px solid var(--border);">
+
+  <!-- RAIL (same as Main) -->
+  <div style="width:72px;flex:0 0 72px;background:var(--bg-elevated);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:8px;border-right:1px solid var(--border);">
+    <div style="width:40px;height:40px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:17px;color:oklch(0.16 0.02 280);margin-bottom:6px;">T</div>
+    <div class="rail-btn" style="background:var(--surface);color:var(--text-dim);">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-4 4v-4H6a2 2 0 0 1-2-2z"/></svg>
+    </div>
+    <div style="width:28px;height:2px;background:var(--border);border-radius:1px;margin:4px 0;"></div>
+    <div style="position:relative;">
+      <div style="position:absolute;left:-16px;top:8px;width:4px;height:26px;background:var(--text);border-radius:0 3px 3px 0;"></div>
+      <div class="rail-btn" style="background:var(--accent-wash);color:var(--accent-strong);font-family:var(--font-display);font-weight:700;font-size:14px;">SC</div>
+    </div>
+    <div class="rail-btn" style="background:var(--surface);color:var(--text-dim);font-family:var(--font-display);font-weight:700;font-size:13px;">OL</div>
+    <div style="width:28px;height:2px;background:var(--border);border-radius:1px;margin:4px 0;"></div>
+    <div class="rail-btn" style="background:var(--surface);color:var(--text-dim);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.2" fill="currentColor" stroke="none"/></svg>
+    </div>
+    <div class="rail-btn" style="background:var(--surface);color:var(--text-dim);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l4.2-7 3.4 4.4L15 9l5 8"/><path d="M4 20h16"/></svg>
+    </div>
+    <div class="rail-btn" style="background:var(--surface);color:var(--text-dim);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="12" height="15" rx="2" transform="rotate(-8 9 14)"/><rect x="8" y="4" width="12" height="15" rx="2"/></svg>
+    </div>
+    <div style="flex:1;"></div>
+    <div class="rail-btn" style="background:var(--surface);color:var(--text-dim);border:1px dashed var(--border);">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div style="width:260px;flex:0 0 260px;background:var(--bg);display:flex;flex-direction:column;border-right:1px solid var(--border);">
+    <div style="height:64px;flex:0 0 64px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:6px;min-width:0;">
+        <span style="font-family:var(--font-display);font-weight:700;font-size:16px;">Sunday Crew</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.8 6-5.8s6 2.5 6 5.8"/><circle cx="17" cy="7.2" r="2.3"/><path d="M15.2 14.3c1.8.4 3.3 2.3 3.3 5.2"/></svg>
+    </div>
+
+    <div class="scroll" style="flex:1;overflow-y:auto;padding:16px 10px;">
+      <div style="padding:0 8px;font-size:11px;font-weight:700;letter-spacing:.07em;color:var(--text-faint);margin-bottom:6px;">TEXT</div>
+      <div class="chan-row">
+        <span style="width:16px;text-align:center;color:var(--text-dim);font-weight:700;">#</span>
+        <span style="font-size:14px;font-weight:600;flex:1;color:var(--text-dim);">general</span>
+      </div>
+
+      <div style="padding:0 8px;font-size:11px;font-weight:700;letter-spacing:.07em;color:var(--text-faint);margin:18px 0 6px;">GAME TABLES</div>
+
+      <div class="chan-row" style="background:var(--accent-wash);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-strong)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="8" cy="8" r="1.1" fill="var(--accent-strong)" stroke="none"/><circle cx="16" cy="8" r="1.1" fill="var(--accent-strong)" stroke="none"/><circle cx="12" cy="12" r="1.1" fill="var(--accent-strong)" stroke="none"/><circle cx="8" cy="16" r="1.1" fill="var(--accent-strong)" stroke="none"/><circle cx="16" cy="16" r="1.1" fill="var(--accent-strong)" stroke="none"/></svg>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:700;">Ludo Night</div>
+          <div style="font-size:11.5px;color:var(--live);display:flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--live);display:inline-block;"></span>Mia&rsquo;s turn</div>
+        </div>
+        <div style="display:flex;">
+          <div style="width:18px;height:18px;border-radius:50%;background:var(--c-sam);border:2px solid var(--bg);margin-left:-6px;"></div>
+          <div style="width:18px;height:18px;border-radius:50%;background:var(--c-priya);border:2px solid var(--bg);margin-left:-6px;"></div>
+          <div style="width:18px;height:18px;border-radius:50%;background:var(--c-mia);border:2px solid var(--bg);margin-left:-6px;"></div>
+        </div>
+      </div>
+
+      <div class="chan-row">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l4.2-7 3.4 4.4L15 9l5 8"/><path d="M4 20h16"/></svg>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:600;">Neon Climb</div>
+          <div style="font-size:11.5px;color:var(--text-faint);">high scores</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v4a4 4 0 0 1-8 0V4z"/><path d="M8 5H5a3 3 0 0 0 3 5"/><path d="M16 5h3a3 3 0 0 1-3 5"/><path d="M12 13v3"/><path d="M9 20h6"/></svg>
+      </div>
+
+      <div class="chan-row" style="opacity:.5;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="8" cy="8" r="1.1" fill="var(--text-faint)" stroke="none"/><circle cx="16" cy="16" r="1.1" fill="var(--text-faint)" stroke="none"/><circle cx="12" cy="12" r="1.1" fill="var(--text-faint)" stroke="none"/></svg>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:600;">Ludo Rematch</div>
+          <div style="font-size:11.5px;color:var(--text-faint);">Won by Sam &middot; 3d ago</div>
+        </div>
+      </div>
+
+      <div class="chan-row" style="opacity:.5;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="12" height="15" rx="2" transform="rotate(-8 9 14)"/><rect x="8" y="4" width="12" height="15" rx="2"/></svg>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:600;">Codenames Thursdays</div>
+          <div style="font-size:11.5px;color:var(--text-faint);">Finished &middot; 2d ago</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:60px;flex:0 0 60px;border-top:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:10px;">
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--c-you);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:12px;color:oklch(0.16 0.02 280);">Y</div>
+      <div style="flex:1;font-size:13px;font-weight:600;">You</div>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+    </div>
+  </div>
+
+  <!-- MAIN: game + chat -->
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0;">
+    <div style="height:64px;flex:0 0 64px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:9px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="8" cy="8" r="1.2" fill="var(--text-dim)" stroke="none"/><circle cx="16" cy="8" r="1.2" fill="var(--text-dim)" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="var(--text-dim)" stroke="none"/><circle cx="8" cy="16" r="1.2" fill="var(--text-dim)" stroke="none"/><circle cx="16" cy="16" r="1.2" fill="var(--text-dim)" stroke="none"/></svg>
+        <span style="font-family:var(--font-display);font-weight:600;font-size:16px;">Ludo Night</span>
+        <span style="width:1px;height:18px;background:var(--border);margin:0 4px;"></span>
+        <span style="font-size:13px;color:var(--text-faint);">Sunday Crew &middot; Ludo &middot; Round 3</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--border);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0"/><path d="M12 18v3"/><line x1="4" y1="4" x2="20" y2="20"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10.5l5-3v9l-5-3z"/><line x1="4" y1="4" x2="20" y2="20"/></svg>
+          <span style="font-size:11.5px;color:var(--text-faint);">voice &amp; video &mdash; soon</span>
+        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.5 7-11a7 7 0 1 0-14 0c0 4.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.3"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.8 6-5.8s6 2.5 6 5.8"/><circle cx="17" cy="7.2" r="2.3"/><path d="M15.2 14.3c1.8.4 3.3 2.3 3.3 5.2"/></svg>
+      </div>
+    </div>
+
+    <div style="flex:1;display:flex;min-height:0;">
+      <!-- board column -->
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:22px;min-width:0;">
+        <div style="width:440px;height:440px;position:relative;background:var(--bg-elevated);border-radius:22px;overflow:hidden;border:1px solid var(--border);">
+          <div style="position:absolute;left:0;top:0;width:170px;height:170px;background:color-mix(in oklch, var(--c-sam) 20%, var(--bg-elevated));border-top-left-radius:22px;"></div>
+          <div style="position:absolute;right:0;top:0;width:170px;height:170px;background:color-mix(in oklch, var(--c-priya) 20%, var(--bg-elevated));border-top-right-radius:22px;"></div>
+          <div style="position:absolute;left:0;bottom:0;width:170px;height:170px;background:color-mix(in oklch, var(--c-you) 20%, var(--bg-elevated));border-bottom-left-radius:22px;"></div>
+          <div style="position:absolute;right:0;bottom:0;width:170px;height:170px;background:color-mix(in oklch, var(--c-mia) 22%, var(--bg-elevated));border-bottom-right-radius:22px;box-shadow:inset 0 0 0 2px var(--c-mia);"></div>
+
+          <div style="position:absolute;left:170px;top:0;width:100px;height:440px;background:var(--surface);"></div>
+          <div style="position:absolute;left:0;top:170px;width:440px;height:100px;background:var(--surface);"></div>
+          <div style="position:absolute;left:170px;top:170px;width:100px;height:100px;background:var(--surface-hover);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.6"><path d="M12 3l2.6 6.4L21 12l-6.4 2.6L12 21l-2.6-6.4L3 12l6.4-2.6z"/></svg>
+          </div>
+
+          <div style="position:absolute;left:36px;top:36px;width:34px;height:34px;border-radius:10px;background:oklch(0.16 0.02 280 / .35);display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:4px;">
+            <div style="border-radius:50%;background:var(--c-sam);"></div><div style="border-radius:50%;background:var(--c-sam);opacity:.4;"></div>
+            <div style="border-radius:50%;background:var(--c-sam);opacity:.4;"></div><div style="border-radius:50%;background:var(--c-sam);opacity:.4;"></div>
+          </div>
+          <div style="position:absolute;right:36px;top:36px;width:34px;height:34px;border-radius:10px;background:oklch(0.16 0.02 280 / .35);display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:4px;">
+            <div style="border-radius:50%;background:var(--c-priya);opacity:.4;"></div><div style="border-radius:50%;background:var(--c-priya);"></div>
+            <div style="border-radius:50%;background:var(--c-priya);opacity:.4;"></div><div style="border-radius:50%;background:var(--c-priya);opacity:.4;"></div>
+          </div>
+          <div style="position:absolute;left:36px;bottom:36px;width:34px;height:34px;border-radius:10px;background:oklch(0.16 0.02 280 / .35);display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:4px;">
+            <div style="border-radius:50%;background:var(--c-you);opacity:.4;"></div><div style="border-radius:50%;background:var(--c-you);opacity:.4;"></div>
+            <div style="border-radius:50%;background:var(--c-you);"></div><div style="border-radius:50%;background:var(--c-you);opacity:.4;"></div>
+          </div>
+          <div style="position:absolute;right:36px;bottom:36px;width:34px;height:34px;border-radius:10px;background:oklch(0.16 0.02 280 / .35);display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:4px;">
+            <div style="border-radius:50%;background:var(--c-mia);"></div><div style="border-radius:50%;background:var(--c-mia);"></div>
+            <div style="border-radius:50%;background:var(--c-mia);opacity:.4;"></div><div style="border-radius:50%;background:var(--c-mia);opacity:.4;"></div>
+          </div>
+
+          <div class="token" style="background:var(--c-sam);left:200px;top:60px;"></div>
+          <div class="token" style="background:var(--c-priya);left:330px;top:200px;"></div>
+          <div class="token" style="background:var(--c-mia);left:200px;top:330px;box-shadow:0 0 0 3px var(--live-wash),0 2px 5px rgba(0,0,0,.4);"></div>
+          <div class="token" style="background:var(--c-you);left:60px;top:200px;"></div>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--border);">
+            <div style="width:22px;height:22px;border-radius:50%;background:var(--c-sam);"></div>
+            <span style="font-size:13px;font-weight:600;">Sam</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--border);">
+            <div style="width:22px;height:22px;border-radius:50%;background:var(--c-priya);"></div>
+            <span style="font-size:13px;font-weight:600;">Priya</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;padding:8px 14px;border-radius:12px;background:var(--live-wash);border:1px solid var(--live);">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:22px;height:22px;border-radius:50%;background:var(--c-mia);box-shadow:0 0 0 2px var(--live);"></div>
+              <span style="font-size:13px;font-weight:700;">Mia &mdash; her turn</span>
+            </div>
+            <div style="width:150px;height:4px;border-radius:2px;background:oklch(0.16 0.02 280 / .4);overflow:hidden;"><div style="width:62%;height:100%;background:var(--live);"></div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--border);">
+            <div style="width:22px;height:22px;border-radius:50%;background:var(--c-you);"></div>
+            <span style="font-size:13px;font-weight:600;">You</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- table chat -->
+      <div style="width:340px;flex:0 0 340px;border-left:1px solid var(--border);display:flex;flex-direction:column;">
+        <div class="scroll" style="flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px;">
+          <div style="font-size:12px;color:var(--text-faint);text-align:center;">Ludo Night started &middot; 12 min ago</div>
+          <div style="display:flex;gap:9px;">
+            <div style="width:26px;height:26px;border-radius:50%;background:var(--c-sam);flex:0 0 auto;"></div>
+            <div>
+              <div style="font-size:12.5px;font-weight:700;">Sam</div>
+              <div style="font-size:13.5px;line-height:1.4;">good luck everyone, be gentle</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:9px;">
+            <div style="width:26px;height:26px;border-radius:50%;background:var(--c-priya);flex:0 0 auto;"></div>
+            <div>
+              <div style="font-size:12.5px;font-weight:700;">Priya</div>
+              <div style="font-size:13.5px;line-height:1.4;">oh come on, another six?</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:9px;">
+            <div style="width:26px;height:26px;border-radius:50%;background:var(--c-you);flex:0 0 auto;"></div>
+            <div>
+              <div style="font-size:12.5px;font-weight:700;">You</div>
+              <div style="font-size:13.5px;line-height:1.4;">called it</div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:14px;">
+          <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:9px 12px;">
+            <span style="flex:1;font-size:13px;color:var(--text-faint);">Message the table&hellip;</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l18-8-8 18-2-8-8-2z"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals(){ return {}; }
+}
+</script>
+</body>
+</html>
