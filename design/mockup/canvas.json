@@ -1,12 +1,46 @@
 {
   "artboards": [
-    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1440, "h": 900, "title": "Server shell + general chat" },
-    { "file": "GameChannel.dc.html", "x": 1520, "y": 0, "w": 1440, "h": 900, "title": "Ludo game channel" },
-    { "file": "Leaderboard.dc.html", "x": 0, "y": 1000, "w": 1440, "h": 900, "title": "Solo high-score channel" },
-    { "file": "GlobalLobby.dc.html", "x": 1520, "y": 1000, "w": 1440, "h": 900, "title": "Global lobby" }
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Server shell + general chat"
+    },
+    {
+      "file": "GameChannel.dc.html",
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Ludo game channel"
+    },
+    {
+      "file": "Leaderboard.dc.html",
+      "x": 0,
+      "y": 1000,
+      "w": 1440,
+      "h": 900,
+      "title": "Solo high-score channel"
+    },
+    {
+      "file": "GlobalLobby.dc.html",
+      "x": 1520,
+      "y": 1000,
+      "w": 1440,
+      "h": 900,
+      "title": "Global lobby"
+    }
   ],
   "annotations": [
-    { "id": "note-palette", "x": 0, "y": -130, "w": 480, "text": "Pastel pass: the cool dark base from the first version, with the neon swapped for soft mauve, rose, peach, periwinkle and teal. Table grain cooled to a limed oak so it reads as a board game without warming the whole screen." }
+    {
+      "id": "note-palette",
+      "x": 0,
+      "y": -130,
+      "w": 480,
+      "text": "Pastel pass: the cool dark base from the first version, with the neon swapped for soft mauve, rose, peach, periwinkle and teal. Table grain cooled to a limed oak so it reads as a board game without warming the whole screen."
+    }
   ],
   "launch": { "view": "canvas" }
 }

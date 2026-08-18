@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+# A newer push to the same branch makes an in-flight run pointless.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Each gate runs separately so a red build names what actually broke.
+      - name: Lint and format
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Tests and coverage
+        run: npm run test:coverage

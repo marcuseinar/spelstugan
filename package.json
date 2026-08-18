@@ -1,0 +1,29 @@
+{
+  "name": "spelstugan",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A social-first gaming platform",
+  "workspaces": ["packages/*", "packages/games/*"],
+  "scripts": {
+    "check": "npm run lint && npm run typecheck && npm run test:coverage",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "typecheck": "tsc --build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.20.1",
+    "@vitest/coverage-v8": "^2.1.8",
+    "fast-check": "^3.23.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

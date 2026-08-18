@@ -1,0 +1,4 @@
+{
+  "files": [],
+  "references": [{ "path": "./packages/game-kit" }, { "path": "./packages/games/ludo" }]
+}
