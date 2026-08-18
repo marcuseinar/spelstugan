@@ -12,27 +12,27 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:oklch(0.19 0.022 55);
-      --bg-elevated:oklch(0.225 0.024 52);
-      --surface:oklch(0.265 0.028 55);
-      --surface-hover:oklch(0.315 0.032 55);
-      --border:oklch(0.36 0.03 55);
-      --text:oklch(0.94 0.018 75);
-      --text-dim:oklch(0.72 0.028 68);
-      --text-faint:oklch(0.55 0.03 62);
-      --accent:oklch(0.68 0.135 45);
-      --accent-strong:oklch(0.77 0.13 55);
-      --accent-wash:oklch(0.68 0.135 45 / 0.18);
-      --live:oklch(0.74 0.105 145);
-      --live-wash:oklch(0.74 0.105 145 / 0.18);
-      --amber:oklch(0.80 0.115 78);
-      --amber-wash:oklch(0.80 0.115 78 / 0.18);
+      --bg:#193549;
+      --bg-elevated:#122C3F;
+      --surface:#1F4662;
+      --surface-hover:#2A5A7C;
+      --border:#2D5A80;
+      --text:#FFFFFF;
+      --text-dim:#A9C4DC;
+      --text-faint:#6E93B3;
+      --accent:#FFC600;
+      --accent-strong:#FFD84D;
+      --accent-wash:rgba(255,198,0,.15);
+      --live:#3AD900;
+      --live-wash:rgba(58,217,0,.15);
+      --amber:#FFC600;
+      --amber-wash:rgba(255,198,0,.15);
       --font-display:'Space Grotesk', system-ui, sans-serif;
       --font-body:'Manrope', system-ui, sans-serif;
-      --c-sam:oklch(0.60 0.135 32);
-      --c-priya:oklch(0.63 0.088 215);
-      --c-mia:oklch(0.74 0.12 88);
-      --c-you:oklch(0.62 0.085 255);
+      --c-sam:#FF628C;
+      --c-priya:#9EFFFF;
+      --c-mia:#FF9D00;
+      --c-you:#0088FF;
     }
     *{box-sizing:border-box;}
     body{margin:0;}
@@ -49,7 +49,7 @@
 
   <!-- RAIL -->
   <div style="width:72px;flex:0 0 72px;background:var(--bg-elevated);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:8px;border-right:1px solid var(--border);">
-    <div style="width:40px;height:40px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:17px;color:oklch(0.19 0.022 55);margin-bottom:6px;">T</div>
+    <div style="width:40px;height:40px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:17px;color:#193549;margin-bottom:6px;">T</div>
     <div class="rail-btn" style="background:var(--surface);color:var(--text-dim);">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-4 4v-4H6a2 2 0 0 1-2-2z"/></svg>
     </div>
@@ -129,7 +129,7 @@
     </div>
 
     <div style="height:60px;flex:0 0 60px;border-top:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:10px;">
-      <div style="width:32px;height:32px;border-radius:50%;background:var(--c-you);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:12px;color:oklch(0.19 0.022 55);">Y</div>
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--c-you);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:12px;color:#193549;">Y</div>
       <div style="flex:1;font-size:13px;font-weight:600;">You</div>
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
     </div>
@@ -163,7 +163,7 @@
             <circle cx="90" cy="10" r="6" fill="var(--live)"/>
           </svg>
           <div style="position:absolute;top:16px;left:18px;font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--text-faint);">NEON CLIMB</div>
-          <button style="position:relative;display:flex;align-items:center;gap:9px;padding:13px 26px;border-radius:999px;background:var(--accent);border:none;color:oklch(0.19 0.022 55);font-family:var(--font-body);font-weight:700;font-size:15px;cursor:pointer;">
+          <button style="position:relative;display:flex;align-items:center;gap:9px;padding:13px 26px;border-radius:999px;background:var(--accent);border:none;color:#193549;font-family:var(--font-body);font-weight:700;font-size:15px;cursor:pointer;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 5l11 7-11 7V5z"/></svg>
             Play Neon Climb
           </button>
@@ -219,7 +219,7 @@
           </div>
           <div class="lb-row" style="opacity:.6;">
             <span style="width:18px;text-align:center;font-size:12.5px;color:var(--text-faint);font-weight:700;">5</span>
-            <div style="width:28px;height:28px;border-radius:50%;background:oklch(0.58 0.03 60);"></div>
+            <div style="width:28px;height:28px;border-radius:50%;background:#4A7396;"></div>
             <span style="flex:1;font-size:13.5px;font-weight:600;">Jonas</span>
             <span style="font-family:var(--font-display);font-weight:700;font-size:14px;">6,040</span>
           </div>
