@@ -12,26 +12,26 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:oklch(0.16 0.02 280);
-      --bg-elevated:oklch(0.185 0.02 280);
-      --surface:oklch(0.225 0.02 280);
-      --surface-hover:oklch(0.27 0.025 280);
-      --border:oklch(0.30 0.02 280);
-      --text:oklch(0.95 0.01 280);
-      --text-dim:oklch(0.68 0.02 280);
-      --text-faint:oklch(0.48 0.02 280);
-      --accent:oklch(0.72 0.19 320);
-      --accent-strong:oklch(0.80 0.20 320);
-      --accent-wash:oklch(0.72 0.19 320 / 0.16);
-      --live:oklch(0.80 0.19 128);
-      --live-wash:oklch(0.80 0.19 128 / 0.16);
-      --amber:oklch(0.78 0.14 70);
+      --bg:oklch(0.19 0.022 55);
+      --bg-elevated:oklch(0.225 0.024 52);
+      --surface:oklch(0.265 0.028 55);
+      --surface-hover:oklch(0.315 0.032 55);
+      --border:oklch(0.36 0.03 55);
+      --text:oklch(0.94 0.018 75);
+      --text-dim:oklch(0.72 0.028 68);
+      --text-faint:oklch(0.55 0.03 62);
+      --accent:oklch(0.68 0.135 45);
+      --accent-strong:oklch(0.77 0.13 55);
+      --accent-wash:oklch(0.68 0.135 45 / 0.18);
+      --live:oklch(0.74 0.105 145);
+      --live-wash:oklch(0.74 0.105 145 / 0.18);
+      --amber:oklch(0.80 0.115 78);
       --font-display:'Space Grotesk', system-ui, sans-serif;
       --font-body:'Manrope', system-ui, sans-serif;
-      --c-sam:oklch(0.6 0.15 30);
-      --c-priya:oklch(0.65 0.14 200);
-      --c-mia:oklch(0.72 0.15 95);
-      --c-you:oklch(0.68 0.15 250);
+      --c-sam:oklch(0.60 0.135 32);
+      --c-priya:oklch(0.63 0.088 215);
+      --c-mia:oklch(0.74 0.12 88);
+      --c-you:oklch(0.62 0.085 255);
     }
     *{box-sizing:border-box;}
     body{margin:0;}
@@ -41,7 +41,7 @@
     .rail-btn{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;flex:0 0 auto;}
     .chan-row{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;cursor:pointer;}
     .chan-row:hover{background:var(--surface-hover);}
-    .token{width:17px;height:17px;border-radius:50%;position:absolute;box-shadow:0 2px 5px rgba(0,0,0,.4);border:2px solid oklch(0.16 0.02 280 / .6);}
+    .token{width:17px;height:17px;border-radius:50%;position:absolute;box-shadow:0 2px 5px rgba(0,0,0,.4);border:2px solid oklch(0.19 0.022 55 / .6);}
   </style>
 </helmet>
 
@@ -49,7 +49,7 @@
 
   <!-- RAIL (same as Main) -->
   <div style="width:72px;flex:0 0 72px;background:var(--bg-elevated);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:8px;border-right:1px solid var(--border);">
-    <div style="width:40px;height:40px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:17px;color:oklch(0.16 0.02 280);margin-bottom:6px;">T</div>
+    <div style="width:40px;height:40px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:17px;color:oklch(0.19 0.022 55);margin-bottom:6px;">T</div>
     <div class="rail-btn" style="background:var(--surface);color:var(--text-dim);">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-4 4v-4H6a2 2 0 0 1-2-2z"/></svg>
     </div>
@@ -134,7 +134,7 @@
     </div>
 
     <div style="height:60px;flex:0 0 60px;border-top:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:10px;">
-      <div style="width:32px;height:32px;border-radius:50%;background:var(--c-you);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:12px;color:oklch(0.16 0.02 280);">Y</div>
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--c-you);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:12px;color:oklch(0.19 0.022 55);">Y</div>
       <div style="flex:1;font-size:13px;font-weight:600;">You</div>
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
     </div>
@@ -161,9 +161,10 @@
     </div>
 
     <div style="flex:1;display:flex;min-height:0;">
-      <!-- board column -->
-      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:22px;min-width:0;">
-        <div style="width:440px;height:440px;position:relative;background:var(--bg-elevated);border-radius:22px;overflow:hidden;border:1px solid var(--border);">
+      <!-- board column: board sits on a wooden table surface -->
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:22px;min-width:0;position:relative;background-color:oklch(0.30 0.045 52);background-image:repeating-linear-gradient(96deg, oklch(0.27 0.05 46 / .55) 0px, oklch(0.32 0.042 54 / .35) 3px, oklch(0.28 0.048 48 / .5) 7px, oklch(0.335 0.04 56 / .3) 11px, oklch(0.29 0.046 50 / .45) 16px),repeating-linear-gradient(93deg, oklch(0.24 0.05 44 / .5) 0px, oklch(0.24 0.05 44 / 0) 2px, oklch(0.24 0.05 44 / 0) 34px, oklch(0.245 0.05 45 / .42) 37px),radial-gradient(ellipse 70% 60% at 50% 38%, oklch(0.44 0.05 60 / .5), transparent 70%);">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse 62% 55% at 50% 42%, transparent, oklch(0.14 0.03 45 / .62));pointer-events:none;"></div>
+        <div style="width:440px;height:440px;position:relative;background:var(--bg-elevated);border-radius:22px;overflow:hidden;border:1px solid var(--border);box-shadow:0 18px 40px oklch(0.12 0.03 40 / .55), 0 2px 0 oklch(0.98 0.02 80 / .07) inset;">
           <div style="position:absolute;left:0;top:0;width:170px;height:170px;background:color-mix(in oklch, var(--c-sam) 20%, var(--bg-elevated));border-top-left-radius:22px;"></div>
           <div style="position:absolute;right:0;top:0;width:170px;height:170px;background:color-mix(in oklch, var(--c-priya) 20%, var(--bg-elevated));border-top-right-radius:22px;"></div>
           <div style="position:absolute;left:0;bottom:0;width:170px;height:170px;background:color-mix(in oklch, var(--c-you) 20%, var(--bg-elevated));border-bottom-left-radius:22px;"></div>
@@ -175,19 +176,19 @@
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.6"><path d="M12 3l2.6 6.4L21 12l-6.4 2.6L12 21l-2.6-6.4L3 12l6.4-2.6z"/></svg>
           </div>
 
-          <div style="position:absolute;left:36px;top:36px;width:34px;height:34px;border-radius:10px;background:oklch(0.16 0.02 280 / .35);display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:4px;">
+          <div style="position:absolute;left:36px;top:36px;width:34px;height:34px;border-radius:10px;background:oklch(0.19 0.022 55 / .35);display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:4px;">
             <div style="border-radius:50%;background:var(--c-sam);"></div><div style="border-radius:50%;background:var(--c-sam);opacity:.4;"></div>
             <div style="border-radius:50%;background:var(--c-sam);opacity:.4;"></div><div style="border-radius:50%;background:var(--c-sam);opacity:.4;"></div>
           </div>
-          <div style="position:absolute;right:36px;top:36px;width:34px;height:34px;border-radius:10px;background:oklch(0.16 0.02 280 / .35);display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:4px;">
+          <div style="position:absolute;right:36px;top:36px;width:34px;height:34px;border-radius:10px;background:oklch(0.19 0.022 55 / .35);display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:4px;">
             <div style="border-radius:50%;background:var(--c-priya);opacity:.4;"></div><div style="border-radius:50%;background:var(--c-priya);"></div>
             <div style="border-radius:50%;background:var(--c-priya);opacity:.4;"></div><div style="border-radius:50%;background:var(--c-priya);opacity:.4;"></div>
           </div>
-          <div style="position:absolute;left:36px;bottom:36px;width:34px;height:34px;border-radius:10px;background:oklch(0.16 0.02 280 / .35);display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:4px;">
+          <div style="position:absolute;left:36px;bottom:36px;width:34px;height:34px;border-radius:10px;background:oklch(0.19 0.022 55 / .35);display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:4px;">
             <div style="border-radius:50%;background:var(--c-you);opacity:.4;"></div><div style="border-radius:50%;background:var(--c-you);opacity:.4;"></div>
             <div style="border-radius:50%;background:var(--c-you);"></div><div style="border-radius:50%;background:var(--c-you);opacity:.4;"></div>
           </div>
-          <div style="position:absolute;right:36px;bottom:36px;width:34px;height:34px;border-radius:10px;background:oklch(0.16 0.02 280 / .35);display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:4px;">
+          <div style="position:absolute;right:36px;bottom:36px;width:34px;height:34px;border-radius:10px;background:oklch(0.19 0.022 55 / .35);display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:4px;">
             <div style="border-radius:50%;background:var(--c-mia);"></div><div style="border-radius:50%;background:var(--c-mia);"></div>
             <div style="border-radius:50%;background:var(--c-mia);opacity:.4;"></div><div style="border-radius:50%;background:var(--c-mia);opacity:.4;"></div>
           </div>
@@ -212,7 +213,7 @@
               <div style="width:22px;height:22px;border-radius:50%;background:var(--c-mia);box-shadow:0 0 0 2px var(--live);"></div>
               <span style="font-size:13px;font-weight:700;">Mia &mdash; her turn</span>
             </div>
-            <div style="width:150px;height:4px;border-radius:2px;background:oklch(0.16 0.02 280 / .4);overflow:hidden;"><div style="width:62%;height:100%;background:var(--live);"></div></div>
+            <div style="width:150px;height:4px;border-radius:2px;background:oklch(0.19 0.022 55 / .4);overflow:hidden;"><div style="width:62%;height:100%;background:var(--live);"></div></div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--border);">
             <div style="width:22px;height:22px;border-radius:50%;background:var(--c-you);"></div>

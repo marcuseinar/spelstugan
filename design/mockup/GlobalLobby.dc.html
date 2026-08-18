@@ -12,21 +12,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:oklch(0.16 0.02 280);
-      --bg-elevated:oklch(0.185 0.02 280);
-      --surface:oklch(0.225 0.02 280);
-      --surface-hover:oklch(0.27 0.025 280);
-      --border:oklch(0.30 0.02 280);
-      --text:oklch(0.95 0.01 280);
-      --text-dim:oklch(0.68 0.02 280);
-      --text-faint:oklch(0.48 0.02 280);
-      --accent:oklch(0.72 0.19 320);
-      --accent-strong:oklch(0.80 0.20 320);
-      --accent-wash:oklch(0.72 0.19 320 / 0.16);
-      --live:oklch(0.80 0.19 128);
-      --live-wash:oklch(0.80 0.19 128 / 0.16);
-      --amber:oklch(0.78 0.14 70);
-      --amber-wash:oklch(0.78 0.14 70 / 0.16);
+      --bg:oklch(0.19 0.022 55);
+      --bg-elevated:oklch(0.225 0.024 52);
+      --surface:oklch(0.265 0.028 55);
+      --surface-hover:oklch(0.315 0.032 55);
+      --border:oklch(0.36 0.03 55);
+      --text:oklch(0.94 0.018 75);
+      --text-dim:oklch(0.72 0.028 68);
+      --text-faint:oklch(0.55 0.03 62);
+      --accent:oklch(0.68 0.135 45);
+      --accent-strong:oklch(0.77 0.13 55);
+      --accent-wash:oklch(0.68 0.135 45 / 0.18);
+      --live:oklch(0.74 0.105 145);
+      --live-wash:oklch(0.74 0.105 145 / 0.18);
+      --amber:oklch(0.80 0.115 78);
+      --amber-wash:oklch(0.80 0.115 78 / 0.18);
       --font-display:'Space Grotesk', system-ui, sans-serif;
       --font-body:'Manrope', system-ui, sans-serif;
     }
@@ -45,7 +45,7 @@
 
   <!-- RAIL -->
   <div style="width:72px;flex:0 0 72px;background:var(--bg-elevated);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:8px;border-right:1px solid var(--border);">
-    <div style="width:40px;height:40px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:17px;color:oklch(0.16 0.02 280);margin-bottom:6px;">T</div>
+    <div style="width:40px;height:40px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:17px;color:oklch(0.19 0.022 55);margin-bottom:6px;">T</div>
     <div class="rail-btn" style="background:var(--surface);color:var(--text-dim);">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-4 4v-4H6a2 2 0 0 1-2-2z"/></svg>
     </div>
@@ -119,7 +119,7 @@
     </div>
 
     <div style="height:60px;flex:0 0 60px;border-top:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:10px;">
-      <div style="width:32px;height:32px;border-radius:50%;background:oklch(0.68 0.15 250);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:12px;color:oklch(0.16 0.02 280);">Y</div>
+      <div style="width:32px;height:32px;border-radius:50%;background:oklch(0.62 0.085 255);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:12px;color:oklch(0.19 0.022 55);">Y</div>
       <div style="flex:1;font-size:13px;font-weight:600;">You</div>
     </div>
   </div>
@@ -130,13 +130,13 @@
       <div style="display:flex;align-items:center;gap:18px;">
         <span style="font-family:var(--font-display);font-weight:600;font-size:18px;">Open Tables</span>
         <div style="display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:3px;">
-          <div style="padding:6px 16px;border-radius:999px;background:var(--accent);color:oklch(0.16 0.02 280);font-size:13px;font-weight:700;">Casual</div>
+          <div style="padding:6px 16px;border-radius:999px;background:var(--accent);color:oklch(0.19 0.022 55);font-size:13px;font-weight:700;">Casual</div>
           <div style="padding:6px 16px;border-radius:999px;color:var(--text-dim);font-size:13px;font-weight:600;">Competitive</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:14px;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <button style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:999px;background:var(--accent);border:none;color:oklch(0.16 0.02 280);font-family:var(--font-body);font-weight:700;font-size:14px;cursor:pointer;">
+        <button style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:999px;background:var(--accent);border:none;color:oklch(0.19 0.022 55);font-family:var(--font-body);font-weight:700;font-size:14px;cursor:pointer;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 5l11 7-11 7V5z"/></svg>
           Quick Match
         </button>
@@ -148,7 +148,7 @@
 
         <div class="table-card">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:34px;height:34px;border-radius:50%;background:oklch(0.6 0.15 30);"></div>
+            <div style="width:34px;height:34px;border-radius:50%;background:oklch(0.60 0.135 32);"></div>
             <div style="flex:1;">
               <div style="font-size:14px;font-weight:700;">dkobayashi&rsquo;s table</div>
               <div style="font-size:11.5px;color:var(--text-faint);">EU &middot; 34ms</div>
@@ -156,8 +156,8 @@
             <span style="font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:4px 8px;border-radius:6px;background:var(--surface-hover);color:var(--text-dim);">CASUAL</span>
           </div>
           <div style="display:flex;gap:6px;">
-            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.6 0.15 30);"></div>
-            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.65 0.14 200);"></div>
+            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.60 0.135 32);"></div>
+            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.63 0.088 215);"></div>
             <div class="seat"></div>
             <div class="seat"></div>
           </div>
@@ -166,7 +166,7 @@
 
         <div class="table-card" style="border-color:var(--amber);">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:34px;height:34px;border-radius:50%;background:oklch(0.7 0.16 95);"></div>
+            <div style="width:34px;height:34px;border-radius:50%;background:oklch(0.74 0.12 88);"></div>
             <div style="flex:1;">
               <div style="font-size:14px;font-weight:700;">Elin R.</div>
               <div style="font-size:11.5px;color:var(--text-faint);">NA &middot; 61ms</div>
@@ -174,9 +174,9 @@
             <span style="font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:4px 8px;border-radius:6px;background:var(--amber-wash);color:var(--amber);">RANKED</span>
           </div>
           <div style="display:flex;gap:6px;">
-            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.7 0.16 95);"></div>
-            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.65 0.14 200);"></div>
-            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.68 0.15 250);"></div>
+            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.74 0.12 88);"></div>
+            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.63 0.088 215);"></div>
+            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.62 0.085 255);"></div>
             <div class="seat"></div>
           </div>
           <button style="width:100%;padding:9px;border-radius:9px;background:var(--surface-hover);border:1px solid var(--border);color:var(--text);font-family:var(--font-body);font-weight:700;font-size:13px;cursor:pointer;">Join Table</button>
@@ -184,7 +184,7 @@
 
         <div class="table-card">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:34px;height:34px;border-radius:50%;background:oklch(0.65 0.14 200);"></div>
+            <div style="width:34px;height:34px;border-radius:50%;background:oklch(0.63 0.088 215);"></div>
             <div style="flex:1;">
               <div style="font-size:14px;font-weight:700;">quiet_otter</div>
               <div style="font-size:11.5px;color:var(--text-faint);">EU &middot; 22ms</div>
@@ -192,7 +192,7 @@
             <span style="font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:4px 8px;border-radius:6px;background:var(--surface-hover);color:var(--text-dim);">CASUAL</span>
           </div>
           <div style="display:flex;gap:6px;">
-            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.65 0.14 200);"></div>
+            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.63 0.088 215);"></div>
             <div class="seat"></div>
             <div class="seat"></div>
             <div class="seat"></div>
@@ -202,7 +202,7 @@
 
         <div class="table-card">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:34px;height:34px;border-radius:50%;background:oklch(0.68 0.15 250);"></div>
+            <div style="width:34px;height:34px;border-radius:50%;background:oklch(0.62 0.085 255);"></div>
             <div style="flex:1;">
               <div style="font-size:14px;font-weight:700;">marcus_p</div>
               <div style="font-size:11.5px;color:var(--text-faint);">NA &middot; 48ms</div>
@@ -210,9 +210,9 @@
             <span style="font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:4px 8px;border-radius:6px;background:var(--surface-hover);color:var(--text-dim);">CASUAL</span>
           </div>
           <div style="display:flex;gap:6px;">
-            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.68 0.15 250);"></div>
-            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.6 0.15 30);"></div>
-            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.7 0.16 95);"></div>
+            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.62 0.085 255);"></div>
+            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.60 0.135 32);"></div>
+            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.74 0.12 88);"></div>
             <div class="seat"></div>
           </div>
           <button style="width:100%;padding:9px;border-radius:9px;background:var(--surface-hover);border:1px solid var(--border);color:var(--text);font-family:var(--font-body);font-weight:700;font-size:13px;cursor:pointer;">Join Table</button>
@@ -220,7 +220,7 @@
 
         <div class="table-card" style="border-color:var(--amber);">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:34px;height:34px;border-radius:50%;background:oklch(0.6 0.02 280);"></div>
+            <div style="width:34px;height:34px;border-radius:50%;background:oklch(0.60 0.032 60);"></div>
             <div style="flex:1;">
               <div style="font-size:14px;font-weight:700;">rook_and_roll</div>
               <div style="font-size:11.5px;color:var(--text-faint);">EU &middot; 29ms</div>
@@ -228,7 +228,7 @@
             <span style="font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:4px 8px;border-radius:6px;background:var(--amber-wash);color:var(--amber);">RANKED</span>
           </div>
           <div style="display:flex;gap:6px;">
-            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.6 0.02 280);"></div>
+            <div style="width:26px;height:26px;border-radius:50%;background:oklch(0.60 0.032 60);"></div>
             <div class="seat"></div>
             <div class="seat"></div>
             <div class="seat"></div>

@@ -1,197 +1,193 @@
 # Engineering Guide
 
 This file is the standing contract for how code gets written in this repo. It
-applies to humans and to Claude sessions alike. If a change conflicts with
-something here, either the change or this file is wrong — fix whichever one
-is actually wrong, don't just ignore the mismatch.
+applies to humans and to AI agents alike. If a change conflicts with something
+here, either the change or this file is wrong — fix whichever one is actually
+wrong, don't silently ignore the mismatch.
 
-## What this project is
+**If you are an agent picking this repo up cold, read in this order:**
 
-A social-first gaming platform (Discord/Slack-shaped: servers, channels,
-DMs) where each channel can host a game instance with text/voice/video
-attached. Games are plugins, not hardcoded platform features — see
-`docs/` (once it exists) for the product/architecture discussion this file
-assumes as background.
+1. This file — how we work.
+2. `docs/PRODUCT.md` — what we're building and why.
+3. `docs/ARCHITECTURE.md` — how the system is shaped.
+4. `docs/ROADMAP.md` — what's done, what's next, what's deliberately deferred.
+5. `docs/DECISIONS.md` — decisions already made, and why. Don't relitigate
+   these without new information.
+6. `docs/GLOSSARY.md` — the project's vocabulary. Use these words exactly.
 
-## Stack (current decision — expect this to evolve, update this section when it does)
+## The documentation duty (this is not optional)
 
-- **The platform is Rust.** Everything that constitutes "the platform"
-  proper — the backend service (auth, servers/channels/sessions,
-  persistence, API), the domain model, and the plugin host/ABI — is
-  written in Rust, in a Cargo workspace. This part is not negotiable per
-  project direction: it's the one place language uniformity matters, since
-  it's the trusted core everything else talks to.
-- **The rest is not required to be Rust.** UI/frontend code (the web
-  client, and later iOS) can be built in whatever stack renders well,
-  Rust or not — the only constraint is the delivery mechanism: it has to
-  ship as WASM or as native JS/DOM, nothing that requires an install step
-  or a bespoke runtime. Concretely this leaves the door open to a
-  plain TS/JS web frontend, or a Rust-via-WASM frontend (e.g. Dioxus/Leptos)
-  if that ends up preferred once something real has been built — don't
-  lock this in prematurely.
-- **Game plugin boundary:** a WASM ABI, hosted server-side via a WASM
-  runtime (e.g. wasmtime). The ABI is language-agnostic on purpose — a
-  plugin author does not have to know Rust, only produce a WASM module that
-  satisfies the contract. First-party games' logic is written in Rust
-  because we control them; third-party creators are never required to use
-  Rust, for their logic or their UI.
-- Do not add a new major dependency (framework, runtime, database) without
-  writing one paragraph in the PR description on why the existing stack
-  doesn't cover it.
+Docs are part of the deliverable, not an afterthought. **Every change that
+alters behavior, structure, or direction updates the relevant doc in the same
+commit as the code.** Specifically:
 
-## Code style — Clean Code, Rust dialect
+- Changed how the system is shaped? → `docs/ARCHITECTURE.md`
+- Made a call that a future contributor might otherwise second-guess or
+  accidentally reverse? → append an entry to `docs/DECISIONS.md`
+- Finished, started, or re-scoped a slice of work? → `docs/ROADMAP.md`
+- Introduced or renamed a domain concept? → `docs/GLOSSARY.md`
 
-The standard here is Robert C. Martin's *Clean Code*, adapted to Rust idiom.
-Concretely:
+The test of whether the docs are good enough: **a fresh agent with no
+conversation history should be able to read them and continue the work
+without asking questions.** If you had context in a conversation that isn't
+written down, it doesn't exist. Write it down.
 
-- **Names are the primary documentation.** A function/variable/type name
-  should make a comment unnecessary. If you feel the urge to comment *what*
-  a line does, rename things until the urge goes away.
-- **Functions do one thing.** If a function needs a "and" to describe it,
-  split it. Prefer many small, well-named private functions over one long
-  one — this is not a performance concern in Rust, the compiler inlines
-  aggressively.
-- **Small modules, single responsibility.** A module that owns "everything
-  about X" is fine; a module that owns "X and also some Y utilities" is not.
-- **Guard clauses over nesting.** Prefer early `return`/`continue`/`?` to
-  pyramid-of-doom `if` nesting. Two levels of indentation inside a function
-  body is a signal to extract a function.
-- **Few, structured arguments.** More than ~3 positional arguments, or any
-  `bool` argument whose meaning isn't obvious at the call site, means:
-  introduce a struct, or split into two differently-named functions instead
-  of one function with a mode flag.
-- **Errors are values.** Library/domain code returns `Result<T, E>` with a
-  real error type (`thiserror`), never panics for a condition a caller can
-  trigger. `.unwrap()`/`.expect()` are for tests, `main`, and genuinely
-  unreachable invariants — and an `.expect()` on an invariant must say *why*
-  it's unreachable in the message, not just describe the value.
-- **`unsafe` is exceptional.** Every `unsafe` block carries a `// SAFETY:`
-  comment stating the invariant that makes it sound. Keep the block as small
-  as possible; don't let `unsafe` leak into a bigger function than it needs
-  to.
-- **Comments explain "why", never "what".** A comment justified by a
-  non-obvious constraint, a workaround for a specific bug, or a subtle
-  invariant is welcome. A comment restating the code in English is not. No
-  commented-out code gets committed — delete it, git remembers.
-- **DRY, but the rule of three.** Two similar-looking blocks are not yet a
-  problem. Extract an abstraction on the third occurrence, once the shared
-  shape is actually proven, not before.
-- **No speculative generality.** Don't add config knobs, trait
-  indirection, or plugin points for a future that isn't real yet. This
-  applies doubly to game logic: a game reducer should be exactly as generic
-  as the plugin ABI requires and no more.
-- **Determinism is a hard requirement for game-reducer code specifically.**
-  No wall-clock reads, no thread/OS randomness, no shared mutable global
-  state inside a game's reducer. Randomness comes from a seed the platform
-  hands the plugin. This isn't a style preference — replay and anti-cheat
-  both depend on it.
-- **Formatting and lints are non-negotiable and automated**, not a matter of
-  taste: `rustfmt` on every file, `clippy` with `-W clippy::pedantic` as a
-  baseline, promoted to `deny` in CI for lints the team hasn't explicitly
-  opted out of in `Cargo.toml`.
+Never leave a doc describing intent that the code has since contradicted. A
+stale doc is worse than no doc, because it gets trusted.
+
+## Commit and authorship rules
+
+- **The repository owner is the author of every commit.** Agents commit as
+  `marcuseinar <78vmnfw27z@privaterelay.appleid.com>`. Do not add
+  `Co-Authored-By` trailers naming an AI, and do not put model names, tool
+  names, or session links in commit messages, PR bodies, or code comments.
+- Small, focused commits; a commit does one logical thing and includes both
+  its tests and its doc updates.
+- No half-finished features land. Prefer complete-but-unwired over
+  partially-wired.
+- Boy Scout Rule: leave touched code cleaner than you found it — but don't
+  drive-by-refactor unrelated code inside a feature commit. That's its own
+  commit.
+
+## Stack
+
+The guiding rule is **best tool for each job**, decided per layer and written
+down in `docs/DECISIONS.md` when chosen. There is no repo-wide language
+mandate.
+
+- **Web first.** The product ships as a web app. iOS is a later question to be
+  revisited once the web product proves itself — do not add native-mobile
+  scaffolding, abstractions, or compromises "for later".
+- **No install step for players.** Whatever the frontend is built with, the
+  experience is: open a link, play. That constraint outranks stack preference.
+- **Game logic is separable from the platform.** Game rules live behind a
+  plugin boundary and must be runnable independently of any UI framework — see
+  `docs/ARCHITECTURE.md`. This is the one structural rule the stack choice may
+  not violate.
+- Do not add a major dependency (framework, runtime, database) without an
+  entry in `docs/DECISIONS.md` explaining what the existing stack couldn't do.
+
+## Code style — Clean Code
+
+The standard is Robert C. Martin's *Clean Code*, applied in whatever language
+a given layer uses.
+
+- **Names are the primary documentation.** If you want to write a comment
+  explaining *what* code does, rename things until the comment is redundant.
+  Names come from `docs/GLOSSARY.md` — one concept, one word, everywhere.
+- **Functions do one thing.** If describing a function needs the word "and",
+  split it. Prefer many small, well-named functions over one long one.
+- **Small modules, one responsibility each.** A module that owns "X and some
+  Y helpers" is two modules.
+- **Guard clauses over nesting.** Early return beats a pyramid of `if`. Two
+  levels of indentation in a function body is a signal to extract.
+- **Few, structured arguments.** More than ~3 positional arguments, or a
+  boolean whose meaning isn't obvious at the call site, means: introduce a
+  named structure, or split into two clearly-named functions.
+- **Errors are values at boundaries.** Domain and library code reports failure
+  explicitly rather than crashing on conditions a caller can cause. Validate
+  at system boundaries (user input, network, plugin output); trust internal
+  invariants rather than defensively re-checking them everywhere.
+- **Comments explain *why*, never *what*.** A comment earns its place by
+  recording a non-obvious constraint, a subtle invariant, or a workaround for
+  a specific bug. Never commit commented-out code — git remembers.
+- **DRY, but rule of three.** Two similar blocks are not a problem yet.
+  Abstract on the third, once the shared shape is proven.
+- **No speculative generality.** No config knobs, indirection layers, or
+  extension points for futures that aren't real yet.
+- **Determinism is mandatory in game rule code.** No wall-clock reads, no
+  ambient randomness, no shared mutable global state inside a game's reducer.
+  Randomness arrives as a seed from the platform. Replay, spectating, and
+  anti-cheat all depend on this — it is a correctness requirement, not taste.
+- **Formatting and linting are automated, not debated.** Every language layer
+  gets a formatter and a linter wired into CI before real code lands in it.
 
 ## Testing
 
-Tests are the executable spec. Untested behavior is unspecified behavior.
+Tests are the executable specification. Untested behavior is unspecified
+behavior.
 
 ### Unit tests
 
-- Every non-trivial public function gets tests for: the happy path, each
-  documented error case, and boundary values (empty, zero, max, one-past-
-  max — whichever apply).
-- Colocate unit tests with the code (`#[cfg(test)] mod tests` at the bottom
-  of the file). If a test needs elaborate setup to reach the function it's
-  testing, that's usually a sign the function/module boundary is wrong —
-  fix the boundary before working around it with test scaffolding.
-- One assertion concept per test. Name the test after the behavior, not the
-  function: `rejects_move_when_not_players_turn`, not `test_apply_move_2`.
-- A test with a conditional (`if` inside a `#[test]` fn, deciding whether to
-  assert) is a bug magnet — split it into separate tests instead.
-- Tests must be hermetic: no wall-clock dependence, no network, no shared
-  mutable state across tests, no dependence on test execution order.
+- Every non-trivial public function is tested for: the happy path, each
+  failure mode, and boundary values (empty, zero, max, one-past-max).
+- One behavior per test. Name tests after the behavior, not the function:
+  `rejects_move_when_not_players_turn`, never `test_apply_move_2`.
+- A test containing a conditional that decides whether to assert is a latent
+  bug — split it into separate tests.
+- Tests are hermetic: no clock dependence, no network, no shared mutable
+  state, no reliance on execution order.
+- If a test needs elaborate setup to reach what it's testing, the boundary is
+  wrong. Fix the design rather than growing the scaffolding.
 
 ### Property-based tests for game logic
 
-Game reducers are pure functions (`(state, move, player) -> (state,
-events)`), which makes them an unusually good fit for property testing —
-use it, don't just hand-write examples. With `proptest`, assert invariants
-like:
-- Replaying a recorded move log through the reducer always reproduces the
-  exact same final state (this *is* the replay feature — test it as a
-  property, not just an example).
-- The reducer never panics for any well-typed move against any reachable
+Game reducers are pure functions, which makes them an unusually good fit for
+property testing. Assert invariants, not just examples:
+
+- Replaying a recorded move log reproduces the identical final state. (This
+  *is* the replay feature — test it as a property.)
+- The reducer never crashes for any well-typed move against any reachable
   state.
-- A move rejected as illegal never mutates state (no partial application).
+- A move rejected as illegal leaves state completely unchanged — no partial
+  application.
 
-### MC/DC — as a discipline, not a claimed tool guarantee
+### MC/DC — a discipline, not a tool claim
 
-There is no mainstream, off-the-shelf MC/DC checker for Rust (that tooling
-mostly lives in avionics/automotive toolchains for C/C++/Ada). Don't claim
-MC/DC coverage from a tool that isn't actually measuring it. Instead:
+Automated MC/DC checkers are avionics/automotive tooling and aren't broadly
+available for the languages we're likely to use. So don't claim MC/DC from a
+tool that isn't measuring it. Instead, apply it by hand where it matters:
 
-- For any function with a compound boolean condition (turn validity, win
-  detection, scoring rules — the actual rules of a game), write the test
-  cases so each individual condition is shown, by at least one test pair, to
-  independently flip the outcome while the others are held fixed. This is
-  the MC/DC test-*design* discipline, applied by hand.
-- Name/group these tests so the condition being isolated is obvious from
-  the test name, so a reviewer can check the discipline was actually
-  followed without re-deriving the truth table themselves.
-- If real MC/DC tooling becomes worth chasing later (e.g. for a
-  certification-adjacent reason), that's a deliberate follow-up, not a
-  silent assumption baked into this file.
+- For any compound boolean condition in rules-critical code (turn validity,
+  win detection, scoring), write cases so that **each individual condition is
+  shown to independently flip the outcome** while the others are held fixed.
+- Name and group those tests so a reviewer can see the discipline was followed
+  without re-deriving the truth table.
+- If real MC/DC tooling becomes worth adopting later, that's a deliberate
+  decision with an ADR — not an assumption baked in silently here.
 
-### Coverage as a floor, not a target
+### Coverage as a floor
 
-- CI runs `cargo-llvm-cov` and gates on branch/region coverage, not just
-  line coverage. Default floor: 85%, per crate. Adjust the number
-  deliberately if it's wrong, don't quietly let it drift.
-- Coverage is a signal that untested code exists, not a goal to be
-  maximized. Never write a test whose only purpose is moving the number —
-  if you can't state what behavior a test verifies, delete it.
+- CI gates on **branch/region coverage**, not line coverage. Default floor:
+  85% per module. Change the number deliberately, with an ADR — don't let it
+  drift.
+- Coverage detects untested code; it is not a goal to maximize. Never write a
+  test whose only purpose is moving the number. If you can't say what behavior
+  a test pins down, delete it.
 
 ### Integration tests
 
-- Crate-level behavior (the plugin ABI boundary, the server's HTTP/WS API)
-  gets integration tests under `tests/`, exercising the public interface
-  only — no reaching into private internals to make a test pass.
+Public interfaces (the plugin boundary, the server API) get tests that
+exercise them from the outside only. Never reach into private internals to
+make a test pass.
 
-## CI gates (all required, no merging with a red one)
+## Definition of Done
 
-1. `cargo fmt --check`
-2. `cargo clippy --all-targets -- -D warnings`
-3. `cargo test --workspace`
-4. `cargo llvm-cov` coverage floor (see above)
+A change is done when **all** of these are true. Agents: do not report work as
+complete otherwise — say explicitly which of these you couldn't satisfy.
 
-## Workspace layout (provisional — a sketch, not a commitment)
+1. It does what was asked, and you have observed it working — not merely
+   compiled it. For UI, that means opening it; if you cannot, say so plainly
+   rather than implying it was verified.
+2. Tests cover the new behavior, including its failure modes, and the whole
+   suite passes.
+3. Formatter and linter are clean.
+4. The relevant docs (above) are updated in the same commit.
+5. No debug leftovers, dead code, commented-out blocks, or TODOs without an
+   owner and a reason.
+6. Committed with the owner as author, and pushed.
 
-```
-crates/
-  domain/        pure domain types: User, Server, Channel, Session, Move...
-  plugin-abi/     the WASM host<->guest contract (types + trait defs)
-  plugin-host/    wasmtime-based sandboxed plugin runner
-  games/ludo/     first-party Ludo plugin logic (reducer, compiled to WASM)
-  games/<solo>/   first-party solo/high-score plugin logic
-  server/         backend service: auth, channels, sessions, persistence, API
+## Working with AI agents on this repo
 
-web/              frontend client — stack TBD (plain TS/JS, or Rust-via-WASM
-                  if that proves out); lives outside the Cargo workspace if
-                  it isn't Rust
-games/*/ui/       per-plugin UI bundles, same rule: whatever stack, ships as
-                  WASM or native JS/DOM
-ios/              (later) thin native shell around the same plugin UIs
-```
-
-Expect this to change as soon as real code makes it obviously wrong — update
-it in the same PR that changes it, don't let it rot into fiction.
-
-## Commit hygiene
-
-- Small, focused commits; a commit does one logical thing and includes its
-  tests.
-- No half-finished features on `main`/the working branch — land things
-  behind a clean boundary (unused-but-complete) rather than partially wired
-  up.
-- Boy Scout Rule: leave touched code cleaner than you found it, but don't
-  drive-by-refactor unrelated code in a feature commit — that's a separate
-  commit.
+- **Read before writing.** Grep the actual code. Never infer an interface from
+  memory or assume a helper exists.
+- **Prefer editing over creating.** New files need a reason; new abstractions
+  need three occurrences.
+- **Ask when a decision is the owner's to make** — product direction, spending
+  money, anything hard to reverse. Make the reasonable call on everything else
+  and note it.
+- **Never fabricate progress.** "Tests pass" means you ran them. "It works"
+  means you saw it work. Report blockers as blockers.
+- **Leave the campsite documented.** Before ending a work session, the roadmap
+  should reflect reality, so the next agent starts from truth rather than
+  archaeology.
