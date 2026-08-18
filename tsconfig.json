@@ -9,6 +9,9 @@
     },
     {
       "path": "./apps/playground"
+    },
+    {
+      "path": "./apps/shell"
     }
   ]
 }

@@ -419,3 +419,41 @@ it found three real defects: the board would still have invited a move after
 the game was won, the "you rolled N" status text was never asserted by any
 test, and two defensive fallbacks existed for states the rules make
 impossible — now deleted rather than tested.
+
+---
+
+## 019 — A demo shell, built as a sketch of the real thing
+
+**Status:** accepted
+
+**Context:** The Ludo board worked, but standing alone it showed nothing about
+the product's actual claim: that the conversation and the play live together.
+A static mockup would have shown the layout without answering whether the
+plugin boundary survives being embedded in a real shell.
+
+**Decision:** Build `apps/shell` — server rail, channel sidebar, chat, and a
+game plugin mounted inside a channel. Everything in memory; no server, no
+persistence, hot seat. Deploy it as the public demo, with the standalone
+playground kept underneath at `/playground/`.
+
+It is a sketch, not scaffolding to throw away: the model mirrors the domain in
+`docs/ARCHITECTURE.md` (Server, Channel, Session), the game is the real
+reducer through the real `GameUi` contract, and the decisions live in pure,
+mutated modules while the drawing does not (decision 018).
+
+**Consequences:** The plugin boundary is now proven in the setting it was
+designed for — the shell hands `ludoUi` an element and plain data, and knows
+nothing about Ludo. Swapping the in-memory `ChatLog` and `Session` for a
+server should not touch the shell's rendering at all; that is the next test of
+this design.
+
+Building it also surfaced two things a mockup would have hidden:
+
+- **Play-by-play drowns conversation.** A stretch of Ludo produced 68 system
+  lines against 3 human ones, all equally loud. System lines are now compact
+  and dim so the people stay audible — the whole reason for putting both in one
+  timeline (decision 001). This will matter more, not less, with a faster game.
+- **The default channel was wrong.** Selecting a server opened whatever channel
+  came first, including a game that had already finished. A test caught it
+  before the code shipped; the rule is now that a finished game is never opened
+  by default.

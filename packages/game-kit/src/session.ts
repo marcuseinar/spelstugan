@@ -2,12 +2,18 @@
  * A game session held in memory.
  *
  * This is the shape the server will eventually take, kept deliberately small:
- * hold a move log, apply attempted moves through the rules, and derive state by
- * folding the log. Nothing here knows about Ludo specifically.
+ * hold a move log, apply attempted moves through the rules, and serve views.
+ * Nothing here knows about any particular game.
+ *
+ * It is not persistence — state lives only as long as the object does. What it
+ * does establish is that the move log is the record and everything else is
+ * derived from it, which is the property the eventual server must keep.
  */
 
-import type { Game, GameEvent, GameState, LoggedMove, PlayerId } from '@spelstugan/game-kit';
-import { createRng, seedForMove } from '@spelstugan/game-kit';
+import type { Game, GameEvent, GameState, PlayerId } from './contract.js';
+import type { LoggedMove } from './replay.js';
+import { seedForMove } from './replay.js';
+import { createRng } from './rng.js';
 
 export interface AttemptResult {
   readonly accepted: boolean;

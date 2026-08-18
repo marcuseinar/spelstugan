@@ -2,10 +2,10 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    include: ['packages/**/src/**/*.test.ts'],
+    include: ['packages/**/src/**/*.test.ts', 'apps/**/src/**/*.test.ts'],
     coverage: {
       provider: 'v8',
-      include: ['packages/**/src/**/*.ts'],
+      include: ['packages/**/src/**/*.ts', 'apps/shell/src/{workspace,chat}.ts'],
       exclude: [
         'packages/**/src/**/*.test.ts',
         'packages/**/src/**/index.ts',

@@ -10,14 +10,16 @@
     "!packages/**/src/index.ts",
     "!packages/games/ludo/src/testing.ts",
     "!packages/game-kit/src/ui.ts",
-    "!packages/games/ludo/src/ui/board.ts"
+    "!packages/games/ludo/src/ui/board.ts",
+    "apps/shell/src/workspace.ts",
+    "apps/shell/src/chat.ts"
   ],
   "//": [
     "Rules code is where a surviving mutant means a real rule is unverified.",
     "Raise these as the suite gets stronger; lowering one needs a decision entry.",
     "",
     "Two files are deliberately not mutated, and the reasons differ:",
-    "  game-kit/src/ui.ts is type declarations — there is no runtime code in it.",
+    "  game-kit/src/ui.ts is type declarations \u2014 there is no runtime code in it.",
     "  ludo/src/ui/board.ts only sets SVG colours, radii and opacities. Mutating",
     "  those yields a board that looks slightly different and behaves the same,",
     "  so the tests that would kill them could only restate the constants back.",

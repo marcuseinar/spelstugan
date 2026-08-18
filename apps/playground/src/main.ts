@@ -7,9 +7,9 @@
  * rules are any fun before building persistence around them.
  */
 
+import { Session } from '@spelstugan/game-kit';
 import { ludo, ludoUi } from '@spelstugan/ludo';
 import type { LudoMove, LudoSecret, LudoShared } from '@spelstugan/ludo';
-import { Session } from './session.js';
 import './style.css';
 
 const PLAYERS = ['Alice', 'Bob', 'Carol', 'Dev'];

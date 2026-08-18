@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:mutation": "stryker run",
-    "dev": "npm run dev --workspace @spelstugan/playground"
+    "dev": "npm run dev --workspace @spelstugan/shell",
+    "dev:playground": "npm run dev --workspace @spelstugan/playground"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

@@ -10,14 +10,15 @@ platform-as-a-service, move to AWS when there's a concrete reason.
 
 ## The demo (live)
 
-The Ludo playground deploys to **GitHub Pages** on every push to the default
+The demo shell deploys to **GitHub Pages** on every push to the default
 branch, via `.github/workflows/pages.yml`:
 
-<https://marcuseinar.github.io/spelstugan/>
+<https://marcuseinar.github.io/spelstugan/> — the shell
+<https://marcuseinar.github.io/spelstugan/playground/> — the board on its own
 
-This works because the playground is genuinely static — the rules run in the
-browser and there is no server to host. It is a demo, not the product:
-hot-seat only, nothing persists, and a refresh loses the game.
+This works because the demo is genuinely static — the rules run in the browser
+and there is no server to host. It is a demo, not the product: hot-seat only,
+chat that talks to itself, and a refresh loses everything.
 
 Two things worth knowing if it ever breaks:
 

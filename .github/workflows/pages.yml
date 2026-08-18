@@ -36,11 +36,23 @@ jobs:
       - name: Check
         run: npm run check
 
-      - name: Build
+      # The shell is the demo; the playground stays reachable underneath it,
+      # since it is the focused harness for working on a game on its own.
+      - name: Build the shell
         env:
           # Project sites live under /<repo>/, not the domain root.
           BASE_PATH: /${{ github.event.repository.name }}/
+        run: npm run build --workspace @spelstugan/shell
+
+      - name: Build the playground
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/playground/
         run: npm run build --workspace @spelstugan/playground
+
+      - name: Gather the site
+        run: |
+          mkdir -p apps/shell/dist/playground
+          cp -r apps/playground/dist/* apps/shell/dist/playground/
 
       # Pages must already be enabled: Settings -> Pages -> Source: GitHub
       # Actions. `enablement: true` was tried and cannot work — creating a
@@ -51,7 +63,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: apps/playground/dist
+          path: apps/shell/dist
 
   deploy:
     needs: build

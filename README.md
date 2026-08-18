@@ -4,16 +4,18 @@ A social-first gaming platform. Discord-shaped servers and channels, where the
 channels are game tables — built on the bet that the social layer is the
 product and the games live inside it, rather than the other way round.
 
-**[Play the demo](https://marcuseinar.github.io/spelstugan/)** — hot-seat Ludo,
-running entirely in your browser.
+**[Open the demo](https://marcuseinar.github.io/spelstugan/)** — the whole
+shell: servers, channels, chat, and a real game of Ludo inside one of them.
+([Just the board, on its own.](https://marcuseinar.github.io/spelstugan/playground/))
 
-**Status: Ludo is playable.** The plugin contract, the rules and a clickable
-board all work; there is no server, no persistence and no accounts yet, so
-everyone plays hot-seat on one screen.
+**Status: the front half works.** The plugin contract, the Ludo rules, a
+clickable board and the social shell around it all run. There is no server:
+nothing persists, nobody else can join, and the game is hot seat.
 
 ```bash
 npm install
-npm run dev             # play Ludo at localhost:5173
+npm run dev             # the shell at localhost:5174
+npm run dev:playground  # just the Ludo board, at localhost:5173
 npm run check           # lint, typecheck, tests, coverage gate
 npm run test:mutation   # the rigour gate — see CLAUDE.md
 ```
@@ -53,4 +55,5 @@ asynchronous play come out of that design rather than being built separately.
 |---|---|
 | `packages/game-kit` | The contract every game implements: a pure reducer, seeded randomness, replay from the move log |
 | `packages/games/ludo` | Ludo — the first game: rules, board geometry, and UI |
-| `apps/playground` | A hot-seat harness for playing Ludo without a server |
+| `apps/shell` | The demo shell — servers, channels, chat, hosting a game plugin |
+| `apps/playground` | A focused harness for playing Ludo on its own |

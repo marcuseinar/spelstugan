@@ -1,0 +1,734 @@
+/*
+ * Every colour is a semantic token (decision 013). Seat colours are the one
+ * exception — they carry game meaning, so a theme must never be able to make
+ * two players' pieces look alike.
+ */
+:root {
+  --bg: #1e1e2e;
+  --bg-rail: #16161f;
+  --bg-sidebar: #191926;
+  --surface: #262637;
+  --surface-hover: #313244;
+  --border: #33344a;
+  --text: #cdd6f4;
+  --text-dim: #a6adc8;
+  --text-faint: #7f849c;
+  --accent: #cba6f7;
+  --accent-strong: #ddbdff;
+  --accent-contrast: #1e1e2e;
+  --live: #a6e3a1;
+
+  --board-bg: #20202e;
+  --board-line: #4b4d68;
+  --track: #3b3d55;
+  --token-edge: #16161f;
+
+  --seat-0: #f38ba8;
+  --seat-1: #89b4fa;
+  --seat-2: #fab387;
+  --seat-3: #94e2d5;
+
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Manrope", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 68px 248px minmax(0, 1fr);
+  height: 100vh;
+}
+
+/* ---------- rail ---------- */
+
+.rail {
+  background: var(--bg-rail);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  overflow-y: auto;
+}
+
+.rail__logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.rail__divider {
+  width: 26px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--border);
+  margin: 2px 0;
+}
+
+.rail__label {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.rail__server {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  flex: 0 0 auto;
+  transition: border-radius 140ms ease;
+}
+
+.rail__server:hover {
+  background: var(--surface-hover);
+  border-radius: 12px;
+  color: var(--text);
+}
+
+.rail__server--lobby {
+  border: 1px dashed var(--border);
+}
+
+.rail__server--active {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-radius: 12px;
+  border-color: transparent;
+}
+
+.rail__spacer {
+  flex: 1;
+}
+
+.rail__add {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  border: 1px dashed var(--border);
+  color: var(--text-faint);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+/* ---------- sidebar ---------- */
+
+.sidebar {
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+}
+
+.sidebar__header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar__server-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.sidebar__server-kind {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.sidebar__channels {
+  overflow-y: auto;
+  padding: 12px 8px;
+}
+
+.sidebar__group {
+  margin: 14px 8px 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.sidebar__group:first-child {
+  margin-top: 0;
+}
+
+.channel {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  text-align: left;
+  color: var(--text-dim);
+}
+
+.channel:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.channel--active {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.channel--finished {
+  opacity: 0.55;
+}
+
+.channel__icon {
+  display: grid;
+  place-items: center;
+  color: var(--text-faint);
+  flex: 0 0 auto;
+}
+
+.channel__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.channel__name {
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.channel__subtitle {
+  font-size: 11px;
+  color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.channel__subtitle--live {
+  color: var(--live);
+}
+
+.channel__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--live);
+  flex: 0 0 auto;
+}
+
+.sidebar__footer {
+  border-top: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.sidebar__you {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sidebar__online {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* ---------- main ---------- */
+
+.main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+}
+
+.topbar {
+  height: 56px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  gap: 16px;
+}
+
+.topbar__title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.topbar__icon {
+  display: grid;
+  place-items: center;
+  color: var(--text-faint);
+}
+
+.topbar__name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.topbar__meta {
+  font-size: 12px;
+  color: var(--text-faint);
+  padding-left: 10px;
+  border-left: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.callbar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-faint);
+  cursor: not-allowed;
+}
+
+.callbar__label {
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.iconbutton {
+  color: var(--text-faint);
+  display: grid;
+  place-items: center;
+}
+
+.iconbutton:hover {
+  color: var(--text);
+}
+
+/* ---------- panes ---------- */
+
+.textpane {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+}
+
+.gamepane {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  min-height: 0;
+}
+
+.gamepane__board {
+  padding: 18px;
+  overflow-y: auto;
+  display: grid;
+  place-items: start center;
+}
+
+.gamepane__chat {
+  border-left: 1px solid var(--border);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+}
+
+.gamepane__chat-title {
+  margin: 0;
+  padding: 12px 14px 8px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+@media (max-width: 1080px) {
+  .gamepane {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .gamepane__chat {
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+}
+
+/* ---------- chat ---------- */
+
+.chat {
+  overflow-y: auto;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* System lines sit tight together; spoken ones get room to breathe. */
+.chat__played + .chat__played {
+  margin-top: -6px;
+}
+
+.chat--compact {
+  padding: 8px 14px;
+  gap: 9px;
+}
+
+.chat__empty {
+  color: var(--text-faint);
+  font-size: 13px;
+  margin: 0;
+}
+
+.chat__note {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--text-faint);
+  text-align: center;
+  padding: 2px 0;
+}
+
+.chat__line {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.chat__played {
+  margin: 0;
+  padding-left: 40px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-faint);
+}
+
+.chat--compact .chat__played {
+  padding-left: 34px;
+}
+
+.chat__played-author {
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--avatar-colour, var(--surface-hover));
+  color: var(--accent-contrast);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex: 0 0 auto;
+  text-transform: capitalize;
+}
+
+.avatar--you {
+  background: var(--accent);
+}
+
+.chat--compact .avatar {
+  width: 24px;
+  height: 24px;
+  font-size: 10px;
+}
+
+.chat__body {
+  min-width: 0;
+}
+
+.chat__head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.chat__author {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.chat__tag {
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+.chat__text {
+  font-size: 13.5px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- composer ---------- */
+
+.composer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 16px 16px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+}
+
+.chat--compact + .composer,
+.gamepane__chat .composer {
+  margin: 0 12px 12px;
+}
+
+.composer__input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  min-width: 0;
+}
+
+.composer__input::placeholder {
+  color: var(--text-faint);
+}
+
+.composer__send {
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+}
+
+.composer__send:hover {
+  color: var(--accent-strong);
+}
+
+/* ---------- idle game states ---------- */
+
+.idle {
+  max-width: 460px;
+  margin-top: 40px;
+  padding: 22px;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.idle__headline {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.idle__detail {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-faint);
+}
+
+/* ---------- the game plugin's own board ---------- */
+
+.ludo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px;
+  gap: 18px;
+  width: 100%;
+  max-width: 720px;
+  align-items: start;
+}
+
+@media (max-width: 780px) {
+  .ludo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ludo__board {
+  min-width: 0;
+}
+
+.ludo-board {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+
+.token {
+  transition: cx 180ms ease, cy 180ms ease;
+}
+
+.token--movable {
+  cursor: pointer;
+  stroke: var(--text);
+  stroke-width: 1.4;
+}
+
+.token--movable:hover {
+  r: 4;
+}
+
+.ludo__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.status {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.die-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.die {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.roll-button {
+  padding: 9px 18px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 700;
+  font-size: 13.5px;
+}
+
+.roll-button:hover {
+  background: var(--accent-strong);
+}
+
+.seats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.seat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid transparent;
+  font-size: 12.5px;
+}
+
+.seat--active {
+  border-color: var(--seat-colour);
+  background: var(--surface-hover);
+}
+
+.seat--winner {
+  border-color: var(--live);
+}
+
+.seat__dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--seat-colour);
+  flex: 0 0 auto;
+}
+
+.seat__name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.seat__home {
+  color: var(--text-faint);
+  font-size: 11px;
+}
+
+.hotseat {
+  margin: 14px 0 0;
+  font-size: 11.5px;
+  color: var(--text-faint);
+  text-align: center;
+}

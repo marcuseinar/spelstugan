@@ -14,18 +14,20 @@ Last updated: 2026-08-18
 
 ## Current state
 
-**Ludo is playable.** The plugin contract, the rules, and a board you can
-click are all in place and verified in a browser. There is still no server,
-no persistence and no accounts — everyone plays hot-seat on one screen.
+**The front half works.** The plugin contract, the Ludo rules, a clickable
+board, and the social shell around it — servers, channels, chat — all run and
+are verified in a browser. There is still no server: nothing persists, nobody
+else can join, and the game is hot seat.
 
 ```bash
 npm install
-npm run dev             # play Ludo at localhost:5173
+npm run dev             # the shell at localhost:5174
+npm run dev:playground  # just the Ludo board, at localhost:5173
 npm run check           # lint, typecheck, tests, coverage gate
 npm run test:mutation   # the rigour gate
 ```
 
-212 tests; 91.7% mutation score.
+262 tests; mutation gate at 85%.
 
 ### Done
 
@@ -45,6 +47,8 @@ npm run test:mutation   # the rigour gate
 - [x] Framework-neutral plugin UI contract (decision 017)
 - [x] Ludo playground at `apps/playground` — hot-seat, runs in the browser
 - [x] Public demo on GitHub Pages (`docs/DEPLOYMENT.md`)
+- [x] Demo shell at `apps/shell` — servers, channels, chat, and a game plugin
+      mounted inside a channel (decision 019)
 
 ### In progress
 
