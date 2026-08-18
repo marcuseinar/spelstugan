@@ -41,6 +41,18 @@ body {
   height: 100%;
 }
 
+/*
+ * `dvh` tracks the viewport as browser chrome and the on-screen keyboard come
+ * and go. Plain `vh` is the classic mobile chat bug: the composer ends up
+ * underneath the keyboard.
+ */
+:root {
+  --app-height: 100dvh;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bar-height: 60px;
+  --tap: 44px;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -60,7 +72,35 @@ button {
 .app {
   display: grid;
   grid-template-columns: 68px 248px minmax(0, 1fr);
-  height: 100vh;
+  grid-template-areas: "rail sidebar main";
+  height: var(--app-height);
+}
+
+.rail {
+  grid-area: rail;
+}
+.sidebar {
+  grid-area: sidebar;
+}
+.main {
+  grid-area: main;
+}
+
+/* The small-screen server switcher; hidden until the layout calls for it. */
+.serverbar {
+  display: none;
+  grid-area: bar;
+}
+
+/* The back control belongs to the small-screen stack only. */
+.topbar__back {
+  display: none;
+  width: var(--tap);
+  height: var(--tap);
+  margin-left: -10px;
+  color: var(--text-dim);
+  place-items: center;
+  flex: 0 0 auto;
 }
 
 /* ---------- rail ---------- */
@@ -400,17 +440,6 @@ button {
   color: var(--text-faint);
 }
 
-@media (max-width: 1080px) {
-  .gamepane {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr);
-  }
-  .gamepane__chat {
-    border-left: none;
-    border-top: 1px solid var(--border);
-  }
-}
-
 /* ---------- chat ---------- */
 
 .chat {
@@ -731,4 +760,431 @@ button {
   font-size: 11.5px;
   color: var(--text-faint);
   text-align: center;
+}
+
+/* =========================================================================
+   Small screens
+   =========================================================================
+
+   The three-column shell cannot survive a phone: at 390px the rail and the
+   channel list alone consume 316px, leaving nothing for the game. So below
+   this width the shell becomes a stack — the channel list pushes to a
+   channel — and the server rail becomes a bar the thumb can reach.
+
+   Which of the two panes is showing comes from `data-screen`, set by
+   `navigation.ts`. Above this width that attribute is simply ignored.
+   ====================================================================== */
+
+@media (max-width: 860px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "main"
+      "bar";
+  }
+
+  /* The vertical rail is a desktop affordance; the bar replaces it. */
+  .rail {
+    display: none;
+  }
+
+  .sidebar,
+  .main {
+    grid-area: main;
+    min-width: 0;
+  }
+
+  /* One pane at a time: the stack shows the list, or the channel. */
+  .app[data-screen="channels"] .main {
+    display: none;
+  }
+
+  .app[data-screen="channel"] .sidebar {
+    display: none;
+  }
+
+  .sidebar {
+    border-right: none;
+  }
+
+  .app[data-can-go-back="true"] .topbar__back {
+    display: grid;
+  }
+
+  /* Room for a thumb, not a mouse pointer. */
+  .channel {
+    min-height: var(--tap);
+    padding: 8px 10px;
+  }
+
+  .channel__name {
+    font-size: 15px;
+  }
+
+  .channel__subtitle {
+    font-size: 12px;
+  }
+
+  .topbar {
+    padding: 0 14px;
+  }
+
+  .topbar__meta {
+    display: none;
+  }
+
+  .serverbar {
+    display: flex;
+    background: var(--bg-rail);
+    border-top: 1px solid var(--border);
+    padding-bottom: var(--safe-bottom);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .serverbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .serverbar__item {
+    flex: 1 0 auto;
+    min-width: 72px;
+    min-height: var(--bar-height);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 8px;
+    color: var(--text-faint);
+  }
+
+  .serverbar__badge {
+    width: 30px;
+    height: 26px;
+    border-radius: 9px;
+    background: var(--surface);
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 11px;
+  }
+
+  .serverbar__name {
+    font-size: 10.5px;
+    max-width: 72px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .serverbar__item--active {
+    color: var(--accent);
+  }
+
+  .serverbar__item--active .serverbar__badge {
+    background: var(--accent);
+    color: var(--accent-contrast);
+  }
+
+  /* ---- the game channel: board keeps the screen, chat rises over it ---- */
+
+  .gamepane {
+    display: block;
+    position: relative;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .gamepane__board {
+    padding: 10px 10px 0;
+    height: 100%;
+    overflow-y: auto;
+    display: block;
+    /* Clear the peeking sheet, with room to spare. */
+    padding-bottom: 150px;
+  }
+
+  .ludo {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: none;
+    gap: 12px;
+  }
+
+  /* Square, and as large as the narrower of the two axes allows. */
+  .ludo-board {
+    width: min(100%, calc(var(--app-height) - 320px));
+    margin: 0 auto;
+  }
+
+  .ludo__panel {
+    gap: 10px;
+  }
+
+  .seats {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .seat {
+    flex: 1 1 45%;
+    min-height: var(--tap);
+  }
+
+  .roll-button {
+    min-height: var(--tap);
+    padding: 10px 26px;
+    font-size: 15px;
+  }
+
+  .gamepane__chat {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    border-radius: 14px 14px 0 0;
+    background: var(--bg-sidebar);
+    box-shadow: 0 -8px 30px rgb(0 0 0 / 45%);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    transition: height 220ms ease;
+    z-index: 2;
+  }
+
+  .app[data-channel-kind="game"] .gamepane__chat[data-height="peek"] {
+    height: 132px;
+  }
+
+  .app[data-channel-kind="game"] .gamepane__chat[data-height="half"] {
+    height: 52%;
+  }
+
+  .app[data-channel-kind="game"] .gamepane__chat[data-height="full"] {
+    height: calc(100% - 8px);
+  }
+
+  /* Only the newest line shows while collapsed; the list is clipped away. */
+  .gamepane__chat[data-height="peek"] .chat {
+    display: none;
+  }
+
+  .gamepane__chat-title {
+    display: none;
+  }
+
+  .composer {
+    margin: 0 12px 12px;
+    min-height: var(--tap);
+  }
+
+  .composer__input {
+    /* Under 16px, iOS Safari zooms the page when the field is focused. */
+    font-size: 16px;
+  }
+
+  .composer__send {
+    width: var(--tap);
+    height: var(--tap);
+  }
+
+  .textpane .composer {
+    margin: 0 12px 12px;
+  }
+
+  .idle {
+    margin: 24px auto;
+  }
+}
+
+/* ---- the sheet handle ---- */
+
+.sheet__handle {
+  display: none;
+  padding: 8px 14px 6px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.sheet__grip {
+  display: block;
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  margin: 0 auto 8px;
+}
+
+.sheet__summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sheet__title {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.sheet__badge {
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.sheet__latest {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 860px) {
+  .sheet__handle {
+    display: block;
+  }
+
+  .gamepane__chat[data-height="peek"] .sheet__latest {
+    color: var(--text);
+  }
+
+  /* Once the sheet is open the preview line is redundant. */
+  .gamepane__chat:not([data-height="peek"]) .sheet__latest {
+    display: none;
+  }
+}
+
+/* =========================================================================
+   Landscape on a small screen
+   =========================================================================
+
+   Vertical space is the scarce thing here, so the bar that costs 60px of
+   height becomes a rail that costs width instead — the same swap Material
+   Design describes between bottom navigation and a navigation rail.
+   ====================================================================== */
+
+@media (max-width: 860px) and (orientation: landscape) {
+  .app {
+    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: "bar main";
+  }
+
+  .serverbar {
+    flex-direction: column;
+    border-top: none;
+    border-right: 1px solid var(--border);
+    padding: 8px 0 calc(8px + var(--safe-bottom));
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .serverbar__item {
+    min-width: 0;
+    width: 100%;
+    min-height: 52px;
+  }
+
+  .serverbar__name {
+    max-width: 58px;
+    font-size: 9.5px;
+  }
+
+  /*
+   * Wide and short is enough room for columns, so chat returns to a panel
+   * beside the board and the sheet goes away entirely. A sheet rising from the
+   * bottom of a 390px-tall window would bury the game it is meant to sit
+   * alongside — the sheet is a portrait answer to a portrait problem.
+   */
+  .gamepane {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 260px;
+    position: static;
+    overflow: hidden;
+  }
+
+  .gamepane__board {
+    padding: 10px 10px 12px;
+  }
+
+  /* Board and its controls side by side; stacking them clips the roll button. */
+  .ludo {
+    grid-template-columns: minmax(0, 1fr) 168px;
+    gap: 12px;
+    align-items: start;
+  }
+
+  .ludo-board {
+    width: min(100%, calc(var(--app-height) - 90px));
+  }
+
+  .seats {
+    flex-direction: column;
+  }
+
+  .seat {
+    flex: 0 0 auto;
+  }
+
+  .hotseat {
+    display: none;
+  }
+
+  .gamepane__chat {
+    position: static;
+    height: auto;
+    width: auto;
+    border-radius: 0;
+    border-top: none;
+    border-left: 1px solid var(--border);
+    box-shadow: none;
+    background: var(--bg-sidebar);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+
+  /*
+   * The handle stays for its label, but stops being a control: with no sheet
+   * to raise, a grip and a preview line would promise a gesture that does
+   * nothing.
+   */
+  .gamepane__chat .sheet__handle {
+    display: block;
+    cursor: default;
+    padding: 12px 14px 8px;
+  }
+
+  .gamepane__chat .sheet__grip,
+  .gamepane__chat .sheet__latest {
+    display: none;
+  }
+
+  .gamepane__chat[data-height] .chat {
+    display: flex;
+  }
+
+  .gamepane__chat .composer {
+    margin: 0 12px 12px;
+  }
+}
+
+/* Touch devices get no hover, so the movable cue must be permanent. */
+@media (hover: none) {
+  .token--movable {
+    stroke-width: 2;
+  }
 }

@@ -2,7 +2,11 @@
   "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
   "packageManager": "npm",
   "testRunner": "vitest",
-  "reporters": ["html", "clear-text", "progress"],
+  "reporters": [
+    "html",
+    "clear-text",
+    "progress"
+  ],
   "coverageAnalysis": "perTest",
   "mutate": [
     "packages/**/src/**/*.ts",
@@ -12,7 +16,8 @@
     "!packages/game-kit/src/ui.ts",
     "!packages/games/ludo/src/ui/board.ts",
     "apps/shell/src/workspace.ts",
-    "apps/shell/src/chat.ts"
+    "apps/shell/src/chat.ts",
+    "apps/shell/src/navigation.ts"
   ],
   "//": [
     "Rules code is where a surviving mutant means a real rule is unverified.",

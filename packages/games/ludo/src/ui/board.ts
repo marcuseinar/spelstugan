@@ -186,23 +186,36 @@ function drawTokens(shared: LudoShared, options: BoardRenderOptions): SVGGElemen
       (target) => target.seat === placement.seat && target.tokenIndex === placement.tokenIndex,
     );
 
+    const cx = (placement.cell.column + 0.5 + placement.offset.x) * CELL;
+    const cy = (placement.cell.row + 0.5 + placement.offset.y) * CELL;
+
     const token = element('circle', {
-      cx: (placement.cell.column + 0.5 + placement.offset.x) * CELL,
-      cy: (placement.cell.row + 0.5 + placement.offset.y) * CELL,
+      cx,
+      cy,
       r: CELL * 0.34,
       fill: seatColour(placement.seat),
       stroke: 'var(--token-edge)',
       'stroke-width': 0.7,
       class: isMovable ? 'token token--movable' : 'token',
     });
+    group.append(token);
 
     if (isMovable) {
-      token.addEventListener('click', () =>
+      // A drawn token is about 9px across on a phone, well under the ~44px a
+      // finger needs. An invisible disc half a cell wide takes the tap instead,
+      // which is as large as it can be without reaching the next square.
+      const target = element('circle', {
+        cx,
+        cy,
+        r: CELL * 0.5,
+        fill: 'transparent',
+        class: 'token__target',
+      });
+      target.addEventListener('click', () =>
         options.onTokenPicked({ seat: placement.seat, tokenIndex: placement.tokenIndex }),
       );
+      group.append(target);
     }
-
-    group.append(token);
   }
 
   return group;

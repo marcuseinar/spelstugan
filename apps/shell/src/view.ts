@@ -69,6 +69,8 @@ const ICONS = {
     'M4 4l16 16',
   ],
   send: ['M4 12l16-8-6 16-2.5-6.5L4 12z'],
+  back: ['M15 5l-7 7 7 7'],
+  grip: ['M7 10h10'],
   plus: ['M12 5v14', 'M5 12h14'],
   message: ['M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-4 4v-4H6a2 2 0 0 1-2-2z'],
 } as const;
@@ -208,10 +210,19 @@ export interface HeaderOptions {
   readonly channel: Channel;
   readonly serverName: string;
   readonly memberCount: number;
+  /** Returns to the channel list. Only ever visible on a small screen. */
+  readonly onBack: () => void;
 }
 
 export function renderHeader(options: HeaderOptions): HTMLElement {
   const header = element('header', 'topbar');
+
+  const back = element('button', 'topbar__back') as HTMLButtonElement;
+  back.type = 'button';
+  back.setAttribute('aria-label', 'Back to channels');
+  back.append(iconNamed('back', 20));
+  back.addEventListener('click', options.onBack);
+  header.append(back);
 
   const title = element('div', 'topbar__title');
   const glyph = element('span', 'topbar__icon');
@@ -345,4 +356,98 @@ function avatarColour(name: string): string {
     hash = (hash + name.charCodeAt(index)) % palette.length;
   }
   return palette[hash] as string;
+}
+
+export interface ServerBarOptions {
+  readonly servers: readonly Server[];
+  readonly activeServerId: string;
+  readonly onPick: (serverId: string) => void;
+}
+
+/**
+ * The server switcher for small screens.
+ *
+ * Identical content to the rail, laid out for a thumb: a bar across the bottom
+ * in portrait, and the same element restyled as a side rail in landscape,
+ * where vertical space is the scarce thing. CSS decides which; this only
+ * renders the buttons once.
+ */
+export function renderServerBar(options: ServerBarOptions): HTMLElement {
+  const bar = element('nav', 'serverbar');
+  bar.setAttribute('aria-label', 'Servers');
+
+  for (const server of options.servers) {
+    const button = element('button', 'serverbar__item') as HTMLButtonElement;
+    button.type = 'button';
+    if (server.id === options.activeServerId) {
+      button.classList.add('serverbar__item--active');
+      button.setAttribute('aria-current', 'true');
+    }
+
+    button.append(element('span', 'serverbar__badge', server.badge));
+    button.append(element('span', 'serverbar__name', server.name));
+    button.addEventListener('click', () => options.onPick(server.id));
+    bar.append(button);
+  }
+
+  return bar;
+}
+
+export interface SheetOptions {
+  /** What the handle says when the sheet is closed: the latest line. */
+  readonly summary: string;
+  readonly unreadHint: number;
+  readonly onToggle: () => void;
+  readonly onDrag: (deltaY: number) => void;
+}
+
+/**
+ * The grab handle at the top of the chat sheet.
+ *
+ * Both a tap target and a drag surface, because people reach for either. The
+ * drag reports only the distance travelled; what that means for the sheet is
+ * decided in `navigation.ts`.
+ */
+export function renderSheetHandle(options: SheetOptions): HTMLElement {
+  const handle = element('div', 'sheet__handle');
+  handle.setAttribute('role', 'button');
+  handle.setAttribute('tabindex', '0');
+  handle.setAttribute('aria-label', 'Table chat');
+
+  handle.append(element('span', 'sheet__grip'));
+
+  const row = element('div', 'sheet__summary');
+  row.append(element('span', 'sheet__title', 'Table chat'));
+  if (options.unreadHint > 0) {
+    row.append(element('span', 'sheet__badge', String(options.unreadHint)));
+  }
+  handle.append(row);
+  handle.append(element('p', 'sheet__latest', options.summary));
+
+  handle.addEventListener('click', options.onToggle);
+  handle.addEventListener('keydown', (event) => {
+    const key = (event as KeyboardEvent).key;
+    if (key === 'Enter' || key === ' ') {
+      event.preventDefault();
+      options.onToggle();
+    }
+  });
+
+  // Pointer events cover mouse, touch and pen with one path.
+  let startY: number | null = null;
+  handle.addEventListener('pointerdown', (event) => {
+    startY = (event as PointerEvent).clientY;
+  });
+  handle.addEventListener('pointerup', (event) => {
+    if (startY === null) {
+      return;
+    }
+    options.onDrag((event as PointerEvent).clientY - startY);
+    startY = null;
+  });
+  handle.addEventListener('pointercancel', () => {
+    startY = null;
+  });
+
+  return handle;
 }

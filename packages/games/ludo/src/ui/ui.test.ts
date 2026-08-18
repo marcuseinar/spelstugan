@@ -30,6 +30,11 @@ function movableTokens(container: HTMLElement): Element[] {
   return [...container.querySelectorAll('.token--movable')];
 }
 
+/** The invisible discs that take the tap, one per movable token. */
+function tapTargets(container: HTMLElement): Element[] {
+  return [...container.querySelectorAll('.token__target')];
+}
+
 describe('ludoUi — what the board shows', () => {
   it('draws a token for every token in play', () => {
     const { container } = mount(position({ tokens: [[5], [10]] }), 'p0');
@@ -134,17 +139,41 @@ describe('ludoUi — choosing a token', () => {
   it('dispatches the chosen token', () => {
     const { container, dispatch } = mount(awaitingMove, 'p0');
 
-    (movableTokens(container)[0] as SVGElement).dispatchEvent(
+    (tapTargets(container)[0] as SVGElement).dispatchEvent(
       new window.MouseEvent('click', { bubbles: true }),
     );
 
     expect(dispatch).toHaveBeenCalledWith({ type: 'move', tokenIndex: 0 });
   });
 
+  it('gives every movable token a tap target and nothing else one', () => {
+    const { container } = mount(awaitingMove, 'p0');
+
+    expect(tapTargets(container)).toHaveLength(movableTokens(container).length);
+  });
+
+  it('makes the tap target larger than the drawn token, for fingers', () => {
+    const { container } = mount(awaitingMove, 'p0');
+    const drawn = Number((movableTokens(container)[0] as SVGElement).getAttribute('r'));
+    const target = Number((tapTargets(container)[0] as SVGElement).getAttribute('r'));
+
+    expect(target).toBeGreaterThan(drawn);
+  });
+
+  it('places the tap target exactly over its token', () => {
+    const { container } = mount(awaitingMove, 'p0');
+    const token = movableTokens(container)[0] as SVGElement;
+    const target = tapTargets(container)[0] as SVGElement;
+
+    expect(target.getAttribute('cx')).toBe(token.getAttribute('cx'));
+    expect(target.getAttribute('cy')).toBe(token.getAttribute('cy'));
+  });
+
   it('marks nothing movable for the player who is not on turn', () => {
     const { container } = mount(awaitingMove, 'p1');
 
     expect(movableTokens(container)).toHaveLength(0);
+    expect(tapTargets(container)).toHaveLength(0);
   });
 
   it('marks nothing movable for a spectator', () => {

@@ -13,6 +13,15 @@ import { ludo, ludoUi } from '@spelstugan/ludo';
 import type { LudoMove, LudoSecret, LudoShared } from '@spelstugan/ludo';
 import { ChatLog, describeGameEvent, messageToSend } from './chat.js';
 import { HOT_SEAT_NOTE, LUDO_PLAYERS, YOU, onlineNow, seededChat, workspace } from './demoData.js';
+import type { MobileScreen, SheetHeight } from './navigation.js';
+import {
+  afterBack,
+  afterDragging,
+  afterPickingChannel,
+  afterPickingServer,
+  afterTappingHandle,
+  canGoBack,
+} from './navigation.js';
 import './style.css';
 import {
   element,
@@ -20,6 +29,8 @@ import {
   renderComposer,
   renderHeader,
   renderRail,
+  renderServerBar,
+  renderSheetHandle,
   renderSidebar,
 } from './view.js';
 import type { Channel, Server } from './workspace.js';
@@ -47,6 +58,9 @@ function gameFor(channelId: string): Session<LudoShared, LudoSecret, LudoMove> {
 
 let activeServerId = workspace.servers[0]?.id ?? '';
 let activeChannelId = '';
+/** Only consulted by the small-screen layout; ignored when everything fits. */
+let mobileScreen: MobileScreen = 'channel';
+let sheetHeight: SheetHeight = 'peek';
 
 function root(): HTMLElement {
   const found = document.getElementById('app');
@@ -60,11 +74,18 @@ function selectServer(serverId: string): void {
   activeServerId = serverId;
   const server = findServer(workspace, serverId);
   activeChannelId = server === undefined ? '' : (defaultChannelFor(server)?.id ?? '');
+  mobileScreen = afterPickingServer();
   render();
 }
 
 function selectChannel(channelId: string): void {
   activeChannelId = channelId;
+  mobileScreen = afterPickingChannel();
+  render();
+}
+
+function goBack(): void {
+  mobileScreen = afterBack();
   render();
 }
 
@@ -112,11 +133,31 @@ function renderGameChannel(channel: Channel): HTMLElement {
     boardHost.append(renderIdleBoard(channel));
   }
 
+  const lines = chat.linesIn(channel.id);
   const side = element('div', 'gamepane__chat');
-  side.append(element('h2', 'gamepane__chat-title', 'Table chat'));
-  const lines = renderChatLines(chat.linesIn(channel.id));
-  lines.classList.add('chat--compact');
-  side.append(lines);
+  side.dataset.height = sheetHeight;
+
+  side.append(
+    renderSheetHandle({
+      summary: latestLine(lines),
+      unreadHint: 0,
+      onToggle: () => {
+        sheetHeight = afterTappingHandle(sheetHeight);
+        render();
+      },
+      onDrag: (deltaY) => {
+        const moved = afterDragging(sheetHeight, deltaY);
+        if (moved !== sheetHeight) {
+          sheetHeight = moved;
+          render();
+        }
+      },
+    }),
+  );
+
+  const list = renderChatLines(lines);
+  list.classList.add('chat--compact');
+  side.append(list);
   side.append(
     renderComposer({
       placeholder: 'Message the table…',
@@ -126,6 +167,15 @@ function renderGameChannel(channel: Channel): HTMLElement {
   pane.append(side);
 
   return pane;
+}
+
+/** The most recent thing said or played, for the collapsed sheet. */
+function latestLine(lines: readonly { author?: string; text: string }[]): string {
+  const last = lines.at(-1);
+  if (last === undefined) {
+    return 'No messages yet';
+  }
+  return last.author === undefined ? last.text : `${last.author}: ${last.text}`;
 }
 
 /** A game channel that is not in play: finished, or waiting for players. */
@@ -168,6 +218,7 @@ function renderMain(server: Server, channel: Channel): HTMLElement {
       channel,
       serverName: server.name,
       memberCount: onlineNow.length + 1,
+      onBack: goBack,
     }),
   );
   main.append(channel.kind === 'game' ? renderGameChannel(channel) : renderTextChannel(channel));
@@ -186,6 +237,11 @@ function render(): void {
   activeChannelId = channel.id;
 
   const app = root();
+  // The layout reads these; which of them matters is a CSS decision.
+  app.dataset.screen = mobileScreen;
+  app.dataset.channelKind = channel.kind;
+  app.dataset.canGoBack = String(canGoBack(mobileScreen));
+
   app.replaceChildren(
     renderRail({
       servers: workspace.servers,
@@ -201,6 +257,11 @@ function render(): void {
       onPick: selectChannel,
     }),
     renderMain(server, channel),
+    renderServerBar({
+      servers: workspace.servers,
+      activeServerId,
+      onPick: selectServer,
+    }),
   );
 
   // Chat reads newest-last, so keep the latest in view the way a chat app does.
