@@ -1,14 +1,12 @@
 {
   "artboards": [
-    { "file": "GameChannel.dc.html", "x": 0, "y": 0, "w": 1440, "h": 900, "title": "A — Cobalt2 palette" },
-    { "file": "GameChannelCabin.dc.html", "x": 1520, "y": 0, "w": 1440, "h": 900, "title": "B — Swedish cabin palette" },
-    { "file": "Main.dc.html", "x": 0, "y": 1000, "w": 1440, "h": 900, "title": "Server shell + general chat" },
-    { "file": "Leaderboard.dc.html", "x": 1520, "y": 1000, "w": 1440, "h": 900, "title": "Solo high-score channel" },
-    { "file": "GlobalLobby.dc.html", "x": 3040, "y": 1000, "w": 1440, "h": 900, "title": "Global lobby" }
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1440, "h": 900, "title": "Server shell + general chat" },
+    { "file": "GameChannel.dc.html", "x": 1520, "y": 0, "w": 1440, "h": 900, "title": "Ludo game channel" },
+    { "file": "Leaderboard.dc.html", "x": 0, "y": 1000, "w": 1440, "h": 900, "title": "Solo high-score channel" },
+    { "file": "GlobalLobby.dc.html", "x": 1520, "y": 1000, "w": 1440, "h": 900, "title": "Global lobby" }
   ],
   "annotations": [
-    { "id": "note-directions", "x": 0, "y": -150, "w": 520, "text": "Two directions for the same screen. A is Cobalt2 — navy with the signature gold, on a dark walnut table. B leans into the name: spelstugan, a Swedish game cabin — stained pine, linen, falu red, brass lamplight.\n\nPick one and I'll carry it across the other screens." },
-    { "id": "note-rest", "x": 0, "y": 950, "w": 460, "text": "The remaining screens are still in Cobalt2 — they follow whichever direction wins." }
+    { "id": "note-palette", "x": 0, "y": -130, "w": 480, "text": "Pastel pass: the cool dark base from the first version, with the neon swapped for soft mauve, rose, peach, periwinkle and teal. Table grain cooled to a limed oak so it reads as a board game without warming the whole screen." }
   ],
   "launch": { "view": "canvas" }
 }
