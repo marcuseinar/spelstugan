@@ -1,0 +1,14 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1440, "h": 900, "title": "Server shell + general chat" },
+    { "file": "GameChannel.dc.html", "x": 1520, "y": 0, "w": 1440, "h": 900, "title": "Ludo game channel" },
+    { "file": "Leaderboard.dc.html", "x": 0, "y": 1000, "w": 1440, "h": 900, "title": "Solo high-score channel" },
+    { "file": "GlobalLobby.dc.html", "x": 1520, "y": 1000, "w": 1440, "h": 900, "title": "Global lobby" }
+  ],
+  "annotations": [
+    { "id": "note-main", "x": 0, "y": -110, "w": 420, "text": "General stays persistent across every game with this crew — the fix for BGA's disappearing chat." },
+    { "id": "note-lobby", "x": 1520, "y": -110, "w": 420, "text": "Same game, different social contract: strangers + matchmaking here vs. persistent friend channels on the left board." },
+    { "id": "note-leaderboard", "x": 0, "y": 910, "w": 420, "text": "Leaderboard is scoped to the server, but always shows your global rank too." }
+  ],
+  "launch": { "view": "canvas" }
+}
