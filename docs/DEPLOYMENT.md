@@ -21,10 +21,13 @@ hot-seat only, nothing persists, and a refresh loses the game.
 
 Two things worth knowing if it ever breaks:
 
-- **Pages is enabled by the workflow itself**, via `enablement: true` on
-  `configure-pages`. Without that the first run fails with "Get Pages site
-  failed", because Pages is off by default. If it is ever switched off by
-  hand, the next push turns it back on.
+- **Pages must be enabled once, by hand**: Settings -> Pages -> Source:
+  **GitHub Actions**. Until then the workflow fails at `configure-pages` with
+  "Get Pages site failed". Automating it with `enablement: true` does not
+  work — creating a Pages site needs repository admin, and the workflow token
+  is refused with "Resource not accessible by integration". Granting that
+  would mean storing a personal access token as a secret, which is a poor
+  trade for a setting clicked once.
 - **The site is served from `/<repo>/`, not the domain root.** The workflow
   passes `BASE_PATH` so Vite rewrites asset URLs; without it every asset 404s
   while the page itself still loads. That is the usual way a Pages deploy of a
