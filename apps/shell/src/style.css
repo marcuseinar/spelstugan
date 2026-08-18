@@ -422,22 +422,18 @@ button {
   place-items: start center;
 }
 
+/* Column rather than fixed rows: the handle is only present on small screens,
+   and rows would hand its share to whatever followed. */
 .gamepane__chat {
   border-left: 1px solid var(--border);
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
   min-height: 0;
 }
 
-.gamepane__chat-title {
-  margin: 0;
-  padding: 12px 14px 8px;
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--text-faint);
+.gamepane__chat .chat {
+  flex: 1;
+  min-height: 0;
 }
 
 /* ---------- chat ---------- */
@@ -448,6 +444,13 @@ button {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* A short log hangs from the composer rather than floating at the top. Done
+   with the first child's margin, not justify-content, which makes overflowing
+   content unreachable above the scroll box. */
+.chat > *:first-child {
+  margin-top: auto;
 }
 
 /* System lines sit tight together; spoken ones get room to breathe. */
@@ -889,25 +892,6 @@ button {
     color: var(--accent-contrast);
   }
 
-  /* ---- the game channel: board keeps the screen, chat rises over it ---- */
-
-  .gamepane {
-    display: block;
-    position: relative;
-    min-height: 0;
-    height: 100%;
-    overflow: hidden;
-  }
-
-  .gamepane__board {
-    padding: 10px 10px 0;
-    height: 100%;
-    overflow-y: auto;
-    display: block;
-    /* Clear the peeking sheet, with room to spare. */
-    padding-bottom: 150px;
-  }
-
   .ludo {
     grid-template-columns: minmax(0, 1fr);
     max-width: none;
@@ -940,42 +924,6 @@ button {
     font-size: 15px;
   }
 
-  .gamepane__chat {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-left: none;
-    border-top: 1px solid var(--border);
-    border-radius: 14px 14px 0 0;
-    background: var(--bg-sidebar);
-    box-shadow: 0 -8px 30px rgb(0 0 0 / 45%);
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    transition: height 220ms ease;
-    z-index: 2;
-  }
-
-  .app[data-channel-kind="game"] .gamepane__chat[data-height="peek"] {
-    height: 132px;
-  }
-
-  .app[data-channel-kind="game"] .gamepane__chat[data-height="half"] {
-    height: 52%;
-  }
-
-  .app[data-channel-kind="game"] .gamepane__chat[data-height="full"] {
-    height: calc(100% - 8px);
-  }
-
-  /* Only the newest line shows while collapsed; the list is clipped away. */
-  .gamepane__chat[data-height="peek"] .chat {
-    display: none;
-  }
-
-  .gamepane__chat-title {
-    display: none;
-  }
-
   .composer {
     margin: 0 12px 12px;
     min-height: var(--tap);
@@ -997,6 +945,74 @@ button {
 
   .idle {
     margin: 24px auto;
+  }
+}
+
+/* =========================================================================
+   The chat sheet — portrait only
+   =========================================================================
+
+   A sheet rising from the bottom answers a tall, narrow window: the board
+   keeps the screen and the talk comes up over it. Landscape has room for a
+   column beside the board instead, so none of this applies there.
+   ====================================================================== */
+
+@media (max-width: 860px) and (orientation: portrait) {
+  .gamepane {
+    display: block;
+    position: relative;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .gamepane__board {
+    padding: 10px 10px 0;
+    height: 100%;
+    overflow-y: auto;
+    display: block;
+    /* Clear the peeking sheet, with room to spare. */
+    padding-bottom: 150px;
+  }
+
+  .gamepane__chat {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    border-radius: 14px 14px 0 0;
+    background: var(--bg-sidebar);
+    box-shadow: 0 -8px 30px rgb(0 0 0 / 45%);
+    transition: height 260ms cubic-bezier(0.32, 0.72, 0, 1), background-color 260ms ease;
+    z-index: 2;
+  }
+
+  .app[data-channel-kind="game"] .gamepane__chat[data-height="peek"] {
+    height: 132px;
+  }
+
+  /* Two thirds of the pane: enough talk to follow, enough board to watch. */
+  .app[data-channel-kind="game"] .gamepane__chat[data-height="open"] {
+    height: 66%;
+  }
+
+  /* Raised, the sheet covers the board — so let the board show through it. */
+  .gamepane__chat[data-height="open"] {
+    background: color-mix(in srgb, var(--bg-sidebar) 80%, transparent);
+  }
+
+  @supports (backdrop-filter: blur(1px)) {
+    .gamepane__chat[data-height="open"] {
+      background: color-mix(in srgb, var(--bg-sidebar) 62%, transparent);
+      backdrop-filter: blur(16px) saturate(140%);
+    }
+  }
+
+  /* Only the newest line shows while lowered; the list is clipped away. */
+  .gamepane__chat[data-height="peek"] .chat {
+    display: none;
   }
 }
 
@@ -1064,7 +1080,7 @@ button {
   }
 
   /* Once the sheet is open the preview line is redundant. */
-  .gamepane__chat:not([data-height="peek"]) .sheet__latest {
+  .gamepane__chat[data-height="open"] .sheet__latest {
     display: none;
   }
 }
@@ -1105,17 +1121,10 @@ button {
     font-size: 9.5px;
   }
 
-  /*
-   * Wide and short is enough room for columns, so chat returns to a panel
-   * beside the board and the sheet goes away entirely. A sheet rising from the
-   * bottom of a 390px-tall window would bury the game it is meant to sit
-   * alongside — the sheet is a portrait answer to a portrait problem.
-   */
+  /* Wide and short is enough room for columns: the board and its controls
+     side by side, with the chat as a panel beside them. */
   .gamepane {
-    display: grid;
     grid-template-columns: minmax(0, 1fr) 260px;
-    position: static;
-    overflow: hidden;
   }
 
   .gamepane__board {
@@ -1145,18 +1154,6 @@ button {
     display: none;
   }
 
-  .gamepane__chat {
-    position: static;
-    height: auto;
-    width: auto;
-    border-radius: 0;
-    border-top: none;
-    border-left: 1px solid var(--border);
-    box-shadow: none;
-    background: var(--bg-sidebar);
-    grid-template-rows: auto minmax(0, 1fr) auto;
-  }
-
   /*
    * The handle stays for its label, but stops being a control: with no sheet
    * to raise, a grip and a preview line would promise a gesture that does
@@ -1171,14 +1168,6 @@ button {
   .gamepane__chat .sheet__grip,
   .gamepane__chat .sheet__latest {
     display: none;
-  }
-
-  .gamepane__chat[data-height] .chat {
-    display: flex;
-  }
-
-  .gamepane__chat .composer {
-    margin: 0 12px 12px;
   }
 }
 

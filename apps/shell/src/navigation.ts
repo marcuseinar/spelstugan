@@ -37,46 +37,37 @@ export function canGoBack(screen: MobileScreen): boolean {
 }
 
 /**
- * How much of the table chat is showing, over the board.
+ * Whether the table chat is raised over the board.
  *
- * The board keeps the screen; chat rises over it. `peek` shows the last line
- * and the composer, which is enough to follow along without losing the game.
+ * Two states rather than a ladder of them: a sheet you have to step through
+ * is a sheet you have to think about. Closed still shows the newest line and
+ * the composer, so following along costs nothing; open slides up over the
+ * board and turns translucent, so the game stays visible behind the talk.
  */
-export type SheetHeight = 'peek' | 'half' | 'full';
+export type SheetHeight = 'peek' | 'open';
 
-const LADDER: readonly SheetHeight[] = ['peek', 'half', 'full'];
-
-function step(height: SheetHeight, by: number): SheetHeight {
-  const index = LADDER.indexOf(height);
-  const next = Math.min(LADDER.length - 1, Math.max(0, index + by));
-  return LADDER[next] as SheetHeight;
+export function toggled(height: SheetHeight): SheetHeight {
+  return height === 'peek' ? 'open' : 'peek';
 }
 
-export function expanded(height: SheetHeight): SheetHeight {
-  return step(height, 1);
-}
-
-export function collapsed(height: SheetHeight): SheetHeight {
-  return step(height, -1);
-}
-
-/** Tapping the handle opens the sheet, or closes it once fully open. */
-export function afterTappingHandle(height: SheetHeight): SheetHeight {
-  return height === 'full' ? 'peek' : expanded(height);
-}
-
-/** Below this, a drag is a tap: fingers move a little even when standing still. */
+/** Below this, a gesture is a tap: fingers move a little even when standing still. */
 export const DRAG_THRESHOLD_PX = 36;
 
 /**
- * Where a drag leaves the sheet.
+ * Where a pointer gesture leaves the sheet.
  *
- * Dragging up is negative in screen coordinates, which is the opposite of
- * "more chat", so the sign is flipped here once rather than at each call site.
+ * A tap is a gesture that went nowhere, so both arrive here and the distance
+ * travelled decides which one it was. Screen coordinates grow downwards, so
+ * dragging up is negative — the sign is flipped here once rather than at every
+ * call site. A gesture always resolves to a state rather than a position,
+ * which is what keeps the sheet from stopping somewhere nobody chose.
+ *
+ * A deltaY of exactly zero never reaches the sign test, so `<` and `<=` are
+ * indistinguishable there: mutating one into the other survives, equivalently.
  */
-export function afterDragging(height: SheetHeight, deltaY: number): SheetHeight {
+export function afterGesture(height: SheetHeight, deltaY: number): SheetHeight {
   if (Math.abs(deltaY) < DRAG_THRESHOLD_PX) {
-    return height;
+    return toggled(height);
   }
-  return deltaY < 0 ? expanded(height) : collapsed(height);
+  return deltaY < 0 ? 'open' : 'peek';
 }

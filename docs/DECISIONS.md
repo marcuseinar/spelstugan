@@ -457,3 +457,55 @@ Building it also surfaced two things a mockup would have hidden:
   came first, including a game that had already finished. A test caught it
   before the code shipped; the rule is now that a finished game is never opened
   by default.
+
+---
+
+## 020 — The shell on a phone: a stack, a bottom bar, and one sheet
+
+**Status:** accepted
+
+**Context:** The shell was built three-columns-wide and did not survive a
+390px screen: the main pane collapsed to 74px and the board drew off-screen.
+The columns were the problem — a rail, a channel list and a channel cannot
+share a phone.
+
+**Decision:** On small screens the shell becomes a stack, following the
+conventions phone users already know rather than inventing gestures:
+
+- **Servers stay permanently visible** as a bottom bar in portrait, and as a
+  left rail in landscape — the swap Material Design describes between bottom
+  navigation and a navigation rail when vertical space is the scarce axis.
+- **The channel list pushes to a channel**, with a back control in the header.
+  `navigation.ts` owns that state; the layout decides *when* it applies with
+  media queries, and ignores it when everything fits.
+- **A game channel gives the screen to the board**, with the table chat as a
+  bottom sheet over it. The sheet has two states: lowered, showing the newest
+  line and the composer; and raised to two thirds of the pane, translucent and
+  blurred so the board stays visible behind the talk.
+
+The sheet is deliberately *two* states, not a ladder of stops. Three stops
+meant a player had to think about which one they wanted and step through them;
+two means one gesture, either direction, always lands somewhere they chose.
+
+A tap and a drag are the same gesture with different distances, so both arrive
+at `afterGesture(height, deltaY)`: under the threshold it is a tap and toggles,
+over it the direction decides. Nothing lands the sheet at a position nobody
+picked.
+
+**Consequences:** The sheet is a portrait answer to a portrait problem and is
+scoped to portrait alone — landscape lays the chat out as a column beside the
+board, because a sheet rising through a 390px-tall window would bury the game
+it exists to sit alongside.
+
+Touch is now a first-class target throughout: 44px minimum tap targets, a
+16px composer font (anything smaller makes iOS Safari zoom on focus),
+`dvh`-based height so browser chrome cannot cut the layout off, safe-area
+insets at the bottom, and a permanent — not hover-dependent — cue for movable
+tokens.
+
+Two bugs found by measuring rather than looking, both from media queries that
+matched more than they were written for: the chat column in landscape
+inherited the sheet's collapsed 132px height, and the game chat's fixed grid
+rows handed the composer the space of a handle that only exists on phones.
+Panes that stack a variable number of children are flex columns now, not fixed
+grids.

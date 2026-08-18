@@ -397,16 +397,19 @@ export interface SheetOptions {
   /** What the handle says when the sheet is closed: the latest line. */
   readonly summary: string;
   readonly unreadHint: number;
+  /** A pointer gesture ended, having travelled this far. A tap travels ~zero. */
+  readonly onGesture: (deltaY: number) => void;
+  /** Activated without a pointer: the keyboard, or assistive technology. */
   readonly onToggle: () => void;
-  readonly onDrag: (deltaY: number) => void;
 }
 
 /**
  * The grab handle at the top of the chat sheet.
  *
- * Both a tap target and a drag surface, because people reach for either. The
- * drag reports only the distance travelled; what that means for the sheet is
- * decided in `navigation.ts`.
+ * Both a tap target and a drag surface, because people reach for either — and
+ * they are the same gesture with different distances, so the handle reports
+ * only how far the pointer travelled. What that means for the sheet is decided
+ * in `navigation.ts`.
  */
 export function renderSheetHandle(options: SheetOptions): HTMLElement {
   const handle = element('div', 'sheet__handle');
@@ -424,7 +427,6 @@ export function renderSheetHandle(options: SheetOptions): HTMLElement {
   handle.append(row);
   handle.append(element('p', 'sheet__latest', options.summary));
 
-  handle.addEventListener('click', options.onToggle);
   handle.addEventListener('keydown', (event) => {
     const key = (event as KeyboardEvent).key;
     if (key === 'Enter' || key === ' ') {
@@ -433,16 +435,29 @@ export function renderSheetHandle(options: SheetOptions): HTMLElement {
     }
   });
 
-  // Pointer events cover mouse, touch and pen with one path.
+  // A click carries the number of clicks in its pointer sequence; zero means
+  // there was no pointer, so the activation came from assistive technology and
+  // the gesture path below never ran.
+  handle.addEventListener('click', (event) => {
+    if ((event as MouseEvent).detail === 0) {
+      options.onToggle();
+    }
+  });
+
+  // Pointer events cover mouse, touch and pen with one path. The capture keeps
+  // the gesture on the handle after the finger leaves it, which it always does:
+  // the handle is the thing being dragged away.
   let startY: number | null = null;
   handle.addEventListener('pointerdown', (event) => {
-    startY = (event as PointerEvent).clientY;
+    const pointer = event as PointerEvent;
+    startY = pointer.clientY;
+    handle.setPointerCapture(pointer.pointerId);
   });
   handle.addEventListener('pointerup', (event) => {
     if (startY === null) {
       return;
     }
-    options.onDrag((event as PointerEvent).clientY - startY);
+    options.onGesture((event as PointerEvent).clientY - startY);
     startY = null;
   });
   handle.addEventListener('pointercancel', () => {

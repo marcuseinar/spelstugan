@@ -16,11 +16,11 @@ import { HOT_SEAT_NOTE, LUDO_PLAYERS, YOU, onlineNow, seededChat, workspace } fr
 import type { MobileScreen, SheetHeight } from './navigation.js';
 import {
   afterBack,
-  afterDragging,
+  afterGesture,
   afterPickingChannel,
   afterPickingServer,
-  afterTappingHandle,
   canGoBack,
+  toggled,
 } from './navigation.js';
 import './style.css';
 import {
@@ -68,6 +68,15 @@ function root(): HTMLElement {
     throw new Error('The page is missing #app.');
   }
   return found;
+}
+
+/** Re-renders only when the sheet actually moved, so a tap-and-hold is free. */
+function moveSheet(height: SheetHeight): void {
+  if (height === sheetHeight) {
+    return;
+  }
+  sheetHeight = height;
+  render();
 }
 
 function selectServer(serverId: string): void {
@@ -141,16 +150,11 @@ function renderGameChannel(channel: Channel): HTMLElement {
     renderSheetHandle({
       summary: latestLine(lines),
       unreadHint: 0,
-      onToggle: () => {
-        sheetHeight = afterTappingHandle(sheetHeight);
-        render();
+      onGesture: (deltaY) => {
+        moveSheet(afterGesture(sheetHeight, deltaY));
       },
-      onDrag: (deltaY) => {
-        const moved = afterDragging(sheetHeight, deltaY);
-        if (moved !== sheetHeight) {
-          sheetHeight = moved;
-          render();
-        }
+      onToggle: () => {
+        moveSheet(toggled(sheetHeight));
       },
     }),
   );

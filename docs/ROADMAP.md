@@ -27,7 +27,7 @@ npm run check           # lint, typecheck, tests, coverage gate
 npm run test:mutation   # the rigour gate
 ```
 
-262 tests; mutation gate at 85%.
+282 tests; mutation gate at 85%, currently 92%.
 
 ### Done
 
@@ -49,6 +49,9 @@ npm run test:mutation   # the rigour gate
 - [x] Public demo on GitHub Pages (`docs/DEPLOYMENT.md`)
 - [x] Demo shell at `apps/shell` — servers, channels, chat, and a game plugin
       mounted inside a channel (decision 019)
+- [x] The shell on a phone — stack navigation, bottom bar in portrait and rail
+      in landscape, table chat as a two-state sheet over the board
+      (decision 020)
 
 ### In progress
 

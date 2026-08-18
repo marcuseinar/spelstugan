@@ -3,13 +3,11 @@ import {
   DRAG_THRESHOLD_PX,
   type SheetHeight,
   afterBack,
-  afterDragging,
+  afterGesture,
   afterPickingChannel,
   afterPickingServer,
-  afterTappingHandle,
   canGoBack,
-  collapsed,
-  expanded,
+  toggled,
 } from './navigation.js';
 
 describe('the small-screen stack', () => {
@@ -35,62 +33,58 @@ describe('the small-screen stack', () => {
 });
 
 describe('the chat sheet', () => {
-  it('rises one step when expanded', () => {
-    expect(expanded('peek')).toBe('half');
-    expect(expanded('half')).toBe('full');
+  it('opens when it is closed', () => {
+    expect(toggled('peek')).toBe('open');
   });
 
-  it('cannot rise past fully open', () => {
-    expect(expanded('full')).toBe('full');
+  it('closes when it is open', () => {
+    expect(toggled('open')).toBe('peek');
   });
 
-  it('falls one step when collapsed', () => {
-    expect(collapsed('full')).toBe('half');
-    expect(collapsed('half')).toBe('peek');
+  it('returns to where it started when toggled twice', () => {
+    expect(toggled(toggled('peek'))).toBe('peek');
+    expect(toggled(toggled('open'))).toBe('open');
   });
 
-  it('cannot fall below a peek, so chat never disappears entirely', () => {
-    expect(collapsed('peek')).toBe('peek');
-  });
-
-  describe('tapping the handle', () => {
-    it('opens the sheet a step at a time', () => {
-      expect(afterTappingHandle('peek')).toBe('half');
-      expect(afterTappingHandle('half')).toBe('full');
-    });
-
-    it('closes it again once fully open, so one control does both', () => {
-      expect(afterTappingHandle('full')).toBe('peek');
-    });
-  });
-
-  describe('dragging', () => {
+  describe('gestures on the handle', () => {
     // Screen coordinates grow downwards, so dragging up is negative.
     it('opens the sheet when dragged up past the threshold', () => {
-      expect(afterDragging('peek', -DRAG_THRESHOLD_PX)).toBe('half');
+      expect(afterGesture('peek', -DRAG_THRESHOLD_PX)).toBe('open');
     });
 
     it('closes the sheet when dragged down past the threshold', () => {
-      expect(afterDragging('half', DRAG_THRESHOLD_PX)).toBe('peek');
+      expect(afterGesture('open', DRAG_THRESHOLD_PX)).toBe('peek');
     });
 
-    it('ignores a drag too small to be deliberate', () => {
-      expect(afterDragging('half', -(DRAG_THRESHOLD_PX - 1))).toBe('half');
-      expect(afterDragging('half', DRAG_THRESHOLD_PX - 1)).toBe('half');
+    // Exactly at the threshold is a drag, not a tap: a drag in the direction
+    // the sheet already sits leaves it there, where a tap would toggle it.
+    it('counts a gesture of exactly the threshold as a drag', () => {
+      expect(afterGesture('open', -DRAG_THRESHOLD_PX)).toBe('open');
+      expect(afterGesture('peek', DRAG_THRESHOLD_PX)).toBe('peek');
     });
 
-    it('ignores a finger that did not move at all', () => {
-      expect(afterDragging('half', 0)).toBe('half');
+    it('leaves an open sheet open when dragged further up', () => {
+      expect(afterGesture('open', -200)).toBe('open');
     });
 
-    it('moves exactly one step however far the drag went', () => {
-      expect(afterDragging('peek', -5000)).toBe('half');
+    it('leaves a closed sheet closed when dragged further down', () => {
+      expect(afterGesture('peek', 200)).toBe('peek');
     });
 
-    it.each<SheetHeight>(['peek', 'half', 'full'])(
-      'leaves %s alone when the drag is under the threshold',
+    it('treats a gesture too small to be a drag as a tap, which toggles', () => {
+      expect(afterGesture('peek', -(DRAG_THRESHOLD_PX - 1))).toBe('open');
+      expect(afterGesture('open', DRAG_THRESHOLD_PX - 1)).toBe('peek');
+    });
+
+    it('treats a finger that did not move at all as a tap', () => {
+      expect(afterGesture('open', 0)).toBe('peek');
+      expect(afterGesture('peek', 0)).toBe('open');
+    });
+
+    it.each<SheetHeight>(['peek', 'open'])(
+      'toggles %s when the gesture is under the threshold',
       (height) => {
-        expect(afterDragging(height, 1)).toBe(height);
+        expect(afterGesture(height, 1)).toBe(toggled(height));
       },
     );
   });
