@@ -11,9 +11,11 @@ product and the games live inside it, rather than the other way round.
 shell: servers, channels, chat, and a real game of Ludo inside one of them.
 ([Just the board, on its own.](https://marcuseinar.github.io/spelstugan/playground/))
 
-**Status: the front half works.** The plugin contract, the Ludo rules, a
-clickable board and the social shell around it all run. There is no server:
-nothing persists, nobody else can join, and the game is hot seat.
+**Status: both halves exist; they are not joined yet.** The plugin contract,
+the Ludo rules, a clickable board and the social shell around it all run in the
+browser. The server — a Cloudflare Worker with a Durable Object per game table
+— seats tables, applies moves through the same reducer, and keeps the move log.
+The shell still plays its own in-memory game, so the demo is hot seat.
 
 ```bash
 npm install
@@ -21,6 +23,7 @@ npm run dev             # the shell at localhost:5174
 npm run dev:playground  # just the Ludo board, at localhost:5173
 npm run check           # lint, typecheck, tests, coverage gate
 npm run test:mutation   # the rigour gate — see CLAUDE.md
+npm run dev --workspace @spelstugan/server   # the server, on localhost:8787
 ```
 
 ## Start here
@@ -59,4 +62,5 @@ asynchronous play come out of that design rather than being built separately.
 | `packages/game-kit` | The contract every game implements: a pure reducer, seeded randomness, replay from the move log |
 | `packages/games/ludo` | Ludo — the first game: rules, board geometry, and UI |
 | `apps/shell` | The demo shell — servers, channels, chat, hosting a game plugin |
+| `apps/server` | The server — a Worker, with each game table a Durable Object |
 | `apps/playground` | A focused harness for playing Ludo on its own |

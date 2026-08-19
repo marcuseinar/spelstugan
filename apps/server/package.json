@@ -5,13 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "test:e2e": "node e2e/play.mjs"
   },
   "dependencies": {
     "@spelstugan/game-kit": "*",
     "@spelstugan/ludo": "*"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260819.1",
     "wrangler": "^4.124.0"
   }
 }

@@ -25,5 +25,15 @@
       },
       "suspicious": { "noConsoleLog": "error" }
     }
-  }
+  },
+  "overrides": [
+    {
+      "include": ["apps/server/e2e/**"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noConsoleLog": "off" }
+        }
+      }
+    }
+  ]
 }

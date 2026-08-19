@@ -13,7 +13,11 @@
     "!packages/games/ludo/src/ui/board.ts",
     "apps/shell/src/workspace.ts",
     "apps/shell/src/chat.ts",
-    "apps/shell/src/navigation.ts"
+    "apps/shell/src/navigation.ts",
+    "apps/server/src/codes.ts",
+    "apps/server/src/routes.ts",
+    "apps/server/src/requests.ts",
+    "apps/server/src/games.ts"
   ],
   "//": [
     "Rules code is where a surviving mutant means a real rule is unverified.",
@@ -26,7 +30,12 @@
     "  so the tests that would kill them could only restate the constants back.",
     "  Every DECISION the board makes lives in geometry.ts and placement.ts,",
     "  which are pure, mutated, and near 100%. Keep it that way: if drawing code",
-    "  starts deciding something, that decision belongs in a mutated module."
+    "  starts deciding something, that decision belongs in a mutated module.",
+    "",
+    "The server's Worker and Durable Object are not mutated either: they hold no",
+    "decisions, only storage and dispatch, and reaching them needs the Workers",
+    "runtime rather than a test double. They are exercised end to end instead \u2014",
+    "apps/server/e2e/play.mjs plays a full game against a running server."
   ],
   "thresholds": {
     "high": 95,

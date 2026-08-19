@@ -1,0 +1,16 @@
+name = "spelstugan"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+
+[[durable_objects.bindings]]
+name = "GAME_TABLE"
+class_name = "GameTable"
+
+# SQLite-backed, which is what the free plan offers and what an append-only
+# move log wants.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["GameTable"]
+
+[observability]
+enabled = true

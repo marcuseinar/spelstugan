@@ -14,10 +14,12 @@ Last updated: 2026-08-19
 
 ## Current state
 
-**The front half works.** The plugin contract, the Ludo rules, a clickable
-board, and the social shell around it — servers, channels, chat — all run and
-are verified in a browser. There is still no server: nothing persists, nobody
-else can join, and the game is hot seat.
+**The front half works, and the server behind it now holds a game.** The
+plugin contract, the Ludo rules, a clickable board, and the social shell
+around it — servers, channels, chat — all run and are verified in a browser. The server persists a game and plays it back:
+a full 312-move game of Ludo has been played against it through HTTP. The two
+halves are not joined yet — the shell still runs its own in-memory session,
+so nobody else can join and the demo is still hot seat.
 
 ```bash
 npm install
@@ -25,9 +27,11 @@ npm run dev             # the shell at localhost:5174
 npm run dev:playground  # just the Ludo board, at localhost:5173
 npm run check           # lint, typecheck, tests, coverage gate
 npm run test:mutation   # the rigour gate
+npm run dev --workspace @spelstugan/server        # the server, locally
+npm run test:e2e --workspace @spelstugan/server   # play a whole game against it
 ```
 
-282 tests; mutation gate at 85%, currently 92%.
+365 tests; mutation gate at 85%, currently 94%.
 
 ### Done
 
@@ -52,19 +56,22 @@ npm run test:mutation   # the rigour gate
 - [x] The shell on a phone — stack navigation, bottom bar in portrait and rail
       in landscape, table chat as a two-state sheet over the board
       (decision 020)
+- [x] Cloudflare account and API token, so deploys are git-push
+      (`docs/DEPLOYMENT.md`)
+- [x] `apps/server` — a Worker with a Durable Object per game table: seat a
+      table, play moves through the real reducer, read a view, and keep the
+      move log in the table's own SQLite (decision 021)
 
 ### In progress
 
-- [ ] Cloudflare account and API token — the one step only the owner can do;
-      steps in `docs/DEPLOYMENT.md`. Everything after it is git-push.
+- [ ] Wire the shell to the server: create a table from the UI, join by code,
+      and poll for the other side's moves. The shell still runs its own
+      in-memory session — nothing is connected yet.
 
 ### Next up (not started)
 
 - [ ] Data model + migrations for User / Server / Channel / Session / Move,
       including the reserved `kind` and `parent_channel_id` fields
-- [ ] Server on Cloudflare Workers (decision 021): a Durable Object per game
-      table, applying moves through the existing reducer and persisting the
-      move log. `docs/DEPLOYMENT.md` has the account setup it needs first
 - [ ] Guest join by room code (decision 015) — reaches a playable game
       sooner than building accounts first
 - [ ] Invite-gated accounts

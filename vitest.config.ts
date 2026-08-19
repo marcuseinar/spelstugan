@@ -5,7 +5,11 @@ export default defineConfig({
     include: ['packages/**/src/**/*.test.ts', 'apps/**/src/**/*.test.ts'],
     coverage: {
       provider: 'v8',
-      include: ['packages/**/src/**/*.ts', 'apps/shell/src/{workspace,chat,navigation}.ts'],
+      include: [
+        'packages/**/src/**/*.ts',
+        'apps/shell/src/{workspace,chat,navigation}.ts',
+        'apps/server/src/{codes,routes,requests,games}.ts',
+      ],
       exclude: [
         'packages/**/src/**/*.test.ts',
         'packages/**/src/**/index.ts',

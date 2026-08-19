@@ -9,7 +9,10 @@ import { Session } from './session.js';
 interface Tally {
   readonly total: number;
 }
-type Move = { readonly type: 'add'; readonly amount: number };
+type Move =
+  | { readonly type: 'add'; readonly amount: number }
+  /** Adds a die roll, so that a move's outcome depends on its seed. */
+  | { readonly type: 'roll' };
 
 const tally: Game<Tally, Record<string, never>, Move> = {
   id: 'tally',
@@ -19,14 +22,15 @@ const tally: Game<Tally, Record<string, never>, Move> = {
 
   setup: () => ({ shared: { total: 0 }, secret: {} }),
 
-  applyMove: (state, move, playerId) => {
-    if (move.amount <= 0) {
+  applyMove: (state, move, playerId, context) => {
+    const amount = move.type === 'roll' ? context.rng.nextInt(6) + 1 : move.amount;
+    if (amount <= 0) {
       return { accepted: false, reason: 'Amount must be positive.' };
     }
     return {
       accepted: true,
-      state: { ...state, shared: { total: state.shared.total + move.amount } },
-      events: [{ type: 'added', playerId, amount: move.amount }],
+      state: { ...state, shared: { total: state.shared.total + amount } },
+      events: [{ type: 'added', playerId, amount }],
     };
   },
 
@@ -39,6 +43,40 @@ const PLAYERS = ['alice', 'bob'];
 function session(log?: readonly LoggedMove<Move>[]) {
   return new Session({ game: tally, seed: 'seed', players: PLAYERS, ...(log && { log }) });
 }
+
+describe('Session randomness', () => {
+  // The seed for a move is derived from its position in the log, so a session
+  // and a replay of that session's log agree only if both number the moves the
+  // same way. Nothing else checks that they do.
+  it('reaches the state a replay of its own log reaches', () => {
+    const game = session();
+    game.attempt({ type: 'roll' }, 'alice');
+    game.attempt({ type: 'roll' }, 'bob');
+    game.attempt({ type: 'roll' }, 'alice');
+
+    const replayed = replay(tally, 'seed', PLAYERS, game.history());
+
+    expect(replayed.state.shared.total).toBe(game.viewFor(null).shared.total);
+  });
+
+  it('gives a move a different result at a different position in the log', () => {
+    const first = session();
+    first.attempt({ type: 'roll' }, 'alice');
+
+    const totals = new Set<number>();
+    for (let position = 0; position < 12; position += 1) {
+      const game = session();
+      for (let filler = 0; filler <= position; filler += 1) {
+        game.attempt({ type: 'roll' }, 'alice');
+      }
+      totals.add(game.viewFor(null).shared.total);
+    }
+
+    // Twelve consecutive rolls that all landed on the same face would mean the
+    // seed is not moving with the log.
+    expect(totals.size).toBeGreaterThan(1);
+  });
+});
 
 describe('Session resumed from a stored log', () => {
   const played: readonly LoggedMove<Move>[] = [

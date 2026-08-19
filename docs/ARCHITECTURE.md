@@ -121,6 +121,31 @@ Note that the persistent-chat-with-the-same-people problem is solved by the
 server's general channel, not by the game channel. A game table's chat is
 play-by-play for that one game; the relationship lives in the server.
 
+## The server *(partly built)*
+
+`apps/server` is a Cloudflare Worker; each game table is a Durable Object
+(decision 021). The Worker owns HTTP — routing, validation, status codes — and
+a table owns the game: it holds the move log in its own SQLite storage and
+answers in outcomes, not status codes.
+
+```
+POST /api/tables            {game, players}        -> 201 {code, game, players}
+GET  /api/tables/:code      ?viewer=<name>         -> 200 {table}
+POST /api/tables/:code/moves {player, move}        -> 200 {events, table} | 409 {error}
+GET  /api/games                                    -> 200 {games}
+```
+
+A table is named by its room code, and `idFromName(code)` is the whole lookup —
+there is no table index to keep consistent. State is never stored: every
+request folds the stored log through the rules with `Session`, which is the
+same mechanism as replay (see above) rather than a second path that could
+disagree with it.
+
+What is built: seating a table, playing moves, reading a view, and durability
+of the log. What is not: accounts, guest tokens, chat, and any notion of who
+is allowed to claim a seat — right now naming a seated player is enough to
+move for them, which is fine for a hot-seat demo and not fine for strangers.
+
 ## Realtime *(not built)*
 
 Not in the first slice. The MVP can be turn-based with refresh-to-see-state.
@@ -129,6 +154,11 @@ Realtime transport (websocket/SSE push) becomes mandatory as soon as
 second-screen play arrives — a board on a TV updating as players act on their
 phones cannot be poll-based by definition. Don't build it before then; don't
 pretend it can be avoided after.
+
+The shape it will take is already decided by where tables live: a Durable
+Object can hold the WebSocket connections of everyone at its table, so pushing
+a move to the other players is a broadcast from the object that just applied
+it. No separate service, no shared bus.
 
 ## The UI boundary *(built)*
 
