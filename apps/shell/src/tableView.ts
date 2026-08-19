@@ -1,9 +1,13 @@
 /**
- * Drawing an online table.
+ * Drawing a table.
  *
  * Rendering only, in the same split as the rest of the shell (decision 018):
  * what the lobby says, whether it can start, and when to ask the server again
  * are decided in `table.ts`.
+ *
+ * A screen that can change under a player returns a `LivePart`: the element,
+ * and a way to bring it up to date without rebuilding it. Rebuilding is what
+ * takes the keyboard away mid-sentence (decision 027).
  */
 
 import type { TableSnapshot } from './api.js';
@@ -30,8 +34,19 @@ export interface LobbyOptions {
 
 const SEAT_CHOICES = [2, 3, 4] as const;
 
-/** The first screen: name yourself, say how many are playing. */
-export function renderOpening(options: OpeningOptions): HTMLElement {
+/** A piece of the page that can be refreshed in place rather than replaced. */
+export interface LivePart {
+  readonly element: HTMLElement;
+  readonly refresh: (table: TableSnapshot) => void;
+}
+
+/**
+ * The first screen: name yourself, say how many are playing.
+ *
+ * Live, with nothing to update: a half-typed name is state too, and the poll
+ * behind it must not take it away (decision 027).
+ */
+export function renderOpening(options: OpeningOptions): LivePart {
   const pane = element('section', 'tablepane');
   const form = element('form', 'tableform');
   form.append(element('h3', 'tableform__title', 'Start a game of Ludo'));
@@ -67,11 +82,16 @@ export function renderOpening(options: OpeningOptions): HTMLElement {
   });
 
   pane.append(form);
-  return pane;
+  return { element: pane, refresh: () => {} };
 }
 
-/** The screen someone lands on from a shared link. */
-export function renderJoining(options: JoiningOptions): HTMLElement {
+/**
+ * The screen someone lands on from a shared link.
+ *
+ * Polls keep running behind it while the lobby fills, so like the opening
+ * form it is kept rather than redrawn.
+ */
+export function renderJoining(options: JoiningOptions): LivePart {
   const pane = element('section', 'tablepane');
   const form = element('form', 'tableform');
   form.append(element('h3', 'tableform__title', 'Take a seat'));
@@ -89,11 +109,11 @@ export function renderJoining(options: JoiningOptions): HTMLElement {
   });
 
   pane.append(form);
-  return pane;
+  return { element: pane, refresh: () => {} };
 }
 
 /** Waiting for the others: the code, who has arrived, and the empty chairs. */
-export function renderLobby(options: LobbyOptions): HTMLElement {
+export function renderLobby(options: LobbyOptions): LivePart {
   const { table } = options;
   const pane = element('section', 'tablepane');
   const body = element('div', 'lobby');
@@ -107,8 +127,11 @@ export function renderLobby(options: LobbyOptions): HTMLElement {
   copy.addEventListener('click', () => options.onCopy(link));
   body.append(copy);
 
-  body.append(renderSeats(table, options.you));
-  body.append(element('p', 'lobby__status', lobbyStatus(table)));
+  const seats = renderSeats(table, options.you);
+  body.append(seats);
+
+  const status = element('p', 'lobby__status', lobbyStatus(table));
+  body.append(status);
 
   const start = element('button', 'lobby__start', 'Start the game') as HTMLButtonElement;
   start.type = 'button';
@@ -117,20 +140,20 @@ export function renderLobby(options: LobbyOptions): HTMLElement {
   body.append(start);
 
   // Waiting for someone is exactly when there is something to say.
-  body.append(renderTableChat(table, options.onSay));
+  const talk = renderTableChat(table, options.onSay);
+  body.append(talk.element);
 
   pane.append(body);
-  return pane;
-}
 
-/** The table's conversation: what was said, and a way to say something. */
-export function renderTableChat(table: TableSnapshot, onSay: (text: string) => void): HTMLElement {
-  const chat = element('div', 'tablechat');
-  const lines = renderChatLines(chatLinesOf(table));
-  lines.classList.add('chat--compact');
-  chat.append(lines);
-  chat.append(renderComposer({ placeholder: 'Message the table…', onSend: onSay }));
-  return chat;
+  return {
+    element: pane,
+    refresh: (next) => {
+      seats.replaceChildren(...renderSeats(next, options.you).childNodes);
+      status.textContent = lobbyStatus(next);
+      start.disabled = !readyToStart(next);
+      talk.refresh(next);
+    },
+  };
 }
 
 function renderSeats(table: TableSnapshot, you: string): HTMLElement {
@@ -169,4 +192,37 @@ function submit(label: string): HTMLButtonElement {
 /** Whatever the table has to say right now: a refusal, or a note. */
 export function renderNotice(message: string): HTMLElement {
   return element('p', 'tablepane__notice', message);
+}
+
+/**
+ * The table's conversation: what was said, and a way to say something.
+ *
+ * The composer is built once and never replaced. Everything else about a
+ * table can change while someone is typing into it, and taking the field away
+ * takes the keyboard with it (decision 027).
+ */
+export function renderTableChat(table: TableSnapshot, onSay: (text: string) => void): LivePart {
+  const chat = element('div', 'tablechat');
+  const lines = renderChatLines(chatLinesOf(table));
+  lines.classList.add('chat--compact');
+  chat.append(lines);
+  chat.append(renderComposer({ placeholder: 'Message the table…', onSend: onSay }));
+
+  return {
+    element: chat,
+    refresh: (next) => {
+      const wasAtBottom = atBottom(lines);
+      lines.replaceChildren(...renderChatLines(chatLinesOf(next)).childNodes);
+      // Follow the conversation only for someone already at the end of it:
+      // yanking a reader back down mid-scroll is its own kind of rude.
+      if (wasAtBottom) {
+        lines.scrollTop = lines.scrollHeight;
+      }
+    },
+  };
+}
+
+/** Within a line's height of the end counts as reading the newest. */
+function atBottom(list: HTMLElement): boolean {
+  return list.scrollHeight - list.clientHeight - list.scrollTop < 40;
 }

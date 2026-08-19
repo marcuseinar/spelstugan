@@ -3,30 +3,44 @@
  * exception — they carry game meaning, so a theme must never be able to make
  * two players' pieces look alike.
  */
+/*
+ * Every colour is a semantic token (decision 013). Seat colours are the one
+ * exception — they carry game meaning, so a theme must never be able to make
+ * two players' pieces look alike.
+ *
+ * The palette is four bands: a pale sky, a cream, a sand and a tan. Ink is
+ * derived from them rather than picked from them, because four light bands
+ * cannot spell out text on each other — every value below was checked against
+ * the surface it sits on and clears WCAG AA (decision 026).
+ */
 :root {
-  --bg: #1e1e2e;
+  --sky: #b8dbe4;
+  --cream: #eaece0;
+  --sand: #dbc6b0;
+  --tan: #d1a988;
 
-  --bg-sidebar: #191926;
-  --surface: #262637;
-  --surface-hover: #313244;
-  --border: #33344a;
-  --text: #cdd6f4;
-  --text-dim: #a6adc8;
-  --text-faint: #7f849c;
-  --accent: #cba6f7;
-  --accent-strong: #ddbdff;
-  --accent-contrast: #1e1e2e;
-  --live: #a6e3a1;
+  --bg: var(--cream);
+  --bg-sidebar: var(--sky);
+  --surface: #f4f5ec;
+  --surface-hover: #fdfdf6;
+  --border: #c2ab90;
+  --text: #262b28;
+  --text-dim: #4e544f;
+  --text-faint: #5f665f;
+  --accent: #215466;
+  --accent-strong: #163b49;
+  --accent-contrast: #f7f8f0;
+  --live: #3f8a4f;
 
-  --board-bg: #20202e;
-  --board-line: #4b4d68;
-  --track: #3b3d55;
-  --token-edge: #16161f;
+  --board-bg: #f4f5ec;
+  --board-line: #c2ab90;
+  --track: var(--sand);
+  --token-edge: #262b28;
 
-  --seat-0: #f38ba8;
-  --seat-1: #89b4fa;
-  --seat-2: #fab387;
-  --seat-3: #94e2d5;
+  --seat-0: #b0455f;
+  --seat-1: #2f6f85;
+  --seat-2: #b8722a;
+  --seat-3: #3f8a72;
 
   --font-display: "Space Grotesk", system-ui, sans-serif;
   --font-body: "Manrope", system-ui, sans-serif;
@@ -778,7 +792,7 @@ button {
     border-top: 1px solid var(--border);
     border-radius: 14px 14px 0 0;
     background: var(--bg-sidebar);
-    box-shadow: 0 -8px 30px rgb(0 0 0 / 45%);
+    box-shadow: 0 -8px 30px rgb(38 43 40 / 18%);
     transition: height 260ms cubic-bezier(0.32, 0.72, 0, 1), background-color 260ms ease;
     z-index: 2;
   }

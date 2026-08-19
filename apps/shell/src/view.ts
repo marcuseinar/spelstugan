@@ -158,7 +158,13 @@ function renderNewTableRow(onNew: () => void, active: boolean): HTMLElement {
 
 export interface HeaderOptions {
   readonly title: string;
-  readonly subtitle: string;
+  /**
+   * The line under the title, owned by the caller.
+   *
+   * Passed in rather than built here so it can be kept up to date without
+   * rebuilding the bar around it (decision 027).
+   */
+  readonly meta: HTMLElement;
   readonly onBack: () => void;
 }
 
@@ -177,7 +183,7 @@ export function renderHeader(options: HeaderOptions): HTMLElement {
   glyph.append(iconNamed('dice', 18));
   title.append(glyph);
   title.append(element('span', 'topbar__name', options.title));
-  title.append(element('span', 'topbar__meta', options.subtitle));
+  title.append(options.meta);
   header.append(title);
 
   const actions = element('div', 'topbar__actions');
@@ -299,8 +305,11 @@ function avatarColour(name: string): string {
 }
 
 export interface SheetOptions {
-  /** What the handle says when the sheet is closed: the latest line. */
-  readonly summary: string;
+  /**
+   * What the handle says when the sheet is closed: the latest line, owned by
+   * the caller so it can change without the handle being rebuilt.
+   */
+  readonly summary: HTMLElement;
   readonly unreadHint: number;
   /** A pointer gesture ended, having travelled this far. A tap travels ~zero. */
   readonly onGesture: (deltaY: number) => void;
@@ -330,7 +339,7 @@ export function renderSheetHandle(options: SheetOptions): HTMLElement {
     row.append(element('span', 'sheet__badge', String(options.unreadHint)));
   }
   handle.append(row);
-  handle.append(element('p', 'sheet__latest', options.summary));
+  handle.append(options.summary);
 
   handle.addEventListener('keydown', (event) => {
     const key = (event as KeyboardEvent).key;

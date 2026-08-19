@@ -698,3 +698,71 @@ The list of tables is **local to a browser**, not an account, and says so on
 screen. It is a convenience, not an identity, and it disappears when the
 storage does — which is the honest shape of a product with no accounts
 (decision 022).
+
+
+---
+
+## 026 — A light palette, with ink derived rather than picked
+
+**Status:** accepted, still provisional (supersedes the palette in 012)
+
+**Context:** The owner supplied four bands to work from: a pale sky
+`#b8dbe4`, a cream `#eaece0`, a sand `#dbc6b0` and a tan `#d1a988`. The app
+was dark; this is not.
+
+**Decision:** The four bands carry the surfaces — cream for the main pane,
+sky for the sidebar, sand for the board's track, tan in the board's home
+columns — and **every ink colour is derived from them rather than taken from
+them**. Four light bands cannot spell out text on each other; text, borders
+and the accent are darkened until they can.
+
+Nothing was chosen by eye. Each value was checked against every surface it
+can appear on and clears WCAG AA — 4.5:1 for text, 3:1 for the faint and the
+edges. The worst case is sand, so the tokens are tuned against sand and are
+comfortable everywhere else. The accent is a deep blue drawn out of the sky
+band, so the one strong colour on screen still belongs to the palette.
+
+**Consequences:** Seat colours changed too — pastels that read on a dark board
+disappear on a cream one. They are deeper now and still four clearly separate
+hues, each at least 3:1 against the board. They remain the one exception to
+theming (decision 013): a theme may never make two players' pieces look alike.
+
+Decision 013 stands: this is still provisional and user-chosen palettes are
+still the plan. That every colour goes through a semantic token is what made
+this swap a change to one block rather than a change to the whole stylesheet
+— which is the argument for the rule, now demonstrated.
+
+---
+
+## 027 — The page is kept up to date, not rebuilt
+
+**Status:** accepted
+
+**Context:** The shell redrew everything on every change, and a table polls
+every one to three seconds. On a phone that meant the keyboard vanished
+mid-word, half-typed names disappeared, and scrolling back through the chat
+was yanked to the bottom by the next poll. Three reports, one cause: the
+input a player was using did not survive the redraw, because nothing did.
+
+**Decision:** A screen that can change under a player is drawn once and
+**refreshed in place**. Each such screen returns its element together with a
+`refresh(table)`, and the shell compares a *shape* — which table, which phase,
+whether the viewer is seated — to decide between refreshing and redrawing.
+Composers, name fields and scroll positions are never rebuilt for a change
+that did not need them rebuilt.
+
+The board is refreshed through the plugin contract's own `update(view)`, which
+existed for exactly this and which the shell had been ignoring in favour of
+mounting a fresh copy each time.
+
+**Consequences:** Chat follows the conversation only for a reader already at
+the end of it; scrolled up, they are left where they are.
+
+The app's height now follows `visualViewport` rather than `dvh` alone. `dvh`
+tracks the address bar but knows nothing about the keyboard, which is what put
+the composer underneath it.
+
+Rendering is now two paths where it was one, and the shape string is what
+keeps them honest — get it wrong and a stale screen persists. Its one job is
+to name everything a redraw would change, so anything added to a screen must
+be either refreshable or in the shape.

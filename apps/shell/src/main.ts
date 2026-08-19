@@ -10,8 +10,9 @@
  * else. This file knows how to reach a table; it knows nothing about Ludo.
  */
 
+import type { MountedGameUi } from '@spelstugan/game-kit';
 import { ludoUi } from '@spelstugan/ludo';
-import type { LudoMove, LudoShared } from '@spelstugan/ludo';
+import type { LudoMove, LudoSecret, LudoShared } from '@spelstugan/ludo';
 import { Tables } from './api.js';
 import type { TableSnapshot } from './api.js';
 import { messageToSend } from './chat.js';
@@ -20,7 +21,6 @@ import type { MobileScreen, SheetHeight } from './navigation.js';
 import { STORAGE_KEY, forgetting, nameAt, remembering, tablesIn } from './remembered.js';
 import type { RememberedTable } from './remembered.js';
 import {
-  chatLinesOf,
   codeInvitedTo,
   latestLineOf,
   millisecondsUntilNextPoll,
@@ -28,15 +28,15 @@ import {
   worthPolling,
 } from './table.js';
 import './style.css';
-import { renderJoining, renderLobby, renderNotice, renderOpening } from './tableView.js';
 import {
-  element,
-  renderChatLines,
-  renderComposer,
-  renderHeader,
-  renderSheetHandle,
-  renderSidebar,
-} from './view.js';
+  renderJoining,
+  renderLobby,
+  renderNotice,
+  renderOpening,
+  renderTableChat,
+} from './tableView.js';
+import type { LivePart } from './tableView.js';
+import { element, renderHeader, renderSheetHandle, renderSidebar } from './view.js';
 
 /**
  * Where the server lives.
@@ -53,6 +53,16 @@ let name = code === null ? '' : (nameAt(remembered, code) ?? '');
 let table: TableSnapshot | null = null;
 let notice = '';
 let pollTimer: number | undefined;
+
+/**
+ * The part of the page that changes under the player, and how to update it.
+ *
+ * Rebuilding the page on every poll is what takes the keyboard away in the
+ * middle of a sentence (decision 027), so a table is drawn once and then kept
+ * up to date in place. `shape` says what was drawn: when that changes — a
+ * different table, a lobby that has started — the pane is built again.
+ */
+let live: (LivePart & { readonly shape: string }) | null = null;
 
 /** Only consulted by the small-screen layout; ignored when everything fits. */
 let mobileScreen: MobileScreen = code === null ? 'channels' : 'channel';
@@ -140,14 +150,20 @@ function rememberCodeInUrl(shown: string | null): void {
 
 function accept(answer: { ok: boolean; value?: TableSnapshot; reason?: string }): void {
   if (answer.ok && answer.value !== undefined) {
-    table = answer.value;
     code = answer.value.code;
-    notice = '';
     rememberCodeInUrl(answer.value.code);
+    const hadNotice = notice !== '';
+    notice = '';
+    if (hadNotice) {
+      table = answer.value;
+      render();
+    } else {
+      showTable(answer.value);
+    }
   } else {
     notice = answer.reason ?? 'Something went wrong.';
+    render();
   }
-  render();
   schedulePoll();
 }
 
@@ -236,8 +252,7 @@ async function refreshTable(): Promise<void> {
   }
   const seen = await tables.read(code, name === '' ? null : name);
   if (seen.ok) {
-    table = seen.value;
-    render();
+    showTable(seen.value);
   } else if (seen.reason.includes('No table')) {
     // The table is gone — an old code in storage, or a server that has been
     // reset. Say so once and stop asking, rather than blinking an error.
@@ -253,8 +268,19 @@ async function refreshTable(): Promise<void> {
 
 function renderMain(): HTMLElement {
   const main = element('main', 'main');
-  main.append(renderHeader({ title: headerTitle(), subtitle: headerSubtitle(), onBack: goBack }));
-  main.append(renderTablePane());
+  const subtitle = element('span', 'topbar__meta', headerSubtitle());
+  main.append(renderHeader({ title: headerTitle(), meta: subtitle, onBack: goBack }));
+
+  const pane = renderTablePane();
+  main.append(pane.element);
+  live = {
+    shape: paneShape(),
+    element: pane.element,
+    refresh: (next) => {
+      subtitle.textContent = headerSubtitle();
+      pane.refresh(next);
+    },
+  };
 
   if (notice !== '') {
     main.append(renderNotice(notice));
@@ -274,7 +300,19 @@ function headerSubtitle(): string {
   return table.phase === 'lobby' ? seated : `Playing · ${table.players.join(', ')}`;
 }
 
-function renderTablePane(): HTMLElement {
+/**
+ * What the pane is showing, as one string.
+ *
+ * Two snapshots with the same shape can be shown by the same DOM; a different
+ * shape needs a different pane. Comparing this is what decides between
+ * refreshing in place and building again.
+ */
+function paneShape(): string {
+  const seated = table?.players.includes(name) === true;
+  return `${code ?? ''}|${table?.phase ?? 'none'}|${seated}|${sheetHeight}`;
+}
+
+function renderTablePane(): LivePart {
   const seatedHere = table?.players.includes(name);
 
   if (table === null || seatedHere !== true) {
@@ -295,21 +333,25 @@ function renderTablePane(): HTMLElement {
   return renderGame(table);
 }
 
-function renderGame(playing: TableSnapshot): HTMLElement {
+function renderGame(playing: TableSnapshot): LivePart {
   const pane = element('div', 'gamepane');
 
   const boardHost = element('div', 'gamepane__board');
-  const view = playing.view as { shared: LudoShared } | null;
-  if (view !== null) {
-    ludoUi.mount(boardHost, { view, viewerId: name, dispatch: playMove });
-  }
   pane.append(boardHost);
+
+  const view = playing.view as { shared: LudoShared } | null;
+  let board: MountedGameUi<LudoShared, LudoSecret> | null = null;
+  if (view !== null) {
+    board = ludoUi.mount(boardHost, { view, viewerId: name, dispatch: playMove });
+  }
 
   const side = element('div', 'gamepane__chat');
   side.dataset.height = sheetHeight;
+
+  const summary = element('p', 'sheet__latest', latestLineOf(playing));
   side.append(
     renderSheetHandle({
-      summary: latestLineOf(playing),
+      summary,
       unreadHint: 0,
       onGesture: (deltaY) => {
         moveSheet(afterGesture(sheetHeight, deltaY));
@@ -319,11 +361,39 @@ function renderGame(playing: TableSnapshot): HTMLElement {
       },
     }),
   );
-  side.append(renderChatLines(chatLinesOf(playing)));
-  side.append(renderComposer({ placeholder: 'Message the table…', onSend: say }));
+
+  const talk = renderTableChat(playing, say);
+  // The sheet holds the chat directly rather than in a box of its own.
+  side.append(...talk.element.children);
   pane.append(side);
 
-  return pane;
+  return {
+    element: pane,
+    refresh: (next) => {
+      const board_view = next.view as { shared: LudoShared } | null;
+      if (board !== null && board_view !== null) {
+        board.update(board_view);
+      }
+      summary.textContent = latestLineOf(next);
+      talk.refresh(next);
+    },
+  };
+}
+
+/**
+ * Takes a new snapshot without rebuilding what is already on screen.
+ *
+ * The composer, the board and the player's place in the conversation all
+ * survive a refresh; only a change of shape justifies drawing again.
+ */
+function showTable(next: TableSnapshot): void {
+  const before = paneShape();
+  table = next;
+  if (live !== null && paneShape() === before && before === live.shape) {
+    live.refresh(next);
+    return;
+  }
+  render();
 }
 
 function render(): void {
@@ -333,6 +403,7 @@ function render(): void {
   app.dataset.pane = table?.phase === 'playing' ? 'game' : 'form';
   app.dataset.canGoBack = String(canGoBack(mobileScreen));
 
+  live = null;
   app.replaceChildren(
     renderSidebar({
       tables: remembered,
@@ -343,12 +414,32 @@ function render(): void {
     renderMain(),
   );
 
-  // Chat reads newest-last, so keep the latest in view the way a chat app does.
+  // Chat reads newest-last, so start at the bottom the way a chat app does.
   for (const list of app.querySelectorAll('.chat')) {
     list.scrollTop = list.scrollHeight;
   }
 }
 
+/**
+ * Keeps the app the size of what the browser is actually showing.
+ *
+ * `dvh` tracks the address bar but not the keyboard, so on a phone the
+ * composer ends up underneath it. The visual viewport knows about both.
+ */
+function trackViewport(): void {
+  const viewport = window.visualViewport;
+  if (viewport === null || viewport === undefined) {
+    return;
+  }
+  const follow = () => {
+    document.documentElement.style.setProperty('--app-height', `${viewport.height}px`);
+  };
+  viewport.addEventListener('resize', follow);
+  viewport.addEventListener('scroll', follow);
+  follow();
+}
+
+trackViewport();
 render();
 if (code !== null) {
   void refreshTable();

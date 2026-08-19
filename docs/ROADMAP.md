@@ -7,10 +7,11 @@ Update it in the same commit as the work it describes.
 
 Last updated: 2026-08-19
 
-> Visual direction is provisional (decision 012). One rule follows from it and
-> applies to all UI work starting now: **no literal colors in components** —
-> every color goes through a semantic token, because user-selectable themes
-> (decision 013) are planned.
+> Visual direction is provisional (decisions 012 and 026 — currently a light
+> palette: sky, cream, sand, tan). One rule follows from it and applies to all
+> UI work: **no literal colors in components** — every color goes through a
+> semantic token, because user-selectable themes (decision 013) are planned.
+> Swapping the whole theme touched one block, which is that rule paying off.
 
 ## Current state
 
