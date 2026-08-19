@@ -15,6 +15,7 @@
 
 import { DurableObject } from 'cloudflare:workers';
 import { Session } from '@spelstugan/game-kit';
+import type { Env } from './env.js';
 import { gameNamed, seatingProblem } from './games.js';
 import type { Json } from './json.js';
 import { asJson } from './json.js';
@@ -43,6 +44,8 @@ export type TableCommand =
   | { readonly kind: 'join'; readonly code: string; readonly name: string }
   | { readonly kind: 'start'; readonly code: string }
   | { readonly kind: 'read'; readonly code: string; readonly viewer: string | null }
+  /** Which build this table is running, which can lag the Worker's. */
+  | { readonly kind: 'version' }
   | {
       readonly kind: 'say';
       readonly code: string;
@@ -57,6 +60,7 @@ export type TableCommand =
     };
 
 export type TableAnswer =
+  | { readonly outcome: 'version'; readonly build: string }
   | { readonly outcome: 'code-taken' }
   | { readonly outcome: 'no-table' }
   | { readonly outcome: 'table'; readonly table: TableSummary }
@@ -67,7 +71,7 @@ export type TableAnswer =
       readonly table: TableSummary;
     };
 
-export class GameTable extends DurableObject {
+export class GameTable extends DurableObject<Env> {
   private readonly store = new TableStore(this.ctx.storage.sql);
 
   override async fetch(request: Request): Promise<Response> {
@@ -87,6 +91,8 @@ export class GameTable extends DurableObject {
         return this.start(command.code);
       case 'read':
         return this.read(command.code, command.viewer);
+      case 'version':
+        return { outcome: 'version', build: this.env.BUILD ?? 'unknown' };
       case 'say':
         return this.say(command.code, command.author, command.text);
       case 'play':

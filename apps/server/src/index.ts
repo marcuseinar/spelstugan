@@ -9,6 +9,7 @@
 
 import { createRng } from '@spelstugan/game-kit';
 import { createCode } from './codes.js';
+import type { Env } from './env.js';
 import { gameIds, gameNamed, seatingProblem } from './games.js';
 import { asJson } from './json.js';
 import {
@@ -18,22 +19,10 @@ import {
   parseTableRequest,
 } from './requests.js';
 import { routeFor } from './routes.js';
-import type { GameTable, TableAnswer, TableCommand } from './table.js';
+import type { TableAnswer, TableCommand } from './table.js';
 
 export { GameTable } from './table.js';
-
-export interface Env {
-  readonly GAME_TABLE: DurableObjectNamespace<GameTable>;
-  /**
-   * Which commit is running, set at deploy time.
-   *
-   * A deploy does not become live everywhere at once, and a test that starts
-   * the moment `wrangler deploy` returns can be answered by the version it
-   * replaced. Saying which build is speaking is what lets a caller wait for
-   * the one it meant to test.
-   */
-  readonly BUILD?: string;
-}
+export type { Env } from './env.js';
 
 /**
  * Open to any origin for now.
@@ -61,7 +50,7 @@ export default {
 
     switch (route.kind) {
       case 'health':
-        return json({ service: 'spelstugan', status: 'ok', build: env.BUILD ?? 'unknown' });
+        return await health(env);
       case 'games':
         return json({ games: gameIds() });
       case 'openTable':
@@ -81,6 +70,24 @@ export default {
     }
   },
 };
+
+/**
+ * What is running, in front and behind.
+ *
+ * A table is asked as well as the Worker, under a name nobody has used, so the
+ * answer comes from an object started just now. A Durable Object keeps running
+ * the script it started with, so the Worker can be new while tables are not —
+ * which is a deploy half-live, and worth waiting out rather than testing.
+ */
+async function health(env: Env): Promise<Response> {
+  const fresh = await ask(env, crypto.randomUUID(), { kind: 'version' });
+  return json({
+    service: 'spelstugan',
+    status: 'ok',
+    build: env.BUILD ?? 'unknown',
+    tableBuild: fresh.outcome === 'version' ? fresh.build : 'unknown',
+  });
+}
 
 /** How many codes to try before admitting the room is not the problem. */
 const CODE_ATTEMPTS = 5;

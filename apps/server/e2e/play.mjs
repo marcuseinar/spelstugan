@@ -67,7 +67,9 @@ async function waitForBuild(expected) {
   }
   for (let attempt = 0; attempt < 30; attempt += 1) {
     const health = await call('/');
-    if (health.body?.build === expected) {
+    // Both, because a table can still be running the version the Worker in
+    // front of it has already replaced.
+    if (health.body?.build === expected && health.body?.tableBuild === expected) {
       check(`the deployed build is the one under test (${expected.slice(0, 7)})`, true);
       return;
     }
