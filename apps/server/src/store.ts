@@ -76,15 +76,23 @@ export class TableStore {
     );
   }
 
-  /** The version this storage was last written with, or 0 for empty storage. */
+  /**
+   * The version this storage was last written with, or 0 for empty storage.
+   *
+   * Asked of the catalogue rather than of the table itself: a failed statement
+   * is not a question, and inside a Durable Object it is not something to
+   * provoke on purpose either.
+   */
   private storedVersion(): number {
-    try {
-      return Number(this.first('SELECT version FROM schema_version WHERE only_row = 1')?.version);
-    } catch {
-      // No schema_version table at all: either brand new storage, or storage
-      // from before versioning existed. Both want the same fresh start.
+    const versioned = this.first(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'schema_version'",
+    );
+    if (versioned === undefined) {
+      // Brand new storage, or storage written before versioning existed. Both
+      // want the same fresh start.
       return 0;
     }
+    return Number(this.first('SELECT version FROM schema_version WHERE only_row = 1')?.version);
   }
 
   open(record: TableRecord): void {

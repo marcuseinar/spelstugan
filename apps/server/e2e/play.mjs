@@ -28,18 +28,31 @@ const post = (path, payload) =>
   });
 
 const checks = [];
-const check = (name, passed, detail) => checks.push({ name, passed, detail });
+
+/**
+ * Records a check and says so immediately.
+ *
+ * Printing as it goes rather than at the end matters: when this script met a
+ * shape it did not expect it died silently, and a CI log that ends in a stack
+ * trace with no history is a log that has to be re-run to learn anything.
+ */
+function check(name, passed, detail) {
+  checks.push({ name, passed, detail });
+  const mark = passed ? 'ok  ' : 'FAIL';
+  const because = passed ? '' : ` — ${JSON.stringify(detail)}`;
+  console.log(`${mark} ${name}${because}`);
+}
+
+/** The table in a response, or a placeholder that reports rather than throws. */
+const tableIn = (response) =>
+  response.body?.table ?? { players: [], view: null, moveCount: -1, finished: false, phase: '?' };
 
 const opened = await post('/api/tables', { game: 'ludo', seats: 2 });
-check(
-  'opens a table',
-  opened.status === 201 && /^[A-Z2-9]{5}$/.test(opened.body.table.code),
-  opened,
-);
-const code = opened.body.table.code;
+check('opens a table', opened.status === 201 && /^[A-Z2-9]{5}$/.test(tableIn(opened).code), opened);
+const code = tableIn(opened).code;
 
-check('opens it into a lobby', opened.body.table.phase === 'lobby', opened.body.table);
-check('opens it with nobody seated', opened.body.table.players.length === 0, opened.body.table);
+check('opens it into a lobby', tableIn(opened).phase === 'lobby', tableIn(opened));
+check('opens it with nobody seated', tableIn(opened).players.length === 0, tableIn(opened));
 check(
   'refuses to start with nobody seated',
   (await post(`/api/tables/${code}/start`)).status === 409,
@@ -48,7 +61,7 @@ check(
 const firstSeat = await post(`/api/tables/${code}/players`, { name: 'Alex' });
 check(
   'seats the first player',
-  firstSeat.status === 200 && firstSeat.body.table.players[0] === 'Alex',
+  firstSeat.status === 200 && tableIn(firstSeat).players[0] === 'Alex',
   firstSeat.body,
 );
 check(
@@ -64,13 +77,13 @@ check(
 const secondSeat = await post(`/api/tables/${code}/players`, { name: 'Mia' });
 check(
   'seats a second player',
-  secondSeat.status === 200 && secondSeat.body.table.players.length === 2,
+  secondSeat.status === 200 && tableIn(secondSeat).players.length === 2,
   secondSeat.body,
 );
 check(
   'shows no board while still in the lobby',
-  secondSeat.body.table.view === null,
-  secondSeat.body.table,
+  tableIn(secondSeat).view === null,
+  tableIn(secondSeat),
 );
 check(
   'refuses a third player at a two-seat table',
@@ -80,14 +93,10 @@ check(
 const started = await post(`/api/tables/${code}/start`);
 check(
   'starts the game',
-  started.status === 200 && started.body.table.phase === 'playing',
+  started.status === 200 && tableIn(started).phase === 'playing',
   started.body,
 );
-check(
-  'deals a board on starting',
-  started.body.table.view?.shared !== undefined,
-  started.body.table,
-);
+check('deals a board on starting', tableIn(started).view?.shared !== undefined, started.body);
 check('refuses to start twice', (await post(`/api/tables/${code}/start`)).status === 409);
 check(
   'refuses a latecomer once started',
@@ -104,8 +113,12 @@ let rejections = 0;
 
 for (let step = 0; step < 4000 && !finished; step += 1) {
   const seen = await call(`/api/tables/${code}?viewer=Alex`);
-  lastTable = seen.body.table;
-  const shared = lastTable.view.shared;
+  lastTable = tableIn(seen);
+  const shared = lastTable.view?.shared;
+  if (shared === undefined) {
+    check('the board is readable while playing', false, lastTable);
+    break;
+  }
   const mover = players[shared.currentSeat];
 
   if (shared.phase === 'roll') {
@@ -118,8 +131,8 @@ for (let step = 0; step < 4000 && !finished; step += 1) {
       break;
     }
     moves += 1;
-    lastPlayed = played.body.table;
-    finished = played.body.table.finished;
+    lastPlayed = tableIn(played);
+    finished = tableIn(played).finished;
     continue;
   }
 
@@ -132,8 +145,8 @@ for (let step = 0; step < 4000 && !finished; step += 1) {
     if (played.status === 200) {
       moved = true;
       moves += 1;
-      lastPlayed = played.body.table;
-      finished = played.body.table.finished;
+      lastPlayed = tableIn(played);
+      finished = tableIn(played).finished;
     } else if (played.status === 409) {
       rejections += 1;
     } else {
@@ -158,20 +171,20 @@ check('rejects illegal moves without applying them', rejections > 0, { rejection
 const reread = await call(`/api/tables/${code}`);
 check(
   'serves a spectator the finished table',
-  reread.status === 200 && reread.body.table.finished === true,
-  reread.body.table?.moveCount,
+  reread.status === 200 && tableIn(reread).finished === true,
+  tableIn(reread)?.moveCount,
 );
 check(
   'spectator sees no private state',
-  reread.body.table.view.own === undefined,
-  reread.body.table.view,
+  tableIn(reread).view?.own === undefined,
+  tableIn(reread).view,
 );
-check('the log survived the whole game', reread.body.table.moveCount === moves, {
-  stored: reread.body.table.moveCount,
+check('the log survived the whole game', tableIn(reread).moveCount === moves, {
+  stored: tableIn(reread).moveCount,
   moves,
 });
 
-const winner = reread.body.table.view.shared.winner;
+const winner = tableIn(reread).view?.shared?.winner;
 check('records a winner', winner === 'Alex' || winner === 'Mia', winner);
 
 // Failure modes.
@@ -218,10 +231,5 @@ check(
 );
 
 const failed = checks.filter((c) => !c.passed);
-for (const result of checks) {
-  const mark = result.passed ? 'ok  ' : 'FAIL';
-  const detail = result.passed ? '' : ` — ${JSON.stringify(result.detail)}`;
-  console.log(`${mark} ${result.name}${detail}`);
-}
 console.log(`\n${checks.length - failed.length}/${checks.length} passed, ${moves} moves played`);
 process.exit(failed.length === 0 ? 0 : 1);
