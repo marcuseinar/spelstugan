@@ -14,5 +14,5 @@ export { createRng } from './rng.js';
 export type { LoggedMove, ReplayResult } from './replay.js';
 export { replay, seedForMove } from './replay.js';
 export type { GameUi, GameUiContext, MountedGameUi } from './ui.js';
-export type { AttemptResult } from './session.js';
+export type { AttemptResult, SessionSetup } from './session.js';
 export { Session } from './session.js';

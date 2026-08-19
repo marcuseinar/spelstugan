@@ -1,18 +1,17 @@
 /**
- * A game session held in memory.
+ * A game session: a move log, the rules, and the state derived from folding
+ * one through the other.
  *
- * This is the shape the server will eventually take, kept deliberately small:
- * hold a move log, apply attempted moves through the rules, and serve views.
- * Nothing here knows about any particular game.
- *
- * It is not persistence — state lives only as long as the object does. What it
- * does establish is that the move log is the record and everything else is
- * derived from it, which is the property the eventual server must keep.
+ * Nothing here knows about any particular game. It holds no storage either —
+ * a session is given its log and hands it back, and whoever owns durability
+ * decides where that log lives. In the browser that is memory; on the server
+ * it is the platform's storage. Both resume the same way, because state is
+ * always a recomputation from the log.
  */
 
 import type { Game, GameEvent, GameState, PlayerId } from './contract.js';
 import type { LoggedMove } from './replay.js';
-import { seedForMove } from './replay.js';
+import { replay, seedForMove } from './replay.js';
 import { createRng } from './rng.js';
 
 export interface AttemptResult {
@@ -21,16 +20,30 @@ export interface AttemptResult {
   readonly events: readonly GameEvent[];
 }
 
-export class Session<Shared, Secret, Move> {
-  private state: GameState<Shared, Secret>;
-  private readonly log: LoggedMove<Move>[] = [];
+export interface SessionSetup<Shared, Secret, Move> {
+  readonly game: Game<Shared, Secret, Move>;
+  /** Seeds every move's randomness. The same seed replays the same game. */
+  readonly seed: string;
+  /** Seated players, in turn order. */
+  readonly players: readonly PlayerId[];
+  /** Moves already played. Omitted for a new session. */
+  readonly log?: readonly LoggedMove<Move>[];
+}
 
-  constructor(
-    private readonly game: Game<Shared, Secret, Move>,
-    private readonly seed: string,
-    readonly players: readonly PlayerId[],
-  ) {
-    this.state = game.setup({ players, rng: createRng(seedForMove(seed, 0)) });
+export class Session<Shared, Secret, Move> {
+  private readonly game: Game<Shared, Secret, Move>;
+  private readonly seed: string;
+  private readonly log: LoggedMove<Move>[];
+  private state: GameState<Shared, Secret>;
+
+  readonly players: readonly PlayerId[];
+
+  constructor(setup: SessionSetup<Shared, Secret, Move>) {
+    this.game = setup.game;
+    this.seed = setup.seed;
+    this.players = setup.players;
+    this.log = [...(setup.log ?? [])];
+    this.state = replay(setup.game, setup.seed, setup.players, this.log).state;
   }
 
   /**
@@ -57,7 +70,6 @@ export class Session<Shared, Secret, Move> {
     return this.game.view(this.state, viewerId);
   }
 
-  /** Whoever the rules are waiting on, for a hot-seat client to act as. */
   get moveCount(): number {
     return this.log.length;
   }

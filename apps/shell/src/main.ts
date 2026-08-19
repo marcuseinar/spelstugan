@@ -51,7 +51,7 @@ function gameFor(channelId: string): Session<LudoShared, LudoSecret, LudoMove> {
   if (existing !== undefined) {
     return existing;
   }
-  const created = new Session(ludo, `demo-${channelId}`, LUDO_PLAYERS);
+  const created = new Session({ game: ludo, seed: `demo-${channelId}`, players: LUDO_PLAYERS });
   games.set(channelId, created);
   return created;
 }

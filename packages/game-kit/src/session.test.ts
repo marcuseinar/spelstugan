@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Game, GameState } from './contract.js';
 import { defaultView } from './contract.js';
+import type { LoggedMove } from './replay.js';
 import { replay } from './replay.js';
 import { Session } from './session.js';
 
@@ -35,9 +36,68 @@ const tally: Game<Tally, Record<string, never>, Move> = {
 
 const PLAYERS = ['alice', 'bob'];
 
-function session() {
-  return new Session(tally, 'seed', PLAYERS);
+function session(log?: readonly LoggedMove<Move>[]) {
+  return new Session({ game: tally, seed: 'seed', players: PLAYERS, ...(log && { log }) });
 }
+
+describe('Session resumed from a stored log', () => {
+  const played: readonly LoggedMove<Move>[] = [
+    { playerId: 'alice', move: { type: 'add', amount: 3 } },
+    { playerId: 'bob', move: { type: 'add', amount: 4 } },
+  ];
+
+  it('rebuilds the state the log describes', () => {
+    expect(session(played).viewFor(null).shared.total).toBe(7);
+  });
+
+  it('keeps the log it was given', () => {
+    expect(session(played).history()).toEqual(played);
+  });
+
+  it('counts the moves it resumed with', () => {
+    expect(session(played).moveCount).toBe(2);
+  });
+
+  it('carries on from where the log left off', () => {
+    const resumed = session(played);
+    resumed.attempt({ type: 'add', amount: 1 }, 'alice');
+
+    expect(resumed.viewFor(null).shared.total).toBe(8);
+    expect(resumed.moveCount).toBe(3);
+  });
+
+  it('reaches the same state as playing the moves through', () => {
+    const played_through = session();
+    for (const entry of played) {
+      played_through.attempt(entry.move, entry.playerId);
+    }
+
+    expect(session(played).viewFor(null)).toEqual(played_through.viewFor(null));
+  });
+
+  it('resumes a finished game as finished', () => {
+    expect(session([{ playerId: 'alice', move: { type: 'add', amount: 10 } }]).finished).toBe(true);
+  });
+
+  it('does not mutate the log it was handed', () => {
+    const given = [...played];
+    session(given).attempt({ type: 'add', amount: 1 }, 'alice');
+
+    expect(given).toHaveLength(2);
+  });
+
+  it('refuses a log the rules reject, rather than starting from a lie', () => {
+    const impossible: readonly LoggedMove<Move>[] = [
+      { playerId: 'alice', move: { type: 'add', amount: -5 } },
+    ];
+
+    expect(() => session(impossible)).toThrow(/diverged/);
+  });
+
+  it('starts empty when given an empty log', () => {
+    expect(session([]).viewFor(null).shared.total).toBe(0);
+  });
+});
 
 describe('Session', () => {
   it('starts from the game’s opening state', () => {

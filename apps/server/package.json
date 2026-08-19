@@ -1,0 +1,17 @@
+{
+  "name": "@spelstugan/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@spelstugan/game-kit": "*",
+    "@spelstugan/ludo": "*"
+  },
+  "devDependencies": {
+    "wrangler": "^4.124.0"
+  }
+}

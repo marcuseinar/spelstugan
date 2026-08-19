@@ -91,7 +91,7 @@ function render(): void {
 function startNewGame(): void {
   // A fresh seed per game, recorded so a session could be replayed exactly.
   const seed = `playground-${Date.now()}`;
-  session = new Session(ludo, seed, PLAYERS);
+  session = new Session({ game: ludo, seed, players: PLAYERS });
   logHost.replaceChildren();
   appendToLog(`New game — ${PLAYERS.join(', ')}.`);
   render();
