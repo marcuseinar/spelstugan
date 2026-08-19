@@ -80,7 +80,10 @@ with `VITE_SERVER_URL=http://127.0.0.1:8787 npm run dev`.
       conversation; starting a table is a row where the tables are, and the
       shell stays put while a table is set up
 
-### In progress
+### Known gaps
+
+Nothing is in flight right now. These are shipped features with a hole in
+them, which makes them cheaper to close than the candidates below.
 
 - [ ] **Play-by-play in an online table.** The move events already exist where
       the conversation is kept, so the table can narrate itself; nothing does
@@ -93,12 +96,23 @@ with `VITE_SERVER_URL=http://127.0.0.1:8787 npm run dev`.
 
 ### Next up (not started)
 
-- [ ] Data model + migrations for User / Server / Channel / Session / Move,
-      including the reserved `kind` and `parent_channel_id` fields
-- [ ] Guest join by room code (decision 015) — reaches a playable game
-      sooner than building accounts first
-- [ ] Invite-gated accounts
-- [ ] One server, general text channel, persistent chat
+Nothing here is committed to yet — these are the real candidates, roughly in
+the order they are worth doing.
+
+- [ ] **A live transport instead of polling.** The shell re-reads the table on
+      a timer (1.5s in the lobby, 2.5s in a game). A Durable Object can hold
+      WebSockets, so the table can push instead — fewer reads, and chat that
+      arrives when it is sent. Decision 005 already says realtime is
+      unavoidable by phase 2; this is the first place it pays for itself.
+- [ ] **A second game**, to stress the plugin contract with something that is
+      not Ludo-shaped. Which game is still open (see Open questions).
+- [ ] **Accounts.** Deliberately deferred: a table needs nothing but a name and
+      a code today (decision 022), and guest play was always meant to come
+      first (decision 015). Accounts become necessary when identity has to
+      outlive a table — a leaderboard, an invite, a name someone owns. The
+      User / Server / Channel / Session / Move data model that used to sit here
+      went away with the demo (decision 025) and should be redesigned against
+      what the product actually does, not restored.
 
 ## Phase 1 — prove the core loop
 
@@ -108,13 +122,15 @@ different games are used deliberately, so the plugin API is stressed before
 social scaffolding is built on top of it.
 
 1. **Ludo** as the first plugin — 2–4 players, async, move log persisted
-   *(rules and board done; needs persistence and real players)*
+   *(done — rules, board, and a move log kept by the table itself)*
 2. Guest play by room code, so a game can be started with no signup
-3. Invite-gated accounts
-4. A single shared server, with a general text channel
-5. Game-table channels with text chat
-6. A **solo high-score game** as the second plugin — leaderboard scoped to the
-   channel, tied into a global board, with replay
+   *(done — decision 022)*
+3. Game-table chat, kept beside the move log *(done — decision 024)*
+4. A **solo high-score game** as the second plugin — leaderboard scoped to the
+   table, tied into a global board, with replay
+5. Invite-gated accounts *(deferred — see Next up)*
+6. A single shared server, with a general text channel *(deferred — the
+   server/channel model went away with the demo, decision 025)*
 
 Out of scope for phase 1: voice/video, realtime transport, second screen,
 global lobbies, multi-server, DMs, moderation tooling, plugin sandboxing.
@@ -154,12 +170,11 @@ global lobbies, multi-server, DMs, moderation tooling, plugin sandboxing.
 
 Not yet decided. Don't assume an answer — raise them with the owner.
 
-- Frontend framework for the platform shell. The plugin UI contract is
-  framework-neutral and settled (decision 017); what the shell itself uses —
-  channels, chat, sidebar — is still open
+- Frontend framework for the platform shell — including whether it needs one
+  at all. The plugin UI contract is framework-neutral and settled (decision
+  017); the shell itself is plain DOM that refreshes live parts rather than
+  redrawing (decision 027), and has not hurt yet
 - Which solo high-score game to build
 - Which hidden-information game to build
-- Hosting: PaaS first, AWS deferred (decision 016, `docs/DEPLOYMENT.md`).
-  Which PaaS is still open
 - Whether to build on `boardgame.io` or an equivalent rather than inventing the
   plugin runtime from scratch
