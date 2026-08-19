@@ -12,13 +12,11 @@ import { element, renderChatLines, renderComposer } from './view.js';
 
 export interface OpeningOptions {
   readonly onOpen: (name: string, seats: number) => void;
-  readonly onLeave: () => void;
 }
 
 export interface JoiningOptions {
   readonly code: string;
   readonly onJoin: (name: string) => void;
-  readonly onLeave: () => void;
 }
 
 export interface LobbyOptions {
@@ -26,7 +24,6 @@ export interface LobbyOptions {
   readonly you: string;
   readonly pageUrl: string;
   readonly onStart: () => void;
-  readonly onLeave: () => void;
   readonly onCopy: (link: string) => void;
   readonly onSay: (text: string) => void;
 }
@@ -35,8 +32,9 @@ const SEAT_CHOICES = [2, 3, 4] as const;
 
 /** The first screen: name yourself, say how many are playing. */
 export function renderOpening(options: OpeningOptions): HTMLElement {
-  const pane = shell('Play with a friend', options.onLeave);
+  const pane = element('section', 'tablepane');
   const form = element('form', 'tableform');
+  form.append(element('h3', 'tableform__title', 'Start a game of Ludo'));
 
   const name = nameField('Your name');
   form.append(name.field);
@@ -74,8 +72,9 @@ export function renderOpening(options: OpeningOptions): HTMLElement {
 
 /** The screen someone lands on from a shared link. */
 export function renderJoining(options: JoiningOptions): HTMLElement {
-  const pane = shell('Join the table', options.onLeave);
+  const pane = element('section', 'tablepane');
   const form = element('form', 'tableform');
+  form.append(element('h3', 'tableform__title', 'Take a seat'));
 
   form.append(element('p', 'tableform__code', options.code));
   const name = nameField('Your name');
@@ -96,7 +95,7 @@ export function renderJoining(options: JoiningOptions): HTMLElement {
 /** Waiting for the others: the code, who has arrived, and the empty chairs. */
 export function renderLobby(options: LobbyOptions): HTMLElement {
   const { table } = options;
-  const pane = shell('Waiting to start', options.onLeave);
+  const pane = element('section', 'tablepane');
   const body = element('div', 'lobby');
 
   body.append(element('p', 'lobby__hint', 'Send this code, or the link below.'));
@@ -145,21 +144,6 @@ function renderSeats(table: TableSnapshot, you: string): HTMLElement {
     list.append(element('li', 'lobby__seat', 'empty seat'));
   }
   return list;
-}
-
-/** The frame every table screen shares: a title, and a way out. */
-function shell(title: string, onLeave: () => void): HTMLElement {
-  const pane = element('section', 'tablepane');
-  const bar = element('header', 'tablepane__bar');
-
-  const leave = element('button', 'tablepane__leave', 'Back') as HTMLButtonElement;
-  leave.type = 'button';
-  leave.addEventListener('click', onLeave);
-  bar.append(leave);
-  bar.append(element('h2', 'tablepane__title', title));
-
-  pane.append(bar);
-  return pane;
 }
 
 function nameField(label: string): { field: HTMLElement; value: () => string } {

@@ -7,7 +7,7 @@ export default defineConfig({
       provider: 'v8',
       include: [
         'packages/**/src/**/*.ts',
-        'apps/shell/src/{workspace,chat,navigation,table,api}.ts',
+        'apps/shell/src/{chat,navigation,table,api,remembered}.ts',
         'apps/server/src/{codes,routes,requests,games}.ts',
       ],
       exclude: [

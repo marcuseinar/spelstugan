@@ -7,8 +7,8 @@ import {
   latestLineOf,
   lobbyStatus,
   millisecondsUntilNextPoll,
-  nameKeyFor,
   readyToStart,
+  rememberedCodeIn,
   seatsFree,
   worthPolling,
 } from './table.js';
@@ -70,21 +70,17 @@ describe('invitations', () => {
   });
 
   it('finds no code when the parameter is empty', () => {
-    expect(codeInvitedTo('https://example.com/?table=')).toBe('');
+    expect(codeInvitedTo('https://example.com/?table=')).toBeNull();
   });
 });
 
-describe('nameKeyFor', () => {
-  it('keys a remembered name by the table it belongs to', () => {
-    expect(nameKeyFor('ABCDE')).toContain('ABCDE');
+describe('rememberedCodeIn', () => {
+  it('picks the most recent table, which is the one being played', () => {
+    expect(rememberedCodeIn([{ code: 'NEWER' }, { code: 'OLDER' }])).toBe('NEWER');
   });
 
-  it('keeps two tables apart, so two tabs do not overwrite each other', () => {
-    expect(nameKeyFor('ABCDE')).not.toBe(nameKeyFor('FGHIJ'));
-  });
-
-  it('namespaces the key, since the page shares storage with everything else', () => {
-    expect(nameKeyFor('ABCDE')).toMatch(/^spelstugan:/);
+  it('picks nothing when this browser has played nowhere', () => {
+    expect(rememberedCodeIn([])).toBeNull();
   });
 });
 

@@ -195,6 +195,17 @@ and not at all once a game is finished. That is a placeholder with a cost
 one place, `apps/shell/src/table.ts`, so replacing it is a small change rather
 than an excavation.
 
+## The shell *(built)*
+
+`apps/shell` is the product, not a demo of one (decision 025). Two panes: the
+tables this browser has sat at, and the table it is looking at. On a phone
+they become a stack — the list pushes to a table, a back control returns —
+and in a game the chat becomes a sheet that rises over the board.
+
+The shell knows how to reach a table and nothing about any game. It hands
+`ludoUi` a container, a view and a dispatch, exactly as the contract below
+describes; swapping Ludo for another plugin would not touch it.
+
 ## The UI boundary *(built)*
 
 A game ships two things: rules and a way to draw them. The rules are a pure

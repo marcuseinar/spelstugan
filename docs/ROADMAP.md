@@ -14,12 +14,15 @@ Last updated: 2026-08-19
 
 ## Current state
 
-**The front half works, and the server behind it now holds a game.** The
-plugin contract, the Ludo rules, a clickable board, and the social shell
-around it — servers, channels, chat — all run and are verified in a browser. The server persists a game and plays it back:
-a full 312-move game of Ludo has been played against it through HTTP. The two
-halves are not joined yet — the shell still runs its own in-memory session,
-so nobody else can join and the demo is still hot seat.
+**Two people can play a real game, and talk while they do.** Open a table,
+send the code, take a seat, play — no account, nothing to install. The plugin
+contract, the Ludo rules and the board run in the browser; the server holds
+each table as a Durable Object and keeps the move log and the conversation
+together.
+
+**Nothing on screen is invented** (decision 025). The shell lists the tables
+this browser has sat at and shows the one it is looking at; the demo — its
+servers, channels and pretend conversation — is gone.
 
 ```bash
 npm install
@@ -34,7 +37,7 @@ npm run test:e2e --workspace @spelstugan/server   # play a whole game against it
 The shell talks to the deployed server by default; point it somewhere else
 with `VITE_SERVER_URL=http://127.0.0.1:8787 npm run dev`.
 
-445 tests; mutation gate at 85%, currently 95%.
+433 tests; mutation gate at 85%, currently 95%.
 
 ### Done
 
@@ -70,12 +73,15 @@ with `VITE_SERVER_URL=http://127.0.0.1:8787 npm run dev`.
 - [x] **Chat at an online table** (decision 024) — stored beside the move log,
       in the lobby and over the board, with notes for sitting down and
       starting
+- [x] **The demo removed** (decision 025) — no invented servers, channels or
+      conversation; starting a table is a row where the tables are, and the
+      shell stays put while a table is set up
 
 ### In progress
 
-- [ ] **Play-by-play in an online table.** The demo narrates moves into its
-      chat; the real table does not yet, so the thread holds people and notes
-      only.
+- [ ] **Play-by-play in an online table.** The move events already exist where
+      the conversation is kept, so the table can narrate itself; nothing does
+      yet, so the thread holds people and table notes only.
 - [ ] **Timestamps on messages**, without which asynchronous play cannot read
       right (decision 024).
 - [ ] **A seat token.** Today naming a seated player is enough to move for

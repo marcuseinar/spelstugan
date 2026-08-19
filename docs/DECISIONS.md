@@ -653,3 +653,48 @@ it, and no reducer may ever read it (see `CLAUDE.md`).
 The demo's chat renderer draws both — the mockup's invented conversation and
 the real table's — because one renderer is what keeps the pretend one honest
 about what the real one can do.
+
+
+---
+
+## 025 — The demo is gone; the shell is the product
+
+**Status:** accepted
+
+**Context:** `apps/shell` was built as a sketch (decision 019): invented
+servers, invented conversation, a hot-seat game, and — once online tables
+existed — a *second* screen where the real thing lived. Two of them, side by
+side, one pretend.
+
+That cost more than it looked. Starting a real table was a button bolted onto
+a fake sidebar, where it stretched to fill a row meant for a channel list. The
+real table then replaced the whole window, so the shell around it vanished at
+exactly the moment a player needed to know where they were. Both bugs were
+the same bug: the product was a guest in its own mockup.
+
+**Decision:** Delete the demo. The shell now shows only what is real:
+
+- The sidebar lists **the tables this browser has sat at** — code and the name
+  it sat under — with **New table** as a row among them. Starting a game is
+  where the games are.
+- The main pane holds the table: the setup form, the lobby, or the board with
+  its chat. The frame stays put throughout.
+- No servers, no channels, no invented people. When those become real, they
+  come back as themselves.
+
+Deleted with it: `demoData.ts`, `workspace.ts` and its Server/Channel model,
+the in-memory `ChatLog`, and the client-side play-by-play narrator. The domain
+model those sketched still lives in `docs/ARCHITECTURE.md`, where a plan
+belongs; the narrator's real home is the server, which already has the events
+and now owns the conversation (decision 024).
+
+**Consequences:** The published page is smaller and honest — nothing on it
+implies a feature that does not exist. What it loses is the showroom: there is
+no longer a screen that shows what a busy server would feel like. That was
+worth having while the product was a promise and is worth less now that it is
+a thing you can play.
+
+The list of tables is **local to a browser**, not an account, and says so on
+screen. It is a convenience, not an identity, and it disappears when the
+storage does — which is the honest shape of a product with no accounts
+(decision 022).

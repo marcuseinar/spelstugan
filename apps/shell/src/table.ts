@@ -21,21 +21,22 @@ export function invitationTo(pageUrl: string, code: string): string {
   return url.toString();
 }
 
-/** The code in a link someone opened, if it carried one. */
+/** The code in a link someone opened, if it carried one worth following. */
 export function codeInvitedTo(pageUrl: string): string | null {
-  return new URL(pageUrl).searchParams.get(CODE_PARAMETER);
+  // `get` already answers null when the parameter is absent; the only extra
+  // case is a parameter that is there and empty, which is not a code either.
+  const carried = new URL(pageUrl).searchParams.get(CODE_PARAMETER);
+  return carried === '' ? null : carried;
 }
 
 /**
- * Where a player's name for one table is remembered.
+ * The table to open when the link carried none: the most recent one.
  *
- * Phones reload — a rotation, a background tab, a tapped link — and without
- * this a reload would land back on the join screen and be refused for using a
- * name that is already seated. Keyed by code so two tables in two tabs do not
- * overwrite each other.
+ * Landing on the game you were last playing beats landing on an empty form,
+ * and this browser already knows which that was.
  */
-export function nameKeyFor(code: string): string {
-  return `spelstugan:name:${code}`;
+export function rememberedCodeIn(tables: readonly { readonly code: string }[]): string | null {
+  return tables[0]?.code ?? null;
 }
 
 /** Seats nobody has taken yet. */

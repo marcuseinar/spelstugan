@@ -7,16 +7,15 @@ A social-first gaming platform. Discord-shaped servers and channels, where the
 channels are game tables — built on the bet that the social layer is the
 product and the games live inside it, rather than the other way round.
 
-**[Open the demo](https://marcuseinar.github.io/spelstugan/)** — the whole
-shell: servers, channels, chat, and a real game of Ludo inside one of them.
+**[Open it](https://marcuseinar.github.io/spelstugan/)** — start a table, send
+the code, play a real game of Ludo with someone and talk while you do.
 ([Just the board, on its own.](https://marcuseinar.github.io/spelstugan/playground/))
 
-**Status: two people can play a real game.** Open the demo, hit *Play with a
-friend*, send the code, and play from two devices — no account, nothing to
-install, and you can talk to each other while you play. The server is a
-Cloudflare Worker with a Durable Object per table, keeping the move log and
-the conversation together. The surrounding shell — servers, channels — is
-still a mockup.
+**Status: two people can play a real game, and talk while they do.** Open it,
+hit *New table*, send the code, and play from two devices — no account,
+nothing to install. The server is a Cloudflare Worker with a Durable Object
+per table, keeping the move log and the conversation together. Nothing on
+screen is a mockup.
 
 ```bash
 npm install
@@ -62,6 +61,6 @@ asynchronous play come out of that design rather than being built separately.
 |---|---|
 | `packages/game-kit` | The contract every game implements: a pure reducer, seeded randomness, replay from the move log |
 | `packages/games/ludo` | Ludo — the first game: rules, board geometry, and UI |
-| `apps/shell` | The demo shell — servers, channels, chat, hosting a game plugin |
+| `apps/shell` | The app — tables, chat, and a game plugin mounted inside one |
 | `apps/server` | The server — a Worker, with each game table a Durable Object |
 | `apps/playground` | A focused harness for playing Ludo on its own |

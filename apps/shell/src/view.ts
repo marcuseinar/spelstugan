@@ -1,15 +1,15 @@
 /**
  * Drawing the shell.
  *
- * Only rendering lives here. Every decision the shell makes — which channel
- * opens, how channels are grouped, what a game event says in chat — is in
- * `workspace.ts` and `chat.ts`, which are pure and tested. Same split as the
- * Ludo board (decision 018): if this file starts deciding something, that
- * decision moves out.
+ * Only rendering lives here. Every decision it draws — which tables this
+ * browser knows about, what the lobby says, when to ask the server again — is
+ * made in `remembered.ts` and `table.ts`, which are pure and tested. Same
+ * split as the Ludo board (decision 018): if this file starts deciding
+ * something, that decision moves out.
  */
 
 import type { ChatLine } from './chat.js';
-import type { Channel, ChannelGroup, Server } from './workspace.js';
+import type { RememberedTable } from './remembered.js';
 
 export function element(tag: string, className: string, text?: string): HTMLElement {
   const created = document.createElement(tag);
@@ -81,145 +81,84 @@ export function iconNamed(name: IconName, size = 18): SVGSVGElement {
   return icon(ICONS[name], size);
 }
 
-export interface RailOptions {
-  readonly servers: readonly Server[];
-  readonly activeServerId: string;
-  readonly onPick: (serverId: string) => void;
-}
-
-export function renderRail(options: RailOptions): HTMLElement {
-  const rail = element('nav', 'rail');
-  rail.append(element('div', 'rail__logo', 'S'));
-  rail.append(element('div', 'rail__divider'));
-
-  const groups = options.servers.filter((server) => server.kind === 'group');
-  const lobbies = options.servers.filter((server) => server.kind === 'lobby');
-
-  const addButtons = (servers: readonly Server[]) => {
-    for (const server of servers) {
-      const button = element('button', 'rail__server', server.badge) as HTMLButtonElement;
-      button.type = 'button';
-      button.title = server.name;
-      if (server.id === options.activeServerId) {
-        button.classList.add('rail__server--active');
-      }
-      if (server.kind === 'lobby') {
-        button.classList.add('rail__server--lobby');
-      }
-      button.addEventListener('click', () => options.onPick(server.id));
-      rail.append(button);
-    }
-  };
-
-  addButtons(groups);
-  if (lobbies.length > 0) {
-    rail.append(element('div', 'rail__divider'));
-    rail.append(element('div', 'rail__label', 'Lobbies'));
-    addButtons(lobbies);
-  }
-
-  rail.append(element('div', 'rail__spacer'));
-  const add = element('button', 'rail__add') as HTMLButtonElement;
-  add.type = 'button';
-  add.title = 'Add a server (not in this demo)';
-  add.append(iconNamed('plus', 16));
-  rail.append(add);
-  return rail;
-}
-
 export interface SidebarOptions {
-  readonly server: Server;
-  readonly groups: readonly ChannelGroup[];
-  readonly activeChannelId: string;
-  readonly you: string;
-  readonly online: readonly string[];
-  readonly onPick: (channelId: string) => void;
-  /** Leaves the demo for a real table on the server. */
-  readonly onPlayForReal: () => void;
+  readonly tables: readonly RememberedTable[];
+  /** The table being looked at, if any. */
+  readonly activeCode: string | null;
+  readonly onPick: (code: string) => void;
+  readonly onNew: () => void;
 }
 
 export function renderSidebar(options: SidebarOptions): HTMLElement {
   const sidebar = element('aside', 'sidebar');
 
   const header = element('header', 'sidebar__header');
-  header.append(element('span', 'sidebar__server-name', options.server.name));
-  header.append(
-    element(
-      'span',
-      'sidebar__server-kind',
-      options.server.kind === 'lobby' ? 'Public lobby' : 'Private group',
-    ),
-  );
+  header.append(element('span', 'sidebar__brand', 'Spelstugan'));
+  header.append(element('span', 'sidebar__tagline', 'Games, with the talk around them'));
   sidebar.append(header);
 
-  // The demo is invented; this button is not. It is kept visually apart from
-  // the channel list so nobody mistakes the pretend servers for real ones.
-  const play = element('button', 'sidebar__play', 'Play with a friend') as HTMLButtonElement;
-  play.type = 'button';
-  play.addEventListener('click', options.onPlayForReal);
-  sidebar.append(play);
-
   const list = element('div', 'sidebar__channels');
-  for (const group of options.groups) {
-    list.append(element('h2', 'sidebar__group', group.label));
-    for (const channel of group.channels) {
-      list.append(renderChannelRow(channel, options.activeChannelId, options.onPick));
-    }
+  list.append(element('h2', 'sidebar__group', 'Game tables'));
+
+  for (const table of options.tables) {
+    list.append(renderTableRow(table, options.activeCode, options.onPick));
   }
+  if (options.tables.length === 0) {
+    list.append(element('p', 'sidebar__empty', 'No tables yet.'));
+  }
+  list.append(renderNewTableRow(options.onNew, options.activeCode === null));
   sidebar.append(list);
 
   const footer = element('footer', 'sidebar__footer');
-  const avatar = element('span', 'avatar avatar--you', options.you.slice(0, 1));
-  footer.append(avatar);
-  footer.append(element('span', 'sidebar__you', options.you));
-  footer.append(element('span', 'sidebar__online', `${options.online.length} online`));
+  footer.append(element('span', 'sidebar__note', 'Tables are remembered on this device only.'));
   sidebar.append(footer);
 
   return sidebar;
 }
 
-function renderChannelRow(
-  channel: Channel,
-  activeChannelId: string,
-  onPick: (channelId: string) => void,
+function renderTableRow(
+  table: RememberedTable,
+  activeCode: string | null,
+  onPick: (code: string) => void,
 ): HTMLElement {
   const row = element('button', 'channel') as HTMLButtonElement;
   row.type = 'button';
-  if (channel.id === activeChannelId) {
-    row.classList.add('channel--active');
-  }
-  if (channel.state === 'finished') {
-    row.classList.add('channel--finished');
-  }
+  row.classList.toggle('channel--active', table.code === activeCode);
 
   const glyph = element('span', 'channel__icon');
-  glyph.append(iconNamed(channel.kind === 'text' ? 'hash' : 'dice', 16));
+  glyph.append(iconNamed('dice', 16));
   row.append(glyph);
 
   const body = element('span', 'channel__body');
-  body.append(element('span', 'channel__name', channel.name));
-  if (channel.subtitle !== undefined) {
-    const subtitle = element('span', 'channel__subtitle', channel.subtitle);
-    if (channel.state === 'playing') {
-      subtitle.classList.add('channel__subtitle--live');
-    }
-    body.append(subtitle);
-  }
+  body.append(element('span', 'channel__name', table.code));
+  body.append(element('span', 'channel__subtitle', `as ${table.name}`));
   row.append(body);
 
-  if (channel.state === 'playing') {
-    row.append(element('span', 'channel__dot'));
-  }
+  row.addEventListener('click', () => onPick(table.code));
+  return row;
+}
 
-  row.addEventListener('click', () => onPick(channel.id));
+/** Starting a table is where the tables are, not somewhere else. */
+function renderNewTableRow(onNew: () => void, active: boolean): HTMLElement {
+  const row = element('button', 'channel channel--new') as HTMLButtonElement;
+  row.type = 'button';
+  row.classList.toggle('channel--active', active);
+
+  const glyph = element('span', 'channel__icon');
+  glyph.append(iconNamed('plus', 16));
+  row.append(glyph);
+
+  const body = element('span', 'channel__body');
+  body.append(element('span', 'channel__name', 'New table'));
+  row.append(body);
+
+  row.addEventListener('click', onNew);
   return row;
 }
 
 export interface HeaderOptions {
-  readonly channel: Channel;
-  readonly serverName: string;
-  readonly memberCount: number;
-  /** Returns to the channel list. Only ever visible on a small screen. */
+  readonly title: string;
+  readonly subtitle: string;
   readonly onBack: () => void;
 }
 
@@ -228,19 +167,17 @@ export function renderHeader(options: HeaderOptions): HTMLElement {
 
   const back = element('button', 'topbar__back') as HTMLButtonElement;
   back.type = 'button';
-  back.setAttribute('aria-label', 'Back to channels');
+  back.setAttribute('aria-label', 'Back to tables');
   back.append(iconNamed('back', 20));
   back.addEventListener('click', options.onBack);
   header.append(back);
 
   const title = element('div', 'topbar__title');
   const glyph = element('span', 'topbar__icon');
-  glyph.append(iconNamed(options.channel.kind === 'text' ? 'hash' : 'dice', 18));
+  glyph.append(iconNamed('dice', 18));
   title.append(glyph);
-  title.append(element('span', 'topbar__name', options.channel.name));
-  title.append(
-    element('span', 'topbar__meta', `${options.serverName} · ${options.memberCount} members`),
-  );
+  title.append(element('span', 'topbar__name', options.title));
+  title.append(element('span', 'topbar__meta', options.subtitle));
   header.append(title);
 
   const actions = element('div', 'topbar__actions');
@@ -254,12 +191,6 @@ export function renderHeader(options: HeaderOptions): HTMLElement {
   call.append(iconNamed('camera', 15));
   call.append(element('span', 'callbar__label', 'soon'));
   actions.append(call);
-
-  const members = element('button', 'iconbutton') as HTMLButtonElement;
-  members.type = 'button';
-  members.title = 'Members';
-  members.append(iconNamed('people', 18));
-  actions.append(members);
 
   header.append(actions);
   return header;
@@ -365,41 +296,6 @@ function avatarColour(name: string): string {
     hash = (hash + name.charCodeAt(index)) % palette.length;
   }
   return palette[hash] as string;
-}
-
-export interface ServerBarOptions {
-  readonly servers: readonly Server[];
-  readonly activeServerId: string;
-  readonly onPick: (serverId: string) => void;
-}
-
-/**
- * The server switcher for small screens.
- *
- * Identical content to the rail, laid out for a thumb: a bar across the bottom
- * in portrait, and the same element restyled as a side rail in landscape,
- * where vertical space is the scarce thing. CSS decides which; this only
- * renders the buttons once.
- */
-export function renderServerBar(options: ServerBarOptions): HTMLElement {
-  const bar = element('nav', 'serverbar');
-  bar.setAttribute('aria-label', 'Servers');
-
-  for (const server of options.servers) {
-    const button = element('button', 'serverbar__item') as HTMLButtonElement;
-    button.type = 'button';
-    if (server.id === options.activeServerId) {
-      button.classList.add('serverbar__item--active');
-      button.setAttribute('aria-current', 'true');
-    }
-
-    button.append(element('span', 'serverbar__badge', server.badge));
-    button.append(element('span', 'serverbar__name', server.name));
-    button.addEventListener('click', () => options.onPick(server.id));
-    bar.append(button);
-  }
-
-  return bar;
 }
 
 export interface SheetOptions {
