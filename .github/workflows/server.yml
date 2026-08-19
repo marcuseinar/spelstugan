@@ -46,7 +46,9 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/server
-          command: deploy
+          # The Worker reports this back on /, so the check below can wait for
+          # the version it just published rather than the one before it.
+          command: deploy --var BUILD:${{ github.sha }}
 
       # The deploy is not the proof; playing a game on it is. This seats a
       # table on the Worker that was just published, plays Ludo to a winner,
@@ -54,6 +56,7 @@ jobs:
       - name: Play a game against what was deployed
         env:
           BASE: ${{ steps.deploy.outputs.deployment-url }}
+          EXPECT_BUILD: ${{ github.sha }}
         run: |
           if [ -z "$BASE" ]; then
             echo "The deploy step reported no URL, so there is nothing to test against."

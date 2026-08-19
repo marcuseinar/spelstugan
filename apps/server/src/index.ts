@@ -24,6 +24,15 @@ export { GameTable } from './table.js';
 
 export interface Env {
   readonly GAME_TABLE: DurableObjectNamespace<GameTable>;
+  /**
+   * Which commit is running, set at deploy time.
+   *
+   * A deploy does not become live everywhere at once, and a test that starts
+   * the moment `wrangler deploy` returns can be answered by the version it
+   * replaced. Saying which build is speaking is what lets a caller wait for
+   * the one it meant to test.
+   */
+  readonly BUILD?: string;
 }
 
 /**
@@ -52,7 +61,7 @@ export default {
 
     switch (route.kind) {
       case 'health':
-        return json({ service: 'spelstugan', status: 'ok' });
+        return json({ service: 'spelstugan', status: 'ok', build: env.BUILD ?? 'unknown' });
       case 'games':
         return json({ games: gameIds() });
       case 'openTable':

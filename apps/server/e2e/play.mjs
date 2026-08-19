@@ -45,7 +45,39 @@ function check(name, passed, detail) {
 
 /** The table in a response, or a placeholder that reports rather than throws. */
 const tableIn = (response) =>
-  response.body?.table ?? { players: [], view: null, moveCount: -1, finished: false, phase: '?' };
+  response.body?.table ?? {
+    players: [],
+    messages: [],
+    view: null,
+    moveCount: -1,
+    finished: false,
+    phase: '?',
+  };
+
+/**
+ * Waits until the server answering is the one that was just deployed.
+ *
+ * A deploy is not instant everywhere, and testing the version it replaced
+ * looks exactly like a bug in the version it did not. Skipped when nothing
+ * said which build to expect, as when running against a local Worker.
+ */
+async function waitForBuild(expected) {
+  if (!expected) {
+    return;
+  }
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const health = await call('/');
+    if (health.body?.build === expected) {
+      check(`the deployed build is the one under test (${expected.slice(0, 7)})`, true);
+      return;
+    }
+    await new Promise((wake) => setTimeout(wake, 2000));
+  }
+  check('the deployed build is the one under test', false, { expected });
+  process.exit(1);
+}
+
+await waitForBuild(process.env.EXPECT_BUILD);
 
 const opened = await post('/api/tables', { game: 'ludo', seats: 2 });
 check('opens a table', opened.status === 201 && /^[A-Z2-9]{5}$/.test(tableIn(opened).code), opened);
