@@ -40,9 +40,23 @@ jobs:
       # see docs/DEPLOYMENT.md for how they are made. Nothing else in the
       # repository knows them, and nobody can read them back out.
       - name: Deploy the Worker
+        id: deploy
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/server
           command: deploy
+
+      # The deploy is not the proof; playing a game on it is. This seats a
+      # table on the Worker that was just published, plays Ludo to a winner,
+      # reads the log back and tries every way of asking wrongly.
+      - name: Play a game against what was deployed
+        env:
+          BASE: ${{ steps.deploy.outputs.deployment-url }}
+        run: |
+          if [ -z "$BASE" ]; then
+            echo "The deploy step reported no URL, so there is nothing to test against."
+            exit 1
+          fi
+          npm run test:e2e --workspace @spelstugan/server

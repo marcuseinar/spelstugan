@@ -145,7 +145,10 @@ and must be rolled — Cloudflare's token list has a *Roll* action for exactly
 that. GitHub secrets are write-only to everyone including agents working on
 the repo, which is the property that makes this arrangement safe.
 
-## How deploys will work
+## How deploys work
+
+**Live at <https://spelstugan.marcus-einar.workers.dev>** — `GET /` answers
+with `{"service":"spelstugan","status":"ok"}`.
 
 Same shape as the demo: pushing is the deploy.
 
@@ -160,6 +163,12 @@ Same shape as the demo: pushing is the deploy.
 The gates run first — a deploy that skips `npm run check` is how a broken
 demo ships. Configuration lives in `wrangler.toml` next to the Worker, in
 version control, because the shape of the deployment is part of the code.
+
+**And the deploy is not the proof.** After publishing, the workflow plays a
+whole game of Ludo against the URL it just deployed to: seats a table, plays to
+a winner, reads the log back, and tries every way of asking wrongly. A green
+Server run means the live server played a game, not merely that an upload
+succeeded.
 
 ## When AWS does make sense
 
