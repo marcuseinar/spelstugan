@@ -189,6 +189,47 @@ button {
   color: var(--text-dim);
 }
 
+/* A table row holds two controls: open it, or be rid of it. */
+.channel__open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: inherit;
+  text-align: left;
+}
+
+.channel__close {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--text-faint);
+  opacity: 0;
+}
+
+.channel:hover .channel__close,
+.channel__close:focus-visible {
+  opacity: 1;
+}
+
+.channel__close:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* No hover on a touch screen, so the control has to be there all along. */
+@media (hover: none) {
+  .channel__close {
+    opacity: 1;
+    width: var(--tap);
+    height: var(--tap);
+  }
+}
+
 .channel:hover {
   background: var(--surface);
   color: var(--text);
@@ -969,13 +1010,20 @@ button {
    phone and a laptop.
    ====================================================================== */
 
-/* Waiting-room chat: a plain block, since there is no board to sit over yet. */
+/*
+ * Waiting-room chat: a plain block, since there is no board to sit over yet.
+ *
+ * On a phone it is deliberately not a scroll box of its own. A scroller inside
+ * a scroller is what put the composer below the fold when the keyboard opened
+ * and made scrolling back through the lobby fight itself (decision 027); one
+ * scroller, and the browser can put the focused field where it belongs.
+ */
 .tablechat {
   display: flex;
   flex-direction: column;
   gap: 8px;
   min-height: 180px;
-  max-height: 40vh;
+  max-height: 40dvh;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--bg-sidebar);
@@ -999,6 +1047,19 @@ button {
   align-items: center;
   gap: 18px;
   padding: 20px 18px calc(24px + var(--safe-bottom));
+}
+
+/*
+ * Nothing in a scrolling column may be squashed to fit it.
+ *
+ * A flex item shrinks by default, so a pane shorter than its contents makes
+ * its children smaller instead of scrolling — and their own contents then
+ * spill out from under them, which is what put chat lines behind the box for
+ * writing them. Scroll the pane; leave the children their size.
+ */
+.tablepane > *,
+.lobby > * {
+  flex-shrink: 0;
 }
 
 .tablepane__bar {
@@ -1214,3 +1275,38 @@ button {
 /* The launcher out of the demo. */
 /* A table in play fills the screen the way a game channel does: the board owns
    it, the chat rises over it, and nothing scrolls the page itself. */
+
+/* =========================================================================
+   The lobby's chat on a small screen
+   =========================================================================
+
+   One scroller, not two. A scroll box inside a scrolling pane is what put the
+   composer below the fold when the keyboard opened, floated it over the
+   conversation, and made scrolling back fight itself (decision 027). Here the
+   chat simply grows and the pane is the only thing that scrolls.
+
+   These rules come after the ones they override: at equal specificity, later
+   wins, and the base lives further down this file than the phone block does.
+   ====================================================================== */
+
+@media (max-width: 860px) {
+  .tablechat {
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .tablechat .chat {
+    flex: none;
+    overflow: visible;
+  }
+
+  /*
+   * The field is simply the last thing on the page, and the page scrolls to
+   * it. Pinning it instead means the conversation slides underneath it, which
+   * reads as the newest messages hiding behind the box meant for writing them.
+   */
+  .tablechat .composer {
+    scroll-margin-block-end: 16px;
+  }
+}

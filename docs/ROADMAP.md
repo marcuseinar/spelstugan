@@ -74,6 +74,8 @@ with `VITE_SERVER_URL=http://127.0.0.1:8787 npm run dev`.
 - [x] **Chat at an online table** (decision 024) — stored beside the move log,
       in the lobby and over the board, with notes for sitting down and
       starting
+- [x] **Leaving a table** (decision 028) — a leave control per row, local to
+      the device, and rejoining a seat you already hold now works
 - [x] **The demo removed** (decision 025) — no invented servers, channels or
       conversation; starting a table is a row where the tables are, and the
       shell stays put while a table is set up

@@ -145,8 +145,10 @@ same mechanism as replay (see above) rather than a second path that could
 disagree with it.
 
 A table has two lives. In the **lobby** it is a code and a set of empty seats,
-and anyone holding the code may take one by name. Once **started** the seats
-close and it is a game. That order matters: it is what lets a game begin
+and anyone holding the code may take one by name. Taking a seat you already
+hold hands the table back rather than refusing: closing a tab and following
+the link again is the ordinary case, and a name is already the whole of the
+credential here. Once **started** the seats close and it is a game. That order matters: it is what lets a game begin
 without anyone having an account (decision 015), because a seat is claimed by
 whoever is holding the link, not by whoever proved who they are.
 

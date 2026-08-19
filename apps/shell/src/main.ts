@@ -111,6 +111,34 @@ function showNewTable(): void {
   render();
 }
 
+/**
+ * Takes a table off this device's list.
+ *
+ * It leaves the list, not the world: the table stays on the server with the
+ * other players at it, and the link still works. Nobody owns a table yet
+ * (decision 022), so there is nobody who could close one for everybody.
+ */
+function closeTable(closing: string): void {
+  writeRemembered(forgetting(remembered, closing));
+
+  if (code === closing) {
+    stopPolling();
+    table = null;
+    name = '';
+    notice = `Left table ${closing}. The invite link still works.`;
+    const next = remembered[0]?.code ?? null;
+    code = next;
+    rememberCodeInUrl(next);
+    if (next !== null) {
+      name = nameAt(remembered, next) ?? '';
+      render();
+      void refreshTable();
+      return;
+    }
+  }
+  render();
+}
+
 function openTableAt(chosen: string): void {
   stopPolling();
   code = chosen;
@@ -410,6 +438,7 @@ function render(): void {
       activeCode: code,
       onPick: openTableAt,
       onNew: showNewTable,
+      onClose: closeTable,
     }),
     renderMain(),
   );

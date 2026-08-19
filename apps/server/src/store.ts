@@ -151,13 +151,9 @@ export class TableStore {
     );
   }
 
-  /** Claims a seat. False if that name is already taken at this table. */
-  claimSeat(name: string): boolean {
-    if (this.players().includes(name)) {
-      return false;
-    }
+  /** Seats a player. The caller has already checked there is room. */
+  claimSeat(name: string): void {
     this.sql.exec('INSERT INTO players (name) VALUES (?)', name);
-    return true;
   }
 
   /**

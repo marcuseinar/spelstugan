@@ -766,3 +766,37 @@ Rendering is now two paths where it was one, and the shape string is what
 keeps them honest — get it wrong and a stale screen persists. Its one job is
 to name everything a redraw would change, so anything added to a screen must
 be either refreshable or in the shape.
+
+
+---
+
+## 028 — Leaving a table is local, and walking back in is allowed
+
+**Status:** accepted
+
+**Context:** The sidebar listed every table this browser had sat at and gave
+no way to be rid of one. Worse, `forgetting()` had been written for exactly
+that and left unwired — a feature half-built, which `CLAUDE.md` says not to
+land.
+
+**Decision:** Each table row carries a leave control. Leaving removes the
+table **from this device's list only**: the table stays on the server, the
+other players stay at it, and the invite link still works. Nobody owns a table
+(decision 022), so there is nobody who could close one for everybody, and
+pretending otherwise would be a lie in the interface.
+
+Leaving the table currently open falls through to the next one down, or to the
+new-table screen when the list empties. The notice says the link still works,
+because the alternative is a player believing they destroyed the game.
+
+**Joining a seat you already hold now succeeds** instead of being refused for
+using your own name. Leaving and following the link again was a dead end
+otherwise. It grants nothing new: a name is already the whole credential here,
+so anyone who could take a seat this way could already move and speak from it.
+When seats get tokens, this becomes "resume with your token" and the dead end
+stays closed.
+
+**Consequences:** A player who leaves a table and loses the link has lost the
+way back to it, and no account exists to recover it. That is the price of a
+list with no server behind it, and it is why the sidebar says out loud that
+tables are remembered on this device only.

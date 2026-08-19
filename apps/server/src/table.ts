@@ -110,12 +110,17 @@ export class GameTable extends DurableObject {
     if (this.store.started()) {
       return { outcome: 'refused', reason: 'This game has already started.' };
     }
+    // Already seated under this name: hand the table back rather than refusing.
+    // A player who closed the tab and followed the link again is the common
+    // case, and a name is already the whole of the credential here — someone
+    // who could take this seat could already move and speak from it.
+    if (this.store.players().includes(name)) {
+      return { outcome: 'table', table: this.summarize(code, seating, name) };
+    }
     if (this.store.players().length >= seating.seats) {
       return { outcome: 'refused', reason: 'This table is full.' };
     }
-    if (!this.store.claimSeat(name)) {
-      return { outcome: 'refused', reason: `Somebody at this table is already called ${name}.` };
-    }
+    this.store.claimSeat(name);
     this.store.say({ kind: 'joined', text: `${name} sat down` });
     return { outcome: 'table', table: this.summarize(code, seating, null) };
   }

@@ -96,10 +96,9 @@ check(
   firstSeat.status === 200 && tableIn(firstSeat).players[0] === 'Alex',
   firstSeat.body,
 );
-check(
-  'refuses a second player of the same name',
-  (await post(`/api/tables/${code}/players`, { name: 'Alex' })).status === 409,
-);
+const again = await post(`/api/tables/${code}/players`, { name: 'Alex' });
+check('lets a player back into the seat they already have', again.status === 200, again.body);
+check('without seating them twice', tableIn(again).players.length === 1, tableIn(again).players);
 check(
   'refuses a move before the game starts',
   (await post(`/api/tables/${code}/moves`, { player: 'Alex', move: { type: 'roll' } })).status ===

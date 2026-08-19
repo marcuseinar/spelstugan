@@ -72,6 +72,7 @@ const ICONS = {
   back: ['M15 5l-7 7 7 7'],
   grip: ['M7 10h10'],
   plus: ['M12 5v14', 'M5 12h14'],
+  close: ['M6 6l12 12', 'M18 6L6 18'],
   message: ['M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H10l-4 4v-4H6a2 2 0 0 1-2-2z'],
 } as const;
 
@@ -87,6 +88,8 @@ export interface SidebarOptions {
   readonly activeCode: string | null;
   readonly onPick: (code: string) => void;
   readonly onNew: () => void;
+  /** Takes a table off this device's list. The table itself carries on. */
+  readonly onClose: (code: string) => void;
 }
 
 export function renderSidebar(options: SidebarOptions): HTMLElement {
@@ -101,7 +104,7 @@ export function renderSidebar(options: SidebarOptions): HTMLElement {
   list.append(element('h2', 'sidebar__group', 'Game tables'));
 
   for (const table of options.tables) {
-    list.append(renderTableRow(table, options.activeCode, options.onPick));
+    list.append(renderTableRow(table, options));
   }
   if (options.tables.length === 0) {
     list.append(element('p', 'sidebar__empty', 'No tables yet.'));
@@ -116,25 +119,34 @@ export function renderSidebar(options: SidebarOptions): HTMLElement {
   return sidebar;
 }
 
-function renderTableRow(
-  table: RememberedTable,
-  activeCode: string | null,
-  onPick: (code: string) => void,
-): HTMLElement {
-  const row = element('button', 'channel') as HTMLButtonElement;
-  row.type = 'button';
-  row.classList.toggle('channel--active', table.code === activeCode);
+function renderTableRow(table: RememberedTable, options: SidebarOptions): HTMLElement {
+  // A row rather than a button, because it holds two of them: one to open the
+  // table and one to be rid of it.
+  const row = element('div', 'channel');
+  row.classList.toggle('channel--active', table.code === options.activeCode);
+
+  const open = element('button', 'channel__open') as HTMLButtonElement;
+  open.type = 'button';
 
   const glyph = element('span', 'channel__icon');
   glyph.append(iconNamed('dice', 16));
-  row.append(glyph);
+  open.append(glyph);
 
   const body = element('span', 'channel__body');
   body.append(element('span', 'channel__name', table.code));
   body.append(element('span', 'channel__subtitle', `as ${table.name}`));
-  row.append(body);
+  open.append(body);
+  open.addEventListener('click', () => options.onPick(table.code));
+  row.append(open);
 
-  row.addEventListener('click', () => onPick(table.code));
+  const close = element('button', 'channel__close') as HTMLButtonElement;
+  close.type = 'button';
+  close.title = `Leave table ${table.code}`;
+  close.setAttribute('aria-label', `Leave table ${table.code}`);
+  close.append(iconNamed('close', 14));
+  close.addEventListener('click', () => options.onClose(table.code));
+  row.append(close);
+
   return row;
 }
 
