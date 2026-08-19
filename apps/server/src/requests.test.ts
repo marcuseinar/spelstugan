@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_NAME_LENGTH, parseMoveRequest, parseTableRequest } from './requests.js';
+import {
+  MAX_NAME_LENGTH,
+  parseJoinRequest,
+  parseMoveRequest,
+  parseTableRequest,
+} from './requests.js';
 
 const name = (length: number) => 'a'.repeat(length);
 
@@ -18,25 +23,19 @@ function refusal(result: { ok: boolean; reason?: string }): string {
 }
 
 describe('parseTableRequest', () => {
-  it('accepts a game and its players', () => {
-    expect(parseTableRequest({ game: 'ludo', players: ['Alex', 'Mia'] })).toEqual({
+  it('accepts a game and a number of seats', () => {
+    expect(parseTableRequest({ game: 'ludo', seats: 2 })).toEqual({
       ok: true,
-      value: { gameId: 'ludo', players: ['Alex', 'Mia'] },
+      value: { gameId: 'ludo', seats: 2 },
     });
   });
 
-  it('accepts a single player, since seat counts are the game’s business', () => {
-    expect(parseTableRequest({ game: 'solo', players: ['Alex'] }).ok).toBe(true);
+  it('accepts a seat count the game will later refuse, since that is its call', () => {
+    expect(parseTableRequest({ game: 'ludo', seats: 99 }).ok).toBe(true);
   });
 
-  it('accepts a name of the greatest allowed length', () => {
-    expect(parseTableRequest({ game: 'ludo', players: [name(MAX_NAME_LENGTH)] }).ok).toBe(true);
-  });
-
-  it('accepts the most players a table seats', () => {
-    const players = Array.from({ length: 8 }, (_, index) => `Player ${index}`);
-
-    expect(parseTableRequest({ game: 'ludo', players }).ok).toBe(true);
+  it('accepts zero seats, for the same reason', () => {
+    expect(parseTableRequest({ game: 'ludo', seats: 0 }).ok).toBe(true);
   });
 
   describe('refuses', () => {
@@ -53,55 +52,66 @@ describe('parseTableRequest', () => {
     });
 
     it('a missing game', () => {
-      expect(refusal(parseTableRequest({ players: ['Alex'] }))).toMatch(/game/);
+      expect(refusal(parseTableRequest({ seats: 2 }))).toMatch(/game/);
     });
 
     it('an empty game name', () => {
-      expect(refusal(parseTableRequest({ game: '', players: ['Alex'] }))).toMatch(/game/);
+      expect(refusal(parseTableRequest({ game: '', seats: 2 }))).toMatch(/game/);
     });
 
     it('a game name that is not a string', () => {
-      expect(refusal(parseTableRequest({ game: 7, players: ['Alex'] }))).toMatch(/game/);
+      expect(refusal(parseTableRequest({ game: 7, seats: 2 }))).toMatch(/game/);
     });
 
-    it('missing players', () => {
-      expect(refusal(parseTableRequest({ game: 'ludo' }))).toMatch(/player/);
+    it('a missing seat count', () => {
+      expect(refusal(parseTableRequest({ game: 'ludo' }))).toMatch(/seats/);
     });
 
-    it('an empty table', () => {
-      expect(refusal(parseTableRequest({ game: 'ludo', players: [] }))).toMatch(
-        /at least one player/,
-      );
+    it('a seat count that is not a number', () => {
+      expect(refusal(parseTableRequest({ game: 'ludo', seats: 'two' }))).toMatch(/seats/);
     });
 
-    it('players that are not a list', () => {
-      expect(refusal(parseTableRequest({ game: 'ludo', players: 'Alex' }))).toMatch(/player/);
+    it('half a seat', () => {
+      expect(refusal(parseTableRequest({ game: 'ludo', seats: 2.5 }))).toMatch(/seats/);
+    });
+  });
+});
+
+describe('parseJoinRequest', () => {
+  it('accepts a name', () => {
+    expect(parseJoinRequest({ name: 'Marcus' })).toEqual({
+      ok: true,
+      value: { name: 'Marcus' },
+    });
+  });
+
+  it('accepts a name of the greatest allowed length', () => {
+    expect(parseJoinRequest({ name: name(MAX_NAME_LENGTH) }).ok).toBe(true);
+  });
+
+  describe('refuses', () => {
+    it('a body that is not an object', () => {
+      expect(refusal(parseJoinRequest('Marcus'))).toMatch(/JSON object/);
     });
 
-    it('one player too many', () => {
-      const players = Array.from({ length: 9 }, (_, index) => `Player ${index}`);
+    it('a null body', () => {
+      expect(refusal(parseJoinRequest(null))).toMatch(/JSON object/);
+    });
 
-      expect(refusal(parseTableRequest({ game: 'ludo', players }))).toMatch(/at most 8/);
+    it('a missing name', () => {
+      expect(refusal(parseJoinRequest({}))).toMatch(/name/);
     });
 
     it('an empty name', () => {
-      expect(refusal(parseTableRequest({ game: 'ludo', players: ['Alex', ''] }))).toMatch(/name/);
-    });
-
-    it('a name one character too long', () => {
-      expect(
-        refusal(parseTableRequest({ game: 'ludo', players: [name(MAX_NAME_LENGTH + 1)] })),
-      ).toMatch(/name/);
+      expect(refusal(parseJoinRequest({ name: '' }))).toMatch(/name/);
     });
 
     it('a name that is not a string', () => {
-      expect(refusal(parseTableRequest({ game: 'ludo', players: ['Alex', 3] }))).toMatch(/name/);
+      expect(refusal(parseJoinRequest({ name: 42 }))).toMatch(/name/);
     });
 
-    it('two players sharing a name, who could not tell their moves apart', () => {
-      expect(refusal(parseTableRequest({ game: 'ludo', players: ['Alex', 'Alex'] }))).toMatch(
-        /share a name/,
-      );
+    it('a name one character too long', () => {
+      expect(refusal(parseJoinRequest({ name: name(MAX_NAME_LENGTH + 1) }))).toMatch(/name/);
     });
   });
 });

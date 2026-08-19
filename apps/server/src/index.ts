@@ -11,7 +11,7 @@ import { createRng } from '@spelstugan/game-kit';
 import { createCode } from './codes.js';
 import { gameIds, gameNamed, seatingProblem } from './games.js';
 import { asJson } from './json.js';
-import { parseMoveRequest, parseTableRequest } from './requests.js';
+import { parseJoinRequest, parseMoveRequest, parseTableRequest } from './requests.js';
 import { routeFor } from './routes.js';
 import type { GameTable, TableAnswer, TableCommand } from './table.js';
 
@@ -50,10 +50,14 @@ export default {
         return json({ service: 'spelstugan', status: 'ok' });
       case 'games':
         return json({ games: gameIds() });
-      case 'createTable':
-        return await createTable(request, env);
+      case 'openTable':
+        return await openTable(request, env);
       case 'readTable':
         return await readTable(route.code, url.searchParams.get('viewer'), env);
+      case 'joinTable':
+        return await joinTable(route.code, request, env);
+      case 'startTable':
+        return await answerWith(env, route.code, { kind: 'start', code: route.code });
       case 'playMove':
         return await playMove(route.code, request, env);
       case 'unknown':
@@ -65,7 +69,7 @@ export default {
 /** How many codes to try before admitting the room is not the problem. */
 const CODE_ATTEMPTS = 5;
 
-async function createTable(request: Request, env: Env): Promise<Response> {
+async function openTable(request: Request, env: Env): Promise<Response> {
   const body = await readJson(request);
   if (!body.ok) {
     return problem(400, body.reason);
@@ -81,30 +85,38 @@ async function createTable(request: Request, env: Env): Promise<Response> {
     return problem(404, `This server does not have a game called "${parsed.value.gameId}".`);
   }
 
-  const problemSeating = seatingProblem(game, parsed.value.players.length);
-  if (problemSeating !== null) {
-    return problem(400, problemSeating);
+  const tooManyOrFew = seatingProblem(game, parsed.value.seats);
+  if (tooManyOrFew !== null) {
+    return problem(400, tooManyOrFew);
   }
 
-  const record = {
-    gameId: game.id,
-    seed: crypto.randomUUID(),
-    players: parsed.value.players,
-  };
+  const record = { gameId: game.id, seed: crypto.randomUUID(), seats: parsed.value.seats };
 
   for (let attempt = 0; attempt < CODE_ATTEMPTS; attempt += 1) {
     const code = createCode(createRng(crypto.randomUUID()));
-    const answer = await ask(env, code, { kind: 'seat', record });
-    if (answer.outcome === 'seated') {
-      return json({ code, game: game.id, players: record.players }, 201);
+    const answer = await ask(env, code, { kind: 'open', code, record });
+    if (answer.outcome === 'table') {
+      return json({ table: answer.table }, 201);
     }
   }
   return problem(503, 'Could not find a free room code. Try again.');
 }
 
+async function joinTable(code: string, request: Request, env: Env): Promise<Response> {
+  const body = await readJson(request);
+  if (!body.ok) {
+    return problem(400, body.reason);
+  }
+
+  const parsed = parseJoinRequest(body.value);
+  if (!parsed.ok) {
+    return problem(400, parsed.reason);
+  }
+  return await answerWith(env, code, { kind: 'join', code, name: parsed.value.name });
+}
+
 async function readTable(code: string, viewer: string | null, env: Env): Promise<Response> {
-  const answer = await ask(env, code, { kind: 'read', code, viewer });
-  return answer.outcome === 'table' ? json({ table: answer.table }) : noSuchTable();
+  return await answerWith(env, code, { kind: 'read', code, viewer });
 }
 
 async function playMove(code: string, request: Request, env: Env): Promise<Response> {
@@ -125,20 +137,33 @@ async function playMove(code: string, request: Request, env: Env): Promise<Respo
     move: asJson(parsed.value.move),
   });
 
-  switch (answer.outcome) {
-    case 'played':
-      return json({ events: answer.events, table: answer.table });
-    case 'refused':
-      // The move was understood and refused: that is the rules working, not a
-      // malformed request, so it is a conflict rather than a bad one.
-      return problem(409, answer.reason);
-    default:
-      return noSuchTable();
-  }
+  return answer.outcome === 'played'
+    ? json({ events: answer.events, table: answer.table })
+    : httpFor(answer);
 }
 
-function noSuchTable(): Response {
-  return problem(404, 'No table with that code.');
+/** Runs a command whose only successful answer is the table itself. */
+async function answerWith(env: Env, code: string, command: TableCommand): Promise<Response> {
+  const answer = await ask(env, code, command);
+  return answer.outcome === 'table' ? json({ table: answer.table }) : httpFor(answer);
+}
+
+/**
+ * The one place a table's outcome becomes a status code.
+ *
+ * A refusal is the rules or the lobby working as intended, so it is a
+ * conflict rather than a malformed request — the client sent something
+ * understandable that this table will not do right now.
+ */
+function httpFor(answer: TableAnswer): Response {
+  switch (answer.outcome) {
+    case 'refused':
+      return problem(409, answer.reason);
+    case 'code-taken':
+      return problem(409, 'That code is taken.');
+    default:
+      return problem(404, 'No table with that code.');
+  }
 }
 
 /** Asks the table at this code. Codes name tables; that is the whole lookup. */

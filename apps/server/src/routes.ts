@@ -11,8 +11,10 @@ import { normalizeCode } from './codes.js';
 export type Route =
   | { readonly kind: 'health' }
   | { readonly kind: 'games' }
-  | { readonly kind: 'createTable' }
+  | { readonly kind: 'openTable' }
   | { readonly kind: 'readTable'; readonly code: string }
+  | { readonly kind: 'joinTable'; readonly code: string }
+  | { readonly kind: 'startTable'; readonly code: string }
   | { readonly kind: 'playMove'; readonly code: string }
   | { readonly kind: 'unknown' };
 
@@ -47,7 +49,7 @@ function tableRoute(method: string, segments: readonly string[]): Route {
   const [rawCode, action, ...deeper] = segments;
 
   if (rawCode === undefined) {
-    return method === 'POST' ? { kind: 'createTable' } : UNKNOWN;
+    return method === 'POST' ? { kind: 'openTable' } : UNKNOWN;
   }
 
   const code = normalizeCode(rawCode);
@@ -57,5 +59,21 @@ function tableRoute(method: string, segments: readonly string[]): Route {
   if (action === undefined) {
     return method === 'GET' ? { kind: 'readTable', code } : UNKNOWN;
   }
-  return action === 'moves' && method === 'POST' ? { kind: 'playMove', code } : UNKNOWN;
+  if (method !== 'POST') {
+    return UNKNOWN;
+  }
+  return actionRoute(action, code);
+}
+
+function actionRoute(action: string, code: string): Route {
+  switch (action) {
+    case 'players':
+      return { kind: 'joinTable', code };
+    case 'start':
+      return { kind: 'startTable', code };
+    case 'moves':
+      return { kind: 'playMove', code };
+    default:
+      return UNKNOWN;
+  }
 }

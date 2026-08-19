@@ -30,13 +30,69 @@ const post = (path, payload) =>
 const checks = [];
 const check = (name, passed, detail) => checks.push({ name, passed, detail });
 
-const created = await post('/api/tables', { game: 'ludo', players: ['Alex', 'Mia'] });
+const opened = await post('/api/tables', { game: 'ludo', seats: 2 });
 check(
-  'creates a table',
-  created.status === 201 && /^[A-Z2-9]{5}$/.test(created.body.code),
-  created,
+  'opens a table',
+  opened.status === 201 && /^[A-Z2-9]{5}$/.test(opened.body.table.code),
+  opened,
 );
-const code = created.body.code;
+const code = opened.body.table.code;
+
+check('opens it into a lobby', opened.body.table.phase === 'lobby', opened.body.table);
+check('opens it with nobody seated', opened.body.table.players.length === 0, opened.body.table);
+check(
+  'refuses to start with nobody seated',
+  (await post(`/api/tables/${code}/start`)).status === 409,
+);
+
+const firstSeat = await post(`/api/tables/${code}/players`, { name: 'Alex' });
+check(
+  'seats the first player',
+  firstSeat.status === 200 && firstSeat.body.table.players[0] === 'Alex',
+  firstSeat.body,
+);
+check(
+  'refuses a second player of the same name',
+  (await post(`/api/tables/${code}/players`, { name: 'Alex' })).status === 409,
+);
+check(
+  'refuses a move before the game starts',
+  (await post(`/api/tables/${code}/moves`, { player: 'Alex', move: { type: 'roll' } })).status ===
+    409,
+);
+
+const secondSeat = await post(`/api/tables/${code}/players`, { name: 'Mia' });
+check(
+  'seats a second player',
+  secondSeat.status === 200 && secondSeat.body.table.players.length === 2,
+  secondSeat.body,
+);
+check(
+  'shows no board while still in the lobby',
+  secondSeat.body.table.view === null,
+  secondSeat.body.table,
+);
+check(
+  'refuses a third player at a two-seat table',
+  (await post(`/api/tables/${code}/players`, { name: 'Priya' })).status === 409,
+);
+
+const started = await post(`/api/tables/${code}/start`);
+check(
+  'starts the game',
+  started.status === 200 && started.body.table.phase === 'playing',
+  started.body,
+);
+check(
+  'deals a board on starting',
+  started.body.table.view?.shared !== undefined,
+  started.body.table,
+);
+check('refuses to start twice', (await post(`/api/tables/${code}/start`)).status === 409);
+check(
+  'refuses a latecomer once started',
+  (await post(`/api/tables/${code}/players`, { name: 'Late' })).status === 409,
+);
 
 // Play until someone wins, or we run out of patience.
 let moves = 0;
@@ -141,19 +197,19 @@ check(
 );
 check(
   'unknown game is 404',
-  (await post('/api/tables', { game: 'chess', players: ['A', 'B'] })).status === 404,
+  (await post('/api/tables', { game: 'chess', seats: 2 })).status === 404,
 );
 check(
-  'one player is too few for ludo',
-  (await post('/api/tables', { game: 'ludo', players: ['A'] })).status === 400,
+  'one seat is too few for ludo',
+  (await post('/api/tables', { game: 'ludo', seats: 1 })).status === 400,
 );
 check(
-  'five players is too many for ludo',
-  (await post('/api/tables', { game: 'ludo', players: ['A', 'B', 'C', 'D', 'E'] })).status === 400,
+  'five seats is too many for ludo',
+  (await post('/api/tables', { game: 'ludo', seats: 5 })).status === 400,
 );
 check(
-  'duplicate names are refused',
-  (await post('/api/tables', { game: 'ludo', players: ['A', 'A'] })).status === 400,
+  'a table with no seat count is 400',
+  (await post('/api/tables', { game: 'ludo' })).status === 400,
 );
 check('unknown endpoint is 404', (await call('/api/nothing')).status === 404);
 check(

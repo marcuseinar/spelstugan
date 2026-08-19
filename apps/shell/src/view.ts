@@ -134,6 +134,8 @@ export interface SidebarOptions {
   readonly you: string;
   readonly online: readonly string[];
   readonly onPick: (channelId: string) => void;
+  /** Leaves the demo for a real table on the server. */
+  readonly onPlayForReal: () => void;
 }
 
 export function renderSidebar(options: SidebarOptions): HTMLElement {
@@ -149,6 +151,13 @@ export function renderSidebar(options: SidebarOptions): HTMLElement {
     ),
   );
   sidebar.append(header);
+
+  // The demo is invented; this button is not. It is kept visually apart from
+  // the channel list so nobody mistakes the pretend servers for real ones.
+  const play = element('button', 'sidebar__play', 'Play with a friend') as HTMLButtonElement;
+  play.type = 'button';
+  play.addEventListener('click', options.onPlayForReal);
+  sidebar.append(play);
 
   const list = element('div', 'sidebar__channels');
   for (const group of options.groups) {

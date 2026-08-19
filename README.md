@@ -11,11 +11,11 @@ product and the games live inside it, rather than the other way round.
 shell: servers, channels, chat, and a real game of Ludo inside one of them.
 ([Just the board, on its own.](https://marcuseinar.github.io/spelstugan/playground/))
 
-**Status: both halves exist; they are not joined yet.** The plugin contract,
-the Ludo rules, a clickable board and the social shell around it all run in the
-browser. The server — a Cloudflare Worker with a Durable Object per game table
-— seats tables, applies moves through the same reducer, and keeps the move log.
-The shell still plays its own in-memory game, so the demo is hot seat.
+**Status: two people can play a real game.** Open the demo, hit *Play with a
+friend*, send the code, and play from two devices — no account, nothing to
+install. The server is a Cloudflare Worker with a Durable Object per table,
+keeping the move log. The surrounding shell — servers, channels, chat — is
+still a mockup, and online tables have no chat yet.
 
 ```bash
 npm install

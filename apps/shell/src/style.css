@@ -1177,3 +1177,255 @@ button {
     stroke-width: 2;
   }
 }
+
+/* =========================================================================
+   The online table
+   =========================================================================
+
+   The real product, kept visually apart from the demo around it: no invented
+   servers, no invented conversation, one column that reads the same on a
+   phone and a laptop.
+   ====================================================================== */
+
+.app[data-screen="table"] {
+  display: block;
+  overflow-y: auto;
+}
+
+.tablepane {
+  min-height: var(--app-height);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 0 18px calc(24px + var(--safe-bottom));
+}
+
+.tablepane__bar {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.tablepane__leave {
+  min-height: var(--tap);
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-dim);
+  font-family: var(--font-body);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.tablepane__leave:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.tablepane__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.tablepane__notice {
+  width: 100%;
+  max-width: 520px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-dim);
+  font-size: 14px;
+  /* A copied link is a notice too, and links do not wrap on their own. */
+  overflow-wrap: anywhere;
+}
+
+.tableform,
+.lobby {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tableform__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tableform__label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.tableform__input {
+  min-height: var(--tap);
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body);
+  /* Under 16px, iOS Safari zooms the page when the field is focused. */
+  font-size: 16px;
+}
+
+.tableform__input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.tableform__choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+}
+
+.chip {
+  min-width: var(--tap);
+  min-height: var(--tap);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip--on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.tableform__submit,
+.lobby__start {
+  min-height: var(--tap);
+  border: none;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tableform__submit:hover,
+.lobby__start:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+
+.lobby__start:disabled {
+  background: var(--surface);
+  color: var(--text-faint);
+  cursor: default;
+}
+
+/* The code is read aloud across a room, so it is the biggest thing on screen. */
+.tableform__code {
+  margin: 0;
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-align: center;
+  /* Letter-spacing pads the right edge; this puts the block back in the middle. */
+  text-indent: 0.22em;
+}
+
+.lobby__hint,
+.lobby__status {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 14px;
+  text-align: center;
+}
+
+.lobby__copy {
+  min-height: var(--tap);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.lobby__copy:hover {
+  background: var(--surface-hover);
+}
+
+.lobby__seats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lobby__seat {
+  padding: 12px 14px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  color: var(--text-faint);
+  font-size: 15px;
+}
+
+.lobby__seat--taken {
+  border-style: solid;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.tablepane__board {
+  width: 100%;
+  max-width: 520px;
+}
+
+/* The launcher out of the demo. */
+.sidebar__play {
+  margin: 0 10px 4px;
+  min-height: var(--tap);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sidebar__play:hover {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}

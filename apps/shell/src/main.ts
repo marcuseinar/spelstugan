@@ -11,6 +11,8 @@
 import { Session } from '@spelstugan/game-kit';
 import { ludo, ludoUi } from '@spelstugan/ludo';
 import type { LudoMove, LudoSecret, LudoShared } from '@spelstugan/ludo';
+import { Tables } from './api.js';
+import type { TableSnapshot } from './api.js';
 import { ChatLog, describeGameEvent, messageToSend } from './chat.js';
 import { HOT_SEAT_NOTE, LUDO_PLAYERS, YOU, onlineNow, seededChat, workspace } from './demoData.js';
 import type { MobileScreen, SheetHeight } from './navigation.js';
@@ -23,6 +25,8 @@ import {
   toggled,
 } from './navigation.js';
 import './style.css';
+import { codeInvitedTo, millisecondsUntilNextPoll, nameKeyFor, worthPolling } from './table.js';
+import { renderJoining, renderLobby, renderNotice, renderOpening } from './tableView.js';
 import {
   element,
   renderChatLines,
@@ -55,6 +59,29 @@ function gameFor(channelId: string): Session<LudoShared, LudoSecret, LudoMove> {
   games.set(channelId, created);
   return created;
 }
+
+/**
+ * Where the real server lives.
+ *
+ * Overridable at build time so a local Worker can be pointed at while
+ * developing; the default is the deployed one, which is public anyway.
+ */
+const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? 'https://spelstugan.marcus-einar.workers.dev';
+const tables = new Tables(SERVER_URL);
+
+/**
+ * The online table, which is the only part of this app that is not pretend.
+ *
+ * A code with no snapshot yet means someone followed an invitation and has not
+ * taken a seat. Following one lands on the table rather than the demo, which
+ * is the whole point of sending it.
+ */
+let onlineCode: string | null = codeInvitedTo(window.location.href);
+let showing: 'demo' | 'table' = onlineCode === null ? 'demo' : 'table';
+let onlineTable: TableSnapshot | null = null;
+let onlineName = '';
+let onlineNotice = '';
+let pollTimer: number | undefined;
 
 let activeServerId = workspace.servers[0]?.id ?? '';
 let activeChannelId = '';
@@ -215,6 +242,224 @@ function renderTextChannel(channel: Channel): HTMLElement {
   return pane;
 }
 
+/* ---- the online table: the one part of this app that is not pretend ---- */
+
+/** Leaves the demo behind and opens the real thing. */
+function showTableScreen(): void {
+  showing = 'table';
+  onlineCode = null;
+  onlineTable = null;
+  onlineNotice = '';
+  render();
+}
+
+function showDemo(): void {
+  stopPolling();
+  showing = 'demo';
+  onlineCode = null;
+  onlineTable = null;
+  onlineNotice = '';
+  rememberCode(null);
+  render();
+}
+
+/** Keeps the address bar honest, so a refresh or a share lands in the right place. */
+function rememberCode(code: string | null): void {
+  const url = new URL(window.location.href);
+  if (code === null) {
+    url.searchParams.delete('table');
+  } else {
+    url.searchParams.set('table', code);
+  }
+  window.history.replaceState(null, '', url.toString());
+}
+
+function accept(answer: { ok: boolean; value?: TableSnapshot; reason?: string }): void {
+  if (answer.ok && answer.value !== undefined) {
+    onlineTable = answer.value;
+    onlineCode = answer.value.code;
+    onlineNotice = '';
+    rememberCode(answer.value.code);
+  } else {
+    onlineNotice = answer.reason ?? 'Something went wrong.';
+  }
+  render();
+  schedulePoll();
+}
+
+async function openTable(name: string, seats: number): Promise<void> {
+  onlineName = name;
+  const opened = await tables.open('ludo', seats);
+  if (!opened.ok) {
+    accept(opened);
+    return;
+  }
+  // Opening a table does not seat you at it — taking a seat does, and the
+  // person who opened it wants one too.
+  await takeSeat(opened.value.code, name);
+}
+
+async function joinTable(name: string): Promise<void> {
+  if (onlineCode !== null) {
+    onlineName = name;
+    await takeSeat(onlineCode, name);
+  }
+}
+
+async function takeSeat(code: string, name: string): Promise<void> {
+  const seated = await tables.join(code, name);
+  if (seated.ok) {
+    rememberName(code, name);
+  }
+  accept(seated);
+}
+
+function rememberName(code: string, name: string): void {
+  try {
+    window.localStorage.setItem(nameKeyFor(code), name);
+  } catch {
+    // Private browsing and blocked storage both throw here. Losing the seat on
+    // a reload is worse than nothing but far better than not playing at all.
+  }
+}
+
+function nameRememberedFor(code: string): string {
+  try {
+    return window.localStorage.getItem(nameKeyFor(code)) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Returns to a seat this browser already took.
+ *
+ * A reload should put a player back at their table, not in front of a join
+ * form that will refuse them for using their own name.
+ */
+async function resumeSeat(code: string): Promise<void> {
+  const remembered = nameRememberedFor(code);
+  if (remembered === '') {
+    return;
+  }
+  const seen = await tables.read(code, remembered);
+  if (seen.ok && seen.value.players.includes(remembered)) {
+    onlineName = remembered;
+    accept(seen);
+  }
+}
+
+async function startTable(): Promise<void> {
+  if (onlineCode !== null) {
+    accept(await tables.start(onlineCode));
+  }
+}
+
+async function playOnline(move: LudoMove): Promise<void> {
+  if (onlineCode !== null) {
+    accept(await tables.play(onlineCode, onlineName, move));
+  }
+}
+
+async function refreshTable(): Promise<void> {
+  if (onlineCode === null) {
+    return;
+  }
+  const seen = await tables.read(onlineCode, onlineName === '' ? null : onlineName);
+  if (seen.ok) {
+    onlineTable = seen.value;
+    render();
+  }
+  schedulePoll();
+}
+
+/**
+ * Asks the server again in a moment.
+ *
+ * Polling stands in for the push transport the architecture calls for; it is
+ * the honest placeholder, not the destination. One timer at a time, cancelled
+ * before each new one, so leaving the table stops the asking.
+ */
+function schedulePoll(): void {
+  stopPolling();
+  if (!worthPolling(onlineTable) || onlineTable === null) {
+    return;
+  }
+  pollTimer = window.setTimeout(refreshTable, millisecondsUntilNextPoll(onlineTable));
+}
+
+function stopPolling(): void {
+  if (pollTimer !== undefined) {
+    window.clearTimeout(pollTimer);
+    pollTimer = undefined;
+  }
+}
+
+async function copyInvitation(link: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(link);
+    onlineNotice = 'Link copied. Send it to whoever is playing.';
+  } catch {
+    // Clipboard access is refused often enough — an insecure origin, a
+    // permission prompt declined — that the link itself is the fallback.
+    onlineNotice = link;
+  }
+  render();
+}
+
+function renderOnline(): HTMLElement {
+  const pane = onlinePane();
+  if (onlineNotice !== '') {
+    pane.append(renderNotice(onlineNotice));
+  }
+  return pane;
+}
+
+function onlinePane(): HTMLElement {
+  const seatedHere = onlineTable?.players.includes(onlineName);
+
+  if (onlineTable === null || seatedHere !== true) {
+    return onlineCode === null
+      ? renderOpening({ onOpen: openTable, onLeave: showDemo })
+      : renderJoining({ code: onlineCode, onJoin: joinTable, onLeave: showDemo });
+  }
+  if (onlineTable.phase === 'lobby') {
+    return renderLobby({
+      table: onlineTable,
+      you: onlineName,
+      pageUrl: window.location.href,
+      onStart: startTable,
+      onLeave: showDemo,
+      onCopy: copyInvitation,
+    });
+  }
+  return renderOnlineGame(onlineTable);
+}
+
+function renderOnlineGame(table: TableSnapshot): HTMLElement {
+  const pane = element('section', 'tablepane tablepane--game');
+  const bar = element('header', 'tablepane__bar');
+  const leave = element('button', 'tablepane__leave', 'Back') as HTMLButtonElement;
+  leave.type = 'button';
+  leave.addEventListener('click', showDemo);
+  bar.append(leave);
+  bar.append(element('h2', 'tablepane__title', `Table ${table.code}`));
+  pane.append(bar);
+
+  const boardHost = element('div', 'tablepane__board');
+  pane.append(boardHost);
+
+  const view = table.view as { shared: LudoShared } | null;
+  if (view !== null) {
+    ludoUi.mount(boardHost, {
+      view,
+      viewerId: onlineName,
+      dispatch: playOnline,
+    });
+  }
+  return pane;
+}
+
 function renderMain(server: Server, channel: Channel): HTMLElement {
   const main = element('main', 'main');
   main.append(
@@ -230,6 +475,23 @@ function renderMain(server: Server, channel: Channel): HTMLElement {
 }
 
 function render(): void {
+  if (showing === 'table') {
+    renderTableScreen();
+    return;
+  }
+  renderDemo();
+}
+
+/** The real table, on its own: no fake servers, no invented conversation. */
+function renderTableScreen(): void {
+  const app = root();
+  app.dataset.screen = 'table';
+  app.dataset.channelKind = 'online';
+  app.dataset.canGoBack = 'false';
+  app.replaceChildren(renderOnline());
+}
+
+function renderDemo(): void {
   const server = findServer(workspace, activeServerId);
   if (server === undefined) {
     return;
@@ -259,6 +521,7 @@ function render(): void {
       you: workspace.you,
       online: onlineNow,
       onPick: selectChannel,
+      onPlayForReal: showTableScreen,
     }),
     renderMain(server, channel),
     renderServerBar({
@@ -275,3 +538,8 @@ function render(): void {
 }
 
 selectServer(activeServerId);
+
+// An invitation link, opened again by someone who already took their seat.
+if (onlineCode !== null) {
+  void resumeSeat(onlineCode);
+}

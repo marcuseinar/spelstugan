@@ -552,3 +552,70 @@ deploy at all. `docs/DEPLOYMENT.md` has the setup steps.
 The AWS material in that file is deliberately kept. It is the comparison this
 decision rests on, and the trigger for revisiting is written down there rather
 than left to memory.
+
+
+---
+
+## 022 — Online tables: a lobby first, and no accounts anywhere
+
+**Status:** accepted
+
+**Context:** The shell played its own in-memory game and the server played
+real ones, and the two did not know about each other. Joining them raised the
+question the product has been deferring since decision 015: what does someone
+have to be, to sit down?
+
+**Decision:** Nothing. A table is **opened** with a game and a seat count, and
+anyone holding the code **claims a seat** by typing a display name. When every
+seat is taken, anyone at the table may **start** it, which closes the seats.
+No account, no signup, no verification — the link is the invitation and the
+code is the whole of the authorization story.
+
+The lobby exists because the alternative was worse: the host would have had to
+invent everyone else's name in advance, and the other players would have
+arrived to find themselves already named. Claiming a seat is the smallest step
+that lets someone arrive as themselves.
+
+The name a browser used is remembered per code in `localStorage`, because
+phones reload constantly and being refused for using your own name is an
+absurd way to lose a game.
+
+**Consequences:** **A seat belongs to nobody.** Naming a seated player is
+enough to move for them — there is no token proving the browser that claimed a
+seat is the one now using it. That is acceptable for friends sharing a link
+and is not acceptable for strangers, so it blocks any public opening. The fix
+is a seat token issued at claim time; it is small, and it is deliberately not
+built yet because nothing public exists to protect.
+
+The shell **polls** rather than being pushed to: 1.5s in a lobby, 2.5s in a
+game, never once finished. Deliberately confined to one module so the
+websocket transport (decision 005) replaces it rather than being threaded
+through the UI.
+
+Online tables have **no chat**, which is a strange gap in a product whose
+whole thesis is that the conversation matters more than the game. It is
+honest about being a gap: chat lives in the demo's memory and has no server
+behind it yet. That, not another game, is the next thing worth building.
+
+---
+
+## 023 — A schema change empties a table, until real games exist
+
+**Status:** accepted, with an expiry date
+
+**Context:** Adding the lobby changed a Durable Object's SQLite schema.
+`CREATE TABLE IF NOT EXISTS` does not migrate, so tables written by the older
+shape started failing with "no such column" — found by running the end-to-end
+script against storage that already existed.
+
+**Decision:** The store carries a schema version. Storage written by a
+different version is **dropped and recreated**, not migrated.
+
+**Consequences:** This is only defensible because no game anyone would miss
+has been played here. A move log is the product's memory, and the day a real
+one exists this must become an additive migration — new columns with
+defaults, a rewrite that preserves the log, or a refusal to serve rather than
+a reset. Whoever adds the first feature that real people use owns changing it.
+
+It is written down in `apps/server/src/store.ts` next to the version constant,
+because that is where somebody will be standing when they need to know.

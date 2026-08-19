@@ -31,7 +31,10 @@ npm run dev --workspace @spelstugan/server        # the server, locally
 npm run test:e2e --workspace @spelstugan/server   # play a whole game against it
 ```
 
-365 tests; mutation gate at 85%, currently 94%.
+The shell talks to the deployed server by default; point it somewhere else
+with `VITE_SERVER_URL=http://127.0.0.1:8787 npm run dev`.
+
+419 tests; mutation gate at 85%, currently 94%.
 
 ### Done
 
@@ -61,12 +64,18 @@ npm run test:e2e --workspace @spelstugan/server   # play a whole game against it
 - [x] `apps/server` — a Worker with a Durable Object per game table: seat a
       table, play moves through the real reducer, read a view, and keep the
       move log in the table's own SQLite (decision 021)
+- [x] **Online tables end to end** (decision 022) — open a table, share the
+      code, claim a seat, start, and play from two devices. Verified by
+      driving two browsers through a real game against a real server.
 
 ### In progress
 
-- [ ] Wire the shell to the server: create a table from the UI, join by code,
-      and poll for the other side's moves. The shell still runs its own
-      in-memory session — nothing is connected yet.
+- [ ] **Chat at an online table.** Messages on the server, beside the move log,
+      so the conversation survives the game (decision 001). The demo's chat is
+      in-memory only and the online table has none at all.
+- [ ] **A seat token.** Today naming a seated player is enough to move for
+      them (decision 022). Fine for friends with a link, blocks anything
+      public.
 
 ### Next up (not started)
 

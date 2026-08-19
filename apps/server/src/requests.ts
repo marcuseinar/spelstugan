@@ -13,7 +13,12 @@ export type Validated<T> =
 
 export interface TableRequest {
   readonly gameId: string;
-  readonly players: readonly string[];
+  /** How many seats to open. Whether the game allows that many is its call. */
+  readonly seats: number;
+}
+
+export interface JoinRequest {
+  readonly name: string;
 }
 
 export interface MoveRequest {
@@ -23,7 +28,6 @@ export interface MoveRequest {
 
 /** Long enough for a name someone chose, short enough not to break a layout. */
 export const MAX_NAME_LENGTH = 24;
-const MAX_PLAYERS = 8;
 
 export function parseTableRequest(body: unknown): Validated<TableRequest> {
   if (!isRecord(body)) {
@@ -35,23 +39,21 @@ export function parseTableRequest(body: unknown): Validated<TableRequest> {
     return rejected('Name the game to play, as "game".');
   }
 
-  return withPlayers(gameId, body.players);
+  const seats = body.seats;
+  if (!Number.isInteger(seats)) {
+    return rejected('Say how many seats to open, as "seats".');
+  }
+  return { ok: true, value: { gameId, seats: seats as number } };
 }
 
-function withPlayers(gameId: string, players: unknown): Validated<TableRequest> {
-  if (!Array.isArray(players) || players.length === 0) {
-    return rejected('Seat at least one player, as "players".');
+export function parseJoinRequest(body: unknown): Validated<JoinRequest> {
+  if (!isRecord(body)) {
+    return rejected('Expected a JSON object.');
   }
-  if (players.length > MAX_PLAYERS) {
-    return rejected(`A table seats at most ${MAX_PLAYERS} players.`);
+  if (!isName(body.name)) {
+    return rejected(`Pick a name of 1 to ${MAX_NAME_LENGTH} characters, as "name".`);
   }
-  if (!players.every(isName)) {
-    return rejected(`Every player needs a name of 1 to ${MAX_NAME_LENGTH} characters.`);
-  }
-  if (new Set(players).size !== players.length) {
-    return rejected('Two players cannot share a name at the same table.');
-  }
-  return { ok: true, value: { gameId, players } };
+  return { ok: true, value: { name: body.name } };
 }
 
 export function parseMoveRequest(body: unknown): Validated<MoveRequest> {

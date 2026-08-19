@@ -14,6 +14,8 @@
     "apps/shell/src/workspace.ts",
     "apps/shell/src/chat.ts",
     "apps/shell/src/navigation.ts",
+    "apps/shell/src/table.ts",
+    "apps/shell/src/api.ts",
     "apps/server/src/codes.ts",
     "apps/server/src/routes.ts",
     "apps/server/src/requests.ts",

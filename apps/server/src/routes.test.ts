@@ -10,8 +10,22 @@ describe('routeFor', () => {
     expect(routeFor('GET', '/api/games')).toEqual({ kind: 'games' });
   });
 
-  it('creates a table', () => {
-    expect(routeFor('POST', '/api/tables')).toEqual({ kind: 'createTable' });
+  it('opens a table', () => {
+    expect(routeFor('POST', '/api/tables')).toEqual({ kind: 'openTable' });
+  });
+
+  it('joins a table', () => {
+    expect(routeFor('POST', '/api/tables/ABCDE/players')).toEqual({
+      kind: 'joinTable',
+      code: 'ABCDE',
+    });
+  });
+
+  it('starts a table', () => {
+    expect(routeFor('POST', '/api/tables/ABCDE/start')).toEqual({
+      kind: 'startTable',
+      code: 'ABCDE',
+    });
   });
 
   it('reads a table by its code', () => {
@@ -30,7 +44,7 @@ describe('routeFor', () => {
   });
 
   it('tolerates a trailing slash', () => {
-    expect(routeFor('POST', '/api/tables/')).toEqual({ kind: 'createTable' });
+    expect(routeFor('POST', '/api/tables/')).toEqual({ kind: 'openTable' });
   });
 
   describe('turns away', () => {
@@ -44,6 +58,14 @@ describe('routeFor', () => {
 
     it('reading where only posting is offered', () => {
       expect(routeFor('GET', '/api/tables/ABCDE/moves')).toEqual({ kind: 'unknown' });
+    });
+
+    it('reading the seats instead of taking one', () => {
+      expect(routeFor('GET', '/api/tables/ABCDE/players')).toEqual({ kind: 'unknown' });
+    });
+
+    it('reading the start action', () => {
+      expect(routeFor('GET', '/api/tables/ABCDE/start')).toEqual({ kind: 'unknown' });
     });
 
     it('a write to the root', () => {

@@ -129,10 +129,12 @@ a table owns the game: it holds the move log in its own SQLite storage and
 answers in outcomes, not status codes.
 
 ```
-POST /api/tables            {game, players}        -> 201 {code, game, players}
-GET  /api/tables/:code      ?viewer=<name>         -> 200 {table}
-POST /api/tables/:code/moves {player, move}        -> 200 {events, table} | 409 {error}
-GET  /api/games                                    -> 200 {games}
+POST /api/tables             {game, seats}    -> 201 {table}
+POST /api/tables/:code/players {name}         -> 200 {table}   take a seat
+POST /api/tables/:code/start                  -> 200 {table}   close the seats
+GET  /api/tables/:code       ?viewer=<name>   -> 200 {table}
+POST /api/tables/:code/moves {player, move}   -> 200 {events, table} | 409
+GET  /api/games                               -> 200 {games}
 ```
 
 A table is named by its room code, and `idFromName(code)` is the whole lookup —
@@ -141,10 +143,22 @@ request folds the stored log through the rules with `Session`, which is the
 same mechanism as replay (see above) rather than a second path that could
 disagree with it.
 
-What is built: seating a table, playing moves, reading a view, and durability
-of the log. What is not: accounts, guest tokens, chat, and any notion of who
-is allowed to claim a seat — right now naming a seated player is enough to
-move for them, which is fine for a hot-seat demo and not fine for strangers.
+A table has two lives. In the **lobby** it is a code and a set of empty seats,
+and anyone holding the code may take one by name. Once **started** the seats
+close and it is a game. That order matters: it is what lets a game begin
+without anyone having an account (decision 015), because a seat is claimed by
+whoever is holding the link, not by whoever proved who they are.
+
+What is built: opening a table, claiming a seat, starting, playing, reading a
+view, and durability of the log. What is not:
+
+- **Nobody owns a seat.** Naming a seated player is enough to move for them.
+  Two friends sharing a link is fine; strangers is not. A seat needs a token
+  the server issued at claim time before this can face anyone untrusted.
+- **No chat.** Table chat exists only in the demo's memory. Online tables show
+  the board and nothing else.
+- **Nothing expires.** Tables are kept forever, which is wrong at any real
+  scale and irrelevant at this one.
 
 ## Realtime *(not built)*
 
@@ -159,6 +173,12 @@ The shape it will take is already decided by where tables live: a Durable
 Object can hold the WebSocket connections of everyone at its table, so pushing
 a move to the other players is a broadcast from the object that just applied
 it. No separate service, no shared bus.
+
+Until then the shell **polls** — every 1.5s in a lobby, every 2.5s in a game,
+and not at all once a game is finished. That is a placeholder with a cost
+(latency you can feel, requests nobody needed) and it is deliberately kept in
+one place, `apps/shell/src/table.ts`, so replacing it is a small change rather
+than an excavation.
 
 ## The UI boundary *(built)*
 
@@ -186,7 +206,7 @@ What is left in `board.ts` only sets colours and radii. This split is what
 lets presentation be excluded from mutation testing honestly (decision 018) —
 if drawing code starts deciding something, that decision moves out.
 
-## Guests and room codes *(not built)*
+## Guests and room codes *(partly built)*
 
 An earlier version of this document argued that persistent accounts made
 Jackbox-style room codes unnecessary. That was wrong, and decision 015 revises
@@ -217,6 +237,12 @@ What the platform withholds from a guest:
 Room codes are a public entry point onto live games, so they need care: short
 and unambiguous when read aloud (no O/0, I/1/l), rate-limited against
 guessing, and expiring with the Session.
+
+**Built so far:** a five-character code from that alphabet names a table, and
+anyone holding it can claim a seat by picking a display name. **Not built:**
+rate limiting, expiry, and the client-side token that would make a seat
+actually belong to the browser that claimed it. Today a name is the only
+credential, which is exactly as strong as trusting everyone who has the link.
 
 ## Second screen *(not built)*
 
