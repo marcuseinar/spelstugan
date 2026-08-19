@@ -5,7 +5,7 @@ actually done, what is genuinely in progress, what is next. An agent picking
 this repo up cold should be able to start from here without asking questions.
 Update it in the same commit as the work it describes.
 
-Last updated: 2026-08-18
+Last updated: 2026-08-19
 
 > Visual direction is provisional (decision 012). One rule follows from it and
 > applies to all UI work starting now: **no literal colors in components** —
@@ -55,13 +55,16 @@ npm run test:mutation   # the rigour gate
 
 ### In progress
 
-Nothing currently in flight.
+- [ ] Cloudflare account and API token — the one step only the owner can do;
+      steps in `docs/DEPLOYMENT.md`. Everything after it is git-push.
 
 ### Next up (not started)
 
 - [ ] Data model + migrations for User / Server / Channel / Session / Move,
       including the reserved `kind` and `parent_channel_id` fields
-- [ ] Server: apply moves, persist the log, serve views
+- [ ] Server on Cloudflare Workers (decision 021): a Durable Object per game
+      table, applying moves through the existing reducer and persisting the
+      move log. `docs/DEPLOYMENT.md` has the account setup it needs first
 - [ ] Guest join by room code (decision 015) — reaches a playable game
       sooner than building accounts first
 - [ ] Invite-gated accounts

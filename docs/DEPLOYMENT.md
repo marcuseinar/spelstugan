@@ -5,8 +5,10 @@ deployed anywhere**, because there is no server to deploy yet. This file
 records where we intend to run, why, and what to watch out for — written for
 someone without cloud operations experience.
 
-The short version: **don't start on AWS** (decision 016). Start on a
-platform-as-a-service, move to AWS when there's a concrete reason.
+The short version: **the server runs on Cloudflare Workers with Durable
+Objects** (decision 021), and **not on AWS** (decision 016) until there is a
+concrete reason. Setup instructions are below; the AWS material is kept as the
+comparison it is.
 
 ## The demo (live)
 
@@ -54,33 +56,110 @@ What this product needs to run is genuinely small:
 - static file hosting for the frontend,
 - eventually a websocket layer.
 
-On Fly.io, Render, or Railway that's one config file and a `git push`. On AWS
-the same shape means learning VPCs, security groups, IAM roles, task
+On Cloudflare, Fly.io, or Render that's one config file and a `git push`. On
+AWS the same shape means learning VPCs, security groups, IAM roles, task
 definitions, load balancers, and RDS parameter groups — before any of it plays
 Ludo. Meanwhile the monthly cost is comparable, and often *higher* on AWS
 because the beginner-friendly paths (Fargate, ALB, NAT Gateway, RDS) are the
 expensive ones.
 
+What the same product costs per month, priced in August 2026:
+
+| Option | Monthly | Who administers the machine |
+|---|---|---|
+| Cloudflare Workers + Durable Objects | $0, then $5 | nobody |
+| Render — web service plus Postgres | ~$14 | nobody |
+| AWS Lightsail, Postgres on the same box | $8–15 | you, over SSH |
+| AWS as most tutorials build it | $75–95 | you, plus IAM |
+
+That last row is not an exotic setup: it is Fargate, an ALB, a NAT Gateway and
+RDS — the standard "production-ready" walkthrough. The NAT Gateway alone is
+about $32/month and exists only so containers can reach the internet.
+
+A new AWS account no longer gets the old twelve-month free tier either: it
+gets credits and a plan that ends after six months. Free until it isn't, which
+is worse than either free or paid.
+
 Nothing in the architecture is provider-specific — the rules are pure
-functions and state is a move log — so this is cheap to reverse later. That's
-precisely why it shouldn't be decided now.
+functions and state is a move log — so this stays cheap to reverse.
 
-Rough sense of scale for a project this size: a PaaS runs it for roughly
-$5–20/month. A naive AWS setup can reach that before serving a single request,
-because several AWS components bill by the hour whether or not anyone is using
-them.
+## Where the server will run
 
-## Recommended first deployment
+**Cloudflare Workers, with one Durable Object per game table** (decision 021).
 
-1. **Frontend** — static hosting with a CDN. Any of Cloudflare Pages, Netlify,
-   or Vercel; free at this scale.
-2. **Backend** — one small always-on instance on Fly.io or Render.
-3. **Database** — managed Postgres from the same provider, or Neon/Supabase.
-   Postgres rather than SQLite once more than one process exists; SQLite is
-   fine for local development.
-4. **Backups from day one.** A move log is the source of truth for every game
-   ever played. Losing it loses the product's memory. Verify a restore
-   actually works — an untested backup is a rumour.
+The fit is the reason, not the price. A Durable Object is a single, consistent,
+addressable object with storage attached — which is exactly what a game table
+is: one move log, one strict order of events, one place the truth lives. It
+also comes with WebSockets, so the realtime transport that phase 2 needs
+(decision 005) arrives with the model rather than as a later bolt-on.
+
+| Piece | Where | Cost |
+|---|---|---|
+| Frontend | GitHub Pages now; Workers static assets when there's a domain | free |
+| Game tables | One Durable Object each, move log in its SQLite storage | free tier |
+| Accounts, servers, channels | D1 when the relational shape is needed | free tier |
+| Realtime | WebSockets on the Durable Object | included |
+
+The Workers free plan covers this comfortably at our size; Workers Paid is a
+$5/month minimum if we outgrow it. Confirm current limits on Cloudflare's
+pricing page before relying on any number here — free tiers move.
+
+**The cost that isn't money:** this is the Workers runtime, not Node. Our
+reducer is pure TypeScript and the server layer is thin, so the fit is good,
+but it is a more opinionated bet than a Linux box. `packages/game-kit` and the
+game plugins must stay free of Node-specific APIs so they run in either place.
+
+**Backups from day one.** The move log is the source of truth for every game
+ever played; losing it loses the product's memory. Export it on a schedule and
+verify a restore actually works — an untested backup is a rumour.
+
+## Setting up Cloudflare
+
+One-time, and every step is a web page — it works from a phone. Nothing here
+needs a payment method.
+
+1. **Create a free Cloudflare account** at `dash.cloudflare.com` and verify the
+   email.
+2. **Copy the Account ID.** Dashboard → *Workers & Pages*. The account ID is
+   shown on the overview page (on a narrow screen it may be under the account
+   menu rather than a sidebar).
+3. **Create an API token.** Profile menu → *API Tokens* → *Create Token* →
+   start from the **"Edit Cloudflare Workers"** template. Under *Account
+   Resources* pick your account; under *Zone Resources* pick "All zones" —
+   or leave it empty if no domain is attached yet. Create it, then **copy the
+   token: it is shown once and never again**.
+   - If the template has been renamed, a custom token works: Account →
+     *Workers Scripts* → Edit, plus Account → *Account Settings* → Read.
+   - The template does not include D1. Add Account → *D1* → Edit when the
+     first D1 database appears; Durable Objects need nothing extra, since
+     they deploy as part of the Worker script.
+4. **Put the token in GitHub, not anywhere else.** Repository → *Settings* →
+   *Secrets and variables* → *Actions* → *New repository secret*, named
+   `CLOUDFLARE_API_TOKEN`. Add the account ID the same way as
+   `CLOUDFLARE_ACCOUNT_ID` (it is not secret, but keeping the pair together is
+   simpler than remembering which is which).
+
+**Never paste the token into a chat, an issue, a commit, or a config file.**
+This repository is public. A token that has been shown anywhere else is burned
+and must be rolled — Cloudflare's token list has a *Roll* action for exactly
+that. GitHub secrets are write-only to everyone including agents working on
+the repo, which is the property that makes this arrangement safe.
+
+## How deploys will work
+
+Same shape as the demo: pushing is the deploy.
+
+```yaml
+- uses: cloudflare/wrangler-action@v4
+  with:
+    apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    command: deploy
+```
+
+The gates run first — a deploy that skips `npm run check` is how a broken
+demo ships. Configuration lives in `wrangler.toml` next to the Worker, in
+version control, because the shape of the deployment is part of the code.
 
 ## When AWS does make sense
 

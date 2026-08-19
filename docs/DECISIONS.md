@@ -509,3 +509,46 @@ inherited the sheet's collapsed 132px height, and the game chat's fixed grid
 rows handed the composer the space of a handle that only exists on phones.
 Panes that stack a variable number of children are flex columns now, not fixed
 grids.
+
+---
+
+## 021 — The server runs on Cloudflare Workers, with a Durable Object per table
+
+**Status:** accepted
+
+**Context:** Decision 016 said "not AWS, start on a platform-as-a-service" and
+left the platform open. Choosing it properly meant pricing the alternatives —
+Cloudflare, Render, Fly, Railway, and three different shapes of AWS — for the
+product we are actually building.
+
+**Decision:** Cloudflare Workers, with **one Durable Object per game table**
+and the move log in its SQLite storage. D1 later for the relational parts
+(accounts, servers, channels) if and when they need it.
+
+The fit decided it, not the price. A Durable Object is a single consistent
+addressable object with storage attached, which is what a game table already
+is in `docs/ARCHITECTURE.md`: one move log, one strict order of events, one
+place the truth lives. Serialising moves per table is the platform's default
+rather than something we build. WebSockets come with it, so the realtime
+transport phase 2 requires (decision 005) arrives with the model instead of as
+a separate service.
+
+The price merely agreed: free at our size against roughly $14/month for a
+Render pair, $8–15 for a Lightsail box someone has to administer, and $75–95
+for the AWS shape most tutorials produce.
+
+**Consequences:** This is the Workers runtime, not Node. **`game-kit` and the
+game plugins must stay free of Node-specific APIs** — no `fs`, no `crypto`
+module, no `Buffer` — so the same rules run in the browser, in tests, and on
+the edge. That constraint is easy to hold today and expensive to recover if it
+is broken quietly, so it belongs in review.
+
+Deployment stays git-push: GitHub Actions runs the gates and then
+`wrangler deploy`, with the Cloudflare API token as a GitHub secret. No
+long-lived credentials exist in the repository or in any agent's hands —
+GitHub secrets are write-only, which is what makes it safe to have an agent
+deploy at all. `docs/DEPLOYMENT.md` has the setup steps.
+
+The AWS material in that file is deliberately kept. It is the comparison this
+decision rests on, and the trigger for revisiting is written down there rather
+than left to memory.
