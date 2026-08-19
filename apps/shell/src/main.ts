@@ -25,8 +25,20 @@ import {
   toggled,
 } from './navigation.js';
 import './style.css';
-import { codeInvitedTo, millisecondsUntilNextPoll, nameKeyFor, worthPolling } from './table.js';
-import { renderJoining, renderLobby, renderNotice, renderOpening } from './tableView.js';
+import {
+  codeInvitedTo,
+  latestLineOf,
+  millisecondsUntilNextPoll,
+  nameKeyFor,
+  worthPolling,
+} from './table.js';
+import {
+  renderJoining,
+  renderLobby,
+  renderNotice,
+  renderOpening,
+  renderTableChat,
+} from './tableView.js';
 import {
   element,
   renderChatLines,
@@ -355,6 +367,14 @@ async function startTable(): Promise<void> {
   }
 }
 
+async function sayAtTable(raw: string): Promise<void> {
+  const text = messageToSend(raw);
+  if (onlineCode === null || text === null) {
+    return;
+  }
+  accept(await tables.say(onlineCode, onlineName, text));
+}
+
 async function playOnline(move: LudoMove): Promise<void> {
   if (onlineCode !== null) {
     accept(await tables.play(onlineCode, onlineName, move));
@@ -431,6 +451,7 @@ function onlinePane(): HTMLElement {
       onStart: startTable,
       onLeave: showDemo,
       onCopy: copyInvitation,
+      onSay: sayAtTable,
     });
   }
   return renderOnlineGame(onlineTable);
@@ -438,26 +459,50 @@ function onlinePane(): HTMLElement {
 
 function renderOnlineGame(table: TableSnapshot): HTMLElement {
   const pane = element('section', 'tablepane tablepane--game');
+  pane.append(renderTableBar(`Table ${table.code}`));
+
+  // The same board-and-sheet layout the demo uses, so a phone behaves the same
+  // in both: the board keeps the screen and the talk comes up over it.
+  const game = element('div', 'gamepane');
+  const boardHost = element('div', 'gamepane__board');
+  game.append(boardHost);
+
+  const view = table.view as { shared: LudoShared } | null;
+  if (view !== null) {
+    ludoUi.mount(boardHost, { view, viewerId: onlineName, dispatch: playOnline });
+  }
+
+  const side = element('div', 'gamepane__chat');
+  side.dataset.height = sheetHeight;
+  side.append(
+    renderSheetHandle({
+      summary: latestLineOf(table),
+      unreadHint: 0,
+      onGesture: (deltaY) => {
+        moveSheet(afterGesture(sheetHeight, deltaY));
+      },
+      onToggle: () => {
+        moveSheet(toggled(sheetHeight));
+      },
+    }),
+  );
+  const talk = renderTableChat(table, sayAtTable);
+  side.append(...talk.children);
+  game.append(side);
+
+  pane.append(game);
+  return pane;
+}
+
+/** The bar every table screen wears: where you are, and how to leave. */
+function renderTableBar(title: string): HTMLElement {
   const bar = element('header', 'tablepane__bar');
   const leave = element('button', 'tablepane__leave', 'Back') as HTMLButtonElement;
   leave.type = 'button';
   leave.addEventListener('click', showDemo);
   bar.append(leave);
-  bar.append(element('h2', 'tablepane__title', `Table ${table.code}`));
-  pane.append(bar);
-
-  const boardHost = element('div', 'tablepane__board');
-  pane.append(boardHost);
-
-  const view = table.view as { shared: LudoShared } | null;
-  if (view !== null) {
-    ludoUi.mount(boardHost, {
-      view,
-      viewerId: onlineName,
-      dispatch: playOnline,
-    });
-  }
-  return pane;
+  bar.append(element('h2', 'tablepane__title', title));
+  return bar;
 }
 
 function renderMain(server: Server, channel: Channel): HTMLElement {
@@ -486,9 +531,15 @@ function render(): void {
 function renderTableScreen(): void {
   const app = root();
   app.dataset.screen = 'table';
-  app.dataset.channelKind = 'online';
+  // A table in play is a game channel as far as the layout is concerned, which
+  // is what gives it the same sheet behaviour as the demo on a phone.
+  app.dataset.channelKind = onlineTable?.phase === 'playing' ? 'game' : 'online';
   app.dataset.canGoBack = 'false';
   app.replaceChildren(renderOnline());
+
+  for (const list of app.querySelectorAll('.chat')) {
+    list.scrollTop = list.scrollHeight;
+  }
 }
 
 function renderDemo(): void {

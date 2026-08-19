@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  MAX_MESSAGE_LENGTH,
   MAX_NAME_LENGTH,
   parseJoinRequest,
+  parseMessageRequest,
   parseMoveRequest,
   parseTableRequest,
 } from './requests.js';
@@ -112,6 +114,87 @@ describe('parseJoinRequest', () => {
 
     it('a name one character too long', () => {
       expect(refusal(parseJoinRequest({ name: name(MAX_NAME_LENGTH + 1) }))).toMatch(/name/);
+    });
+  });
+});
+
+describe('parseMessageRequest', () => {
+  it('accepts something said by someone', () => {
+    expect(parseMessageRequest({ author: 'Alex', text: 'your turn' })).toEqual({
+      ok: true,
+      value: { author: 'Alex', text: 'your turn' },
+    });
+  });
+
+  it('trims the message, since a stray space is not a message', () => {
+    expect(parseMessageRequest({ author: 'Alex', text: '  hello  ' })).toEqual({
+      ok: true,
+      value: { author: 'Alex', text: 'hello' },
+    });
+  });
+
+  it('accepts a message of the greatest allowed length', () => {
+    expect(parseMessageRequest({ author: 'Alex', text: name(MAX_MESSAGE_LENGTH) }).ok).toBe(true);
+  });
+
+  it('keeps the message as written, punctuation and all', () => {
+    const text = 'ha! 6 again — that is four in a row 🎲';
+
+    expect(parseMessageRequest({ author: 'Alex', text })).toEqual({
+      ok: true,
+      value: { author: 'Alex', text },
+    });
+  });
+
+  describe('refuses', () => {
+    it('a body that is not an object', () => {
+      expect(refusal(parseMessageRequest('hello'))).toMatch(/JSON object/);
+    });
+
+    it('a null body', () => {
+      expect(refusal(parseMessageRequest(null))).toMatch(/JSON object/);
+    });
+
+    it('a missing author', () => {
+      expect(refusal(parseMessageRequest({ text: 'hello' }))).toMatch(/author/);
+    });
+
+    it('an author who is not a string', () => {
+      expect(refusal(parseMessageRequest({ author: 7, text: 'hello' }))).toMatch(/author/);
+    });
+
+    it('an author name one character too long', () => {
+      expect(
+        refusal(parseMessageRequest({ author: name(MAX_NAME_LENGTH + 1), text: 'hello' })),
+      ).toMatch(/author/);
+    });
+
+    it('a missing message', () => {
+      expect(refusal(parseMessageRequest({ author: 'Alex' }))).toMatch(/text/);
+    });
+
+    it('an empty message', () => {
+      expect(refusal(parseMessageRequest({ author: 'Alex', text: '' }))).toMatch(/text/);
+    });
+
+    it('a message of nothing but whitespace', () => {
+      expect(refusal(parseMessageRequest({ author: 'Alex', text: '   \n  ' }))).toMatch(/text/);
+    });
+
+    it('a message that is not a string', () => {
+      expect(refusal(parseMessageRequest({ author: 'Alex', text: 42 }))).toMatch(/text/);
+    });
+
+    it('a message one character too long', () => {
+      expect(
+        refusal(parseMessageRequest({ author: 'Alex', text: name(MAX_MESSAGE_LENGTH + 1) })),
+      ).toMatch(/at most/);
+    });
+
+    it('a message that is only too long before trimming, which is fine', () => {
+      const padded = ` ${name(MAX_MESSAGE_LENGTH)} `;
+
+      expect(parseMessageRequest({ author: 'Alex', text: padded }).ok).toBe(true);
     });
   });
 });

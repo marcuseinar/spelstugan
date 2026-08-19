@@ -90,6 +90,36 @@ check(
   (await post(`/api/tables/${code}/players`, { name: 'Priya' })).status === 409,
 );
 
+// The conversation is the product; it had better work before the game does.
+check(
+  'notes who sat down',
+  tableIn(secondSeat).messages.filter((line) => line.kind === 'joined').length === 2,
+  tableIn(secondSeat).messages,
+);
+const said = await post(`/api/tables/${code}/messages`, {
+  author: 'Alex',
+  text: '  hello table  ',
+});
+check('takes a message from someone seated', said.status === 200, said.body);
+check(
+  'trims it and keeps who said it',
+  tableIn(said).messages.at(-1)?.text === 'hello table' &&
+    tableIn(said).messages.at(-1)?.author === 'Alex',
+  tableIn(said).messages.at(-1),
+);
+check(
+  'refuses a message from someone not seated',
+  (await post(`/api/tables/${code}/messages`, { author: 'Stranger', text: 'hi' })).status === 409,
+);
+check(
+  'refuses an empty message',
+  (await post(`/api/tables/${code}/messages`, { author: 'Alex', text: '   ' })).status === 400,
+);
+check(
+  'refuses a message with nobody behind it',
+  (await post(`/api/tables/${code}/messages`, { text: 'hi' })).status === 400,
+);
+
 const started = await post(`/api/tables/${code}/start`);
 check(
   'starts the game',

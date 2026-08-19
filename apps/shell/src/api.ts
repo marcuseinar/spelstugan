@@ -7,6 +7,14 @@
  * exception in a console.
  */
 
+/** A line in a table's conversation, as the server keeps it. */
+export interface TableMessage {
+  readonly id: number;
+  readonly kind: 'said' | 'joined';
+  readonly author?: string;
+  readonly text: string;
+}
+
 export interface TableSnapshot {
   readonly code: string;
   readonly gameId: string;
@@ -17,6 +25,7 @@ export interface TableSnapshot {
   readonly moveCount: number;
   /** The board, once there is one. Null while the table is still filling. */
   readonly view: { readonly shared: unknown } | null;
+  readonly messages: readonly TableMessage[];
 }
 
 export type Answer<T> =
@@ -47,6 +56,13 @@ export class Tables {
   read(code: string, viewer: string | null): Promise<Answer<TableSnapshot>> {
     const query = viewer === null ? '' : `?viewer=${encodeURIComponent(viewer)}`;
     return this.table(`/api/tables/${code}${query}`, { method: 'GET' });
+  }
+
+  say(code: string, author: string, text: string): Promise<Answer<TableSnapshot>> {
+    return this.table(`/api/tables/${code}/messages`, {
+      method: 'POST',
+      body: { author, text },
+    });
   }
 
   play(code: string, player: string, move: unknown): Promise<Answer<TableSnapshot>> {

@@ -8,6 +8,17 @@
 
 import type { LoggedMove } from '@spelstugan/game-kit';
 
+/** A line in a table's conversation. Ids come from the order it was said in. */
+export interface Message {
+  readonly id: number;
+  /** What someone typed, or a note about the table itself. */
+  readonly kind: 'said' | 'joined';
+  readonly author?: string;
+  readonly text: string;
+}
+
+export type NewMessage = Omit<Message, 'id'>;
+
 export interface TableRecord {
   readonly gameId: string;
   readonly seed: string;
@@ -43,9 +54,16 @@ const SCHEMA = `
     player TEXT NOT NULL,
     move TEXT NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS messages (
+    number INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT NOT NULL,
+    author TEXT,
+    text TEXT NOT NULL
+  );
 `;
 
 const DROP_EVERYTHING = `
+  DROP TABLE IF EXISTS messages;
   DROP TABLE IF EXISTS moves;
   DROP TABLE IF EXISTS players;
   DROP TABLE IF EXISTS seating;
@@ -62,7 +80,7 @@ const DROP_EVERYTHING = `
  * day comes this becomes a real migration and this comment becomes a lie —
  * see `docs/DECISIONS.md`, entry 022.
  */
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 export class TableStore {
   constructor(private readonly sql: SqlStorage) {
@@ -140,6 +158,33 @@ export class TableStore {
     }
     this.sql.exec('INSERT INTO players (name) VALUES (?)', name);
     return true;
+  }
+
+  /**
+   * Adds a line to the table's conversation.
+   *
+   * Kept beside the move log rather than somewhere else, because the two are
+   * one thread: what was said and what was played happened at the same table
+   * (decision 001).
+   */
+  say(line: NewMessage): void {
+    this.sql.exec(
+      'INSERT INTO messages (kind, author, text) VALUES (?, ?, ?)',
+      line.kind,
+      line.author ?? null,
+      line.text,
+    );
+  }
+
+  messages(): Message[] {
+    return [
+      ...this.sql.exec('SELECT number, kind, author, text FROM messages ORDER BY number'),
+    ].map((row) => ({
+      id: Number(row.number),
+      kind: row.kind === 'joined' ? 'joined' : 'said',
+      ...(row.author === null ? {} : { author: String(row.author) }),
+      text: String(row.text),
+    }));
   }
 
   append(entry: LoggedMove<unknown>): void {

@@ -592,10 +592,8 @@ game, never once finished. Deliberately confined to one module so the
 websocket transport (decision 005) replaces it rather than being threaded
 through the UI.
 
-Online tables have **no chat**, which is a strange gap in a product whose
-whole thesis is that the conversation matters more than the game. It is
-honest about being a gap: chat lives in the demo's memory and has no server
-behind it yet. That, not another game, is the next thing worth building.
+Online tables had **no chat** when this decision was first written; decision
+024 closed that.
 
 ---
 
@@ -619,3 +617,39 @@ a reset. Whoever adds the first feature that real people use owns changing it.
 
 It is written down in `apps/server/src/store.ts` next to the version constant,
 because that is where somebody will be standing when they need to know.
+
+
+---
+
+## 024 — Chat lives with the move log, in the same table
+
+**Status:** accepted
+
+**Context:** Online tables could be played but not talked at, in a product
+whose entire thesis (decision 001) is that the conversation is the thing and
+the game lives inside it. A game you can play in silence with a stranger is
+Board Game Arena, which is what this exists not to be.
+
+**Decision:** A table's messages are stored in the Durable Object that holds
+its move log — same object, same storage, one thread. Sitting down and
+starting write notes into it, so the history reads as the table's, not the
+chat box's. Only the seated may speak; anyone holding the code may read.
+
+Messages come back on **every** table response rather than from an endpoint of
+their own. One round trip instead of two, and the poll that was already
+fetching the board now fetches the conversation for free.
+
+**Consequences:** Whole-history-every-poll is wrong at scale and right at this
+one. The moment a table's thread is long enough to notice, this needs a
+since-cursor — the shape is ready for it, since messages already carry
+ascending ids.
+
+**Lines carry no timestamp.** Ordering is enough while both players are
+looking at the same screen, and it will not survive asynchronous play, where
+"your turn" needs to look three days old. Adding one is easy; the reason it is
+not there is that the clock has no business in this repo until something needs
+it, and no reducer may ever read it (see `CLAUDE.md`).
+
+The demo's chat renderer draws both — the mockup's invented conversation and
+the real table's — because one renderer is what keeps the pretend one honest
+about what the real one can do.

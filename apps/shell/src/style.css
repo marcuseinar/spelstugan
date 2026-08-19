@@ -1192,6 +1192,27 @@ button {
   overflow-y: auto;
 }
 
+/* Waiting-room chat: a plain block, since there is no board to sit over yet. */
+.tablechat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 180px;
+  max-height: 40vh;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-sidebar);
+  overflow: hidden;
+}
+
+.tablechat .chat {
+  min-height: 0;
+}
+
+.tablechat .composer {
+  margin: 0 10px 10px;
+}
+
 .tablepane {
   min-height: var(--app-height);
   display: flex;
@@ -1428,4 +1449,30 @@ button {
 .sidebar__play:hover {
   background: var(--accent);
   color: var(--accent-contrast);
+}
+
+/* A table in play fills the screen the way a game channel does: the board owns
+   it, the chat rises over it, and nothing scrolls the page itself. */
+.app[data-screen="table"][data-channel-kind="game"] {
+  overflow: hidden;
+}
+
+.tablepane--game {
+  height: var(--app-height);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  /* The forms above centre their column; a board fills what it is given. */
+  align-items: stretch;
+  gap: 0;
+  padding: 0 0 var(--safe-bottom);
+}
+
+.tablepane--game .tablepane__bar {
+  max-width: none;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tablepane--game .gamepane {
+  min-height: 0;
 }

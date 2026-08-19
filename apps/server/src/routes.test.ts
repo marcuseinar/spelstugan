@@ -32,6 +32,13 @@ describe('routeFor', () => {
     expect(routeFor('GET', '/api/tables/ABCDE')).toEqual({ kind: 'readTable', code: 'ABCDE' });
   });
 
+  it('says something at a table', () => {
+    expect(routeFor('POST', '/api/tables/ABCDE/messages')).toEqual({
+      kind: 'sayAtTable',
+      code: 'ABCDE',
+    });
+  });
+
   it('plays a move at a table', () => {
     expect(routeFor('POST', '/api/tables/ABCDE/moves')).toEqual({
       kind: 'playMove',
@@ -62,6 +69,10 @@ describe('routeFor', () => {
 
     it('reading the seats instead of taking one', () => {
       expect(routeFor('GET', '/api/tables/ABCDE/players')).toEqual({ kind: 'unknown' });
+    });
+
+    it('reading the messages, which are served with the table instead', () => {
+      expect(routeFor('GET', '/api/tables/ABCDE/messages')).toEqual({ kind: 'unknown' });
     });
 
     it('reading the start action', () => {

@@ -134,6 +134,7 @@ POST /api/tables/:code/players {name}         -> 200 {table}   take a seat
 POST /api/tables/:code/start                  -> 200 {table}   close the seats
 GET  /api/tables/:code       ?viewer=<name>   -> 200 {table}
 POST /api/tables/:code/moves {player, move}   -> 200 {events, table} | 409
+POST /api/tables/:code/messages {author, text} -> 200 {table}
 GET  /api/games                               -> 200 {games}
 ```
 
@@ -149,14 +150,28 @@ close and it is a game. That order matters: it is what lets a game begin
 without anyone having an account (decision 015), because a seat is claimed by
 whoever is holding the link, not by whoever proved who they are.
 
-What is built: opening a table, claiming a seat, starting, playing, reading a
-view, and durability of the log. What is not:
+A table keeps its conversation beside its move log, in the same storage: what
+was said and what was played happened at the same table (decision 001). Only
+the seated may speak; anyone with the code may read. Sitting down and starting
+the game write their own notes into that thread, so it reads as a history of
+the table rather than only of the chat.
 
-- **Nobody owns a seat.** Naming a seated player is enough to move for them.
-  Two friends sharing a link is fine; strangers is not. A seat needs a token
-  the server issued at claim time before this can face anyone untrusted.
-- **No chat.** Table chat exists only in the demo's memory. Online tables show
-  the board and nothing else.
+Messages ride along on every table response rather than being fetched
+separately. That is wasteful and deliberate: a table's conversation is small,
+one round trip beats two, and a since-cursor is worth adding when a table's
+history is long enough to notice.
+
+What is built: opening a table, claiming a seat, starting, playing, chatting,
+reading a view, and durability of both logs. What is not:
+
+- **Nobody owns a seat.** Naming a seated player is enough to move — or to
+  speak — for them. Two friends sharing a link is fine; strangers is not. A
+  seat needs a token the server issued at claim time before this can face
+  anyone untrusted.
+- **No play-by-play online.** The demo narrates moves into its chat; an online
+  table does not yet, so the thread holds people and table notes only.
+- **No timestamps.** Lines are ordered but not dated, which will not survive
+  asynchronous play — "your turn" from three days ago must look like it.
 - **Nothing expires.** Tables are kept forever, which is wrong at any real
   scale and irrelevant at this one.
 

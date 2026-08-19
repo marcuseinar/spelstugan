@@ -11,7 +11,12 @@ import { createRng } from '@spelstugan/game-kit';
 import { createCode } from './codes.js';
 import { gameIds, gameNamed, seatingProblem } from './games.js';
 import { asJson } from './json.js';
-import { parseJoinRequest, parseMoveRequest, parseTableRequest } from './requests.js';
+import {
+  parseJoinRequest,
+  parseMessageRequest,
+  parseMoveRequest,
+  parseTableRequest,
+} from './requests.js';
 import { routeFor } from './routes.js';
 import type { GameTable, TableAnswer, TableCommand } from './table.js';
 
@@ -60,6 +65,8 @@ export default {
         return await answerWith(env, route.code, { kind: 'start', code: route.code });
       case 'playMove':
         return await playMove(route.code, request, env);
+      case 'sayAtTable':
+        return await sayAtTable(route.code, request, env);
       case 'unknown':
         return problem(404, 'No such endpoint.');
     }
@@ -113,6 +120,24 @@ async function joinTable(code: string, request: Request, env: Env): Promise<Resp
     return problem(400, parsed.reason);
   }
   return await answerWith(env, code, { kind: 'join', code, name: parsed.value.name });
+}
+
+async function sayAtTable(code: string, request: Request, env: Env): Promise<Response> {
+  const body = await readJson(request);
+  if (!body.ok) {
+    return problem(400, body.reason);
+  }
+
+  const parsed = parseMessageRequest(body.value);
+  if (!parsed.ok) {
+    return problem(400, parsed.reason);
+  }
+  return await answerWith(env, code, {
+    kind: 'say',
+    code,
+    author: parsed.value.author,
+    text: parsed.value.text,
+  });
 }
 
 async function readTable(code: string, viewer: string | null, env: Env): Promise<Response> {

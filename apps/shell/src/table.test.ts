@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { TableSnapshot } from './api.js';
 import {
+  chatLinesOf,
   codeInvitedTo,
   invitationTo,
+  latestLineOf,
   lobbyStatus,
   millisecondsUntilNextPoll,
   nameKeyFor,
@@ -21,8 +23,13 @@ function table(overrides: Partial<TableSnapshot> = {}): TableSnapshot {
     finished: false,
     moveCount: 0,
     view: null,
+    messages: [],
     ...overrides,
   };
+}
+
+function messages(lines: TableSnapshot['messages']): TableSnapshot {
+  return table({ messages: lines });
 }
 
 describe('invitations', () => {
@@ -132,6 +139,60 @@ describe('lobbyStatus', () => {
 
   it('says the waiting is over when the table is full', () => {
     expect(lobbyStatus(table({ seats: 2, players: ['Alex', 'Mia'] }))).toMatch(/start/i);
+  });
+});
+
+describe('chatLinesOf', () => {
+  it('carries a said line through with its author', () => {
+    const table = messages([{ id: 3, kind: 'said', author: 'Alex', text: 'your turn' }]);
+
+    expect(chatLinesOf(table)).toEqual([
+      { id: 3, kind: 'said', author: 'Alex', text: 'your turn' },
+    ]);
+  });
+
+  it('carries a note through without inventing an author for it', () => {
+    const table = messages([{ id: 1, kind: 'joined', text: 'Alex sat down' }]);
+
+    // Strictly: a note has no author at all, rather than an empty one. The
+    // renderer would survive either, but the type says one of them.
+    expect(chatLinesOf(table)).toStrictEqual([{ id: 1, kind: 'joined', text: 'Alex sat down' }]);
+  });
+
+  it('keeps the order the table said things in', () => {
+    const table = messages([
+      { id: 1, kind: 'joined', text: 'Alex sat down' },
+      { id: 2, kind: 'said', author: 'Alex', text: 'hello' },
+    ]);
+
+    expect(chatLinesOf(table).map((line) => line.id)).toEqual([1, 2]);
+  });
+
+  it('has nothing to draw for a table where nothing was said', () => {
+    expect(chatLinesOf(table())).toEqual([]);
+  });
+});
+
+describe('latestLineOf', () => {
+  it('shows the newest thing said, with who said it', () => {
+    const shown = latestLineOf(
+      messages([
+        { id: 1, kind: 'said', author: 'Alex', text: 'first' },
+        { id: 2, kind: 'said', author: 'Mia', text: 'second' },
+      ]),
+    );
+
+    expect(shown).toBe('Mia: second');
+  });
+
+  it('shows a note as itself, since nobody said it', () => {
+    expect(latestLineOf(messages([{ id: 1, kind: 'joined', text: 'The game started' }]))).toBe(
+      'The game started',
+    );
+  });
+
+  it('says so when nothing has been said', () => {
+    expect(latestLineOf(table())).toMatch(/no messages/i);
   });
 });
 

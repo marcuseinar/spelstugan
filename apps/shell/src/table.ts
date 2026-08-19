@@ -7,7 +7,8 @@
  * browser or a server.
  */
 
-import type { TableSnapshot } from './api.js';
+import type { TableMessage, TableSnapshot } from './api.js';
+import type { ChatLine } from './chat.js';
 
 /** How the player reached this table, which is what the code link carries. */
 export const CODE_PARAMETER = 'table';
@@ -59,6 +60,31 @@ export function lobbyStatus(table: TableSnapshot): string {
     return 'Everyone is here. Start when you are ready.';
   }
   return free === 1 ? 'Waiting for one more player.' : `Waiting for ${free} more players.`;
+}
+
+/**
+ * The table's conversation, in the shape the chat renderer already draws.
+ *
+ * The server keeps what was said; the demo keeps its own in memory. Both end
+ * up here so one renderer draws both, which is what stops the real thing and
+ * the mockup drifting apart.
+ */
+export function chatLinesOf(table: TableSnapshot): ChatLine[] {
+  return table.messages.map((message: TableMessage) => ({
+    id: message.id,
+    kind: message.kind,
+    ...(message.author === undefined ? {} : { author: message.author }),
+    text: message.text,
+  }));
+}
+
+/** The newest line, for the collapsed sheet on a phone. */
+export function latestLineOf(table: TableSnapshot): string {
+  const last = table.messages.at(-1);
+  if (last === undefined) {
+    return 'No messages yet';
+  }
+  return last.author === undefined ? last.text : `${last.author}: ${last.text}`;
 }
 
 /**

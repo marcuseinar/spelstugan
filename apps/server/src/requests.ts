@@ -21,6 +21,11 @@ export interface JoinRequest {
   readonly name: string;
 }
 
+export interface MessageRequest {
+  readonly author: string;
+  readonly text: string;
+}
+
 export interface MoveRequest {
   readonly player: string;
   readonly move: unknown;
@@ -54,6 +59,27 @@ export function parseJoinRequest(body: unknown): Validated<JoinRequest> {
     return rejected(`Pick a name of 1 to ${MAX_NAME_LENGTH} characters, as "name".`);
   }
   return { ok: true, value: { name: body.name } };
+}
+
+/** Long enough to say something, short enough that nobody pastes a novel. */
+export const MAX_MESSAGE_LENGTH = 500;
+
+export function parseMessageRequest(body: unknown): Validated<MessageRequest> {
+  if (!isRecord(body)) {
+    return rejected('Expected a JSON object.');
+  }
+  if (!isName(body.author)) {
+    return rejected('Say who is speaking, as "author".');
+  }
+
+  const text = typeof body.text === 'string' ? body.text.trim() : '';
+  if (text === '') {
+    return rejected('Say something, as "text".');
+  }
+  if (text.length > MAX_MESSAGE_LENGTH) {
+    return rejected(`A message can be at most ${MAX_MESSAGE_LENGTH} characters.`);
+  }
+  return { ok: true, value: { author: body.author, text } };
 }
 
 export function parseMoveRequest(body: unknown): Validated<MoveRequest> {

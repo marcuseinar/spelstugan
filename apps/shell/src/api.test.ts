@@ -11,6 +11,7 @@ const SNAPSHOT: TableSnapshot = {
   finished: false,
   moveCount: 0,
   view: null,
+  messages: [],
 };
 
 /** A fetcher that answers with one canned response and records the call. */
@@ -118,6 +119,26 @@ describe('reading a table', () => {
     expect(calls[0]?.init?.method).toBe('GET');
     expect(calls[0]?.init?.body).toBeUndefined();
     expect(calls[0]?.init?.headers).toBeUndefined();
+  });
+});
+
+describe('saying something', () => {
+  it('sends the message to the table', async () => {
+    const { api, calls } = tables(200, { table: SNAPSHOT });
+    await api.say('ABCDE', 'Alex', 'your turn');
+
+    expect(calls[0]?.url).toBe('https://server.test/api/tables/ABCDE/messages');
+    expect(calls[0]?.init?.method).toBe('POST');
+    expect(bodyOf(calls[0] ?? {})).toEqual({ author: 'Alex', text: 'your turn' });
+  });
+
+  it('passes on a refusal rather than losing the message quietly', async () => {
+    const { api } = tables(409, { error: 'Alex is not seated at this table.' });
+
+    expect(await api.say('ABCDE', 'Alex', 'hello')).toEqual({
+      ok: false,
+      reason: 'Alex is not seated at this table.',
+    });
   });
 });
 

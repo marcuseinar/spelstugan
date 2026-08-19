@@ -13,9 +13,10 @@ shell: servers, channels, chat, and a real game of Ludo inside one of them.
 
 **Status: two people can play a real game.** Open the demo, hit *Play with a
 friend*, send the code, and play from two devices — no account, nothing to
-install. The server is a Cloudflare Worker with a Durable Object per table,
-keeping the move log. The surrounding shell — servers, channels, chat — is
-still a mockup, and online tables have no chat yet.
+install, and you can talk to each other while you play. The server is a
+Cloudflare Worker with a Durable Object per table, keeping the move log and
+the conversation together. The surrounding shell — servers, channels — is
+still a mockup.
 
 ```bash
 npm install

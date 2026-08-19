@@ -7,8 +7,8 @@
  */
 
 import type { TableSnapshot } from './api.js';
-import { invitationTo, lobbyStatus, readyToStart, seatsFree } from './table.js';
-import { element } from './view.js';
+import { chatLinesOf, invitationTo, lobbyStatus, readyToStart, seatsFree } from './table.js';
+import { element, renderChatLines, renderComposer } from './view.js';
 
 export interface OpeningOptions {
   readonly onOpen: (name: string, seats: number) => void;
@@ -28,6 +28,7 @@ export interface LobbyOptions {
   readonly onStart: () => void;
   readonly onLeave: () => void;
   readonly onCopy: (link: string) => void;
+  readonly onSay: (text: string) => void;
 }
 
 const SEAT_CHOICES = [2, 3, 4] as const;
@@ -116,8 +117,21 @@ export function renderLobby(options: LobbyOptions): HTMLElement {
   start.addEventListener('click', options.onStart);
   body.append(start);
 
+  // Waiting for someone is exactly when there is something to say.
+  body.append(renderTableChat(table, options.onSay));
+
   pane.append(body);
   return pane;
+}
+
+/** The table's conversation: what was said, and a way to say something. */
+export function renderTableChat(table: TableSnapshot, onSay: (text: string) => void): HTMLElement {
+  const chat = element('div', 'tablechat');
+  const lines = renderChatLines(chatLinesOf(table));
+  lines.classList.add('chat--compact');
+  chat.append(lines);
+  chat.append(renderComposer({ placeholder: 'Message the table…', onSend: onSay }));
+  return chat;
 }
 
 function renderSeats(table: TableSnapshot, you: string): HTMLElement {

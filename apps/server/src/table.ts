@@ -19,7 +19,7 @@ import { gameNamed, seatingProblem } from './games.js';
 import type { Json } from './json.js';
 import { asJson } from './json.js';
 import { TableStore } from './store.js';
-import type { TableRecord } from './store.js';
+import type { Message, TableRecord } from './store.js';
 
 export interface TableSummary {
   readonly code: string;
@@ -33,6 +33,8 @@ export interface TableSummary {
   readonly moveCount: number;
   /** The board, once there is one. Null while the table is still filling. */
   readonly view: Json | null;
+  /** Everything said at this table, oldest first. */
+  readonly messages: readonly Message[];
 }
 
 /** What the Worker asks of a table. Its own Worker is the only caller. */
@@ -41,6 +43,12 @@ export type TableCommand =
   | { readonly kind: 'join'; readonly code: string; readonly name: string }
   | { readonly kind: 'start'; readonly code: string }
   | { readonly kind: 'read'; readonly code: string; readonly viewer: string | null }
+  | {
+      readonly kind: 'say';
+      readonly code: string;
+      readonly author: string;
+      readonly text: string;
+    }
   | {
       readonly kind: 'play';
       readonly code: string;
@@ -79,6 +87,8 @@ export class GameTable extends DurableObject {
         return this.start(command.code);
       case 'read':
         return this.read(command.code, command.viewer);
+      case 'say':
+        return this.say(command.code, command.author, command.text);
       case 'play':
         return this.play(command.code, command.player, command.move);
     }
@@ -106,6 +116,7 @@ export class GameTable extends DurableObject {
     if (!this.store.claimSeat(name)) {
       return { outcome: 'refused', reason: `Somebody at this table is already called ${name}.` };
     }
+    this.store.say({ kind: 'joined', text: `${name} sat down` });
     return { outcome: 'table', table: this.summarize(code, seating, null) };
   }
 
@@ -128,6 +139,7 @@ export class GameTable extends DurableObject {
     }
 
     this.store.start();
+    this.store.say({ kind: 'joined', text: 'The game started' });
     return { outcome: 'table', table: this.summarize(code, seating, null) };
   }
 
@@ -137,6 +149,26 @@ export class GameTable extends DurableObject {
       return { outcome: 'no-table' };
     }
     return { outcome: 'table', table: this.summarize(code, seating, viewer) };
+  }
+
+  /**
+   * Says something at the table.
+   *
+   * Only the seated may speak. Anyone with the code can watch a game, and a
+   * room whose code has been passed around is not a room where every reader
+   * should be able to talk.
+   */
+  private say(code: string, author: string, text: string): TableAnswer {
+    const seating = this.store.seating();
+    if (seating === null) {
+      return { outcome: 'no-table' };
+    }
+    if (!this.store.players().includes(author)) {
+      return { outcome: 'refused', reason: `${author} is not seated at this table.` };
+    }
+
+    this.store.say({ kind: 'said', author, text });
+    return { outcome: 'table', table: this.summarize(code, seating, author) };
   }
 
   private play(code: string, player: string, move: Json): TableAnswer {
@@ -192,6 +224,7 @@ export class GameTable extends DurableObject {
       gameId: seating.gameId,
       seats: seating.seats,
       players,
+      messages: this.store.messages(),
     };
 
     if (!this.store.started()) {

@@ -16,6 +16,7 @@ export type Route =
   | { readonly kind: 'joinTable'; readonly code: string }
   | { readonly kind: 'startTable'; readonly code: string }
   | { readonly kind: 'playMove'; readonly code: string }
+  | { readonly kind: 'sayAtTable'; readonly code: string }
   | { readonly kind: 'unknown' };
 
 const UNKNOWN: Route = { kind: 'unknown' };
@@ -73,6 +74,8 @@ function actionRoute(action: string, code: string): Route {
       return { kind: 'startTable', code };
     case 'moves':
       return { kind: 'playMove', code };
+    case 'messages':
+      return { kind: 'sayAtTable', code };
     default:
       return UNKNOWN;
   }

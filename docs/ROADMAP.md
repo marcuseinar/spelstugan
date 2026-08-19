@@ -34,7 +34,7 @@ npm run test:e2e --workspace @spelstugan/server   # play a whole game against it
 The shell talks to the deployed server by default; point it somewhere else
 with `VITE_SERVER_URL=http://127.0.0.1:8787 npm run dev`.
 
-419 tests; mutation gate at 85%, currently 94%.
+445 tests; mutation gate at 85%, currently 95%.
 
 ### Done
 
@@ -67,12 +67,17 @@ with `VITE_SERVER_URL=http://127.0.0.1:8787 npm run dev`.
 - [x] **Online tables end to end** (decision 022) — open a table, share the
       code, claim a seat, start, and play from two devices. Verified by
       driving two browsers through a real game against a real server.
+- [x] **Chat at an online table** (decision 024) — stored beside the move log,
+      in the lobby and over the board, with notes for sitting down and
+      starting
 
 ### In progress
 
-- [ ] **Chat at an online table.** Messages on the server, beside the move log,
-      so the conversation survives the game (decision 001). The demo's chat is
-      in-memory only and the online table has none at all.
+- [ ] **Play-by-play in an online table.** The demo narrates moves into its
+      chat; the real table does not yet, so the thread holds people and notes
+      only.
+- [ ] **Timestamps on messages**, without which asynchronous play cannot read
+      right (decision 024).
 - [ ] **A seat token.** Today naming a seated player is enough to move for
       them (decision 022). Fine for friends with a link, blocks anything
       public.
