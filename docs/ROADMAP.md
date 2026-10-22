@@ -5,7 +5,7 @@ actually done, what is genuinely in progress, what is next. An agent picking
 this repo up cold should be able to start from here without asking questions.
 Update it in the same commit as the work it describes.
 
-Last updated: 2026-08-19
+Last updated: 2026-10-22
 
 > Visual direction is provisional (decisions 012 and 026 — currently a light
 > palette: sky, cream, sand, tan). One rule follows from it and applies to all
@@ -15,8 +15,9 @@ Last updated: 2026-08-19
 
 ## Current state
 
-**Two people can play a real game, and talk while they do.** Open a table,
-send the code, take a seat, play — no account, nothing to install. The plugin
+**Two people can play a real game, and talk while they do** — and every line
+of that conversation can show the board it was said over. Open a table, send
+the code, take a seat, play — no account, nothing to install. The plugin
 contract, the Ludo rules and the board run in the browser; the server holds
 each table as a Durable Object and keeps the move log and the conversation
 together.
@@ -38,7 +39,7 @@ npm run test:e2e --workspace @spelstugan/server   # play a whole game against it
 The shell talks to the deployed server by default; point it somewhere else
 with `VITE_SERVER_URL=http://127.0.0.1:8787 npm run dev`.
 
-433 tests; mutation gate at 85%, currently 95%.
+466 tests; mutation gate at 85%, currently 95%.
 
 ### Done
 
@@ -76,6 +77,10 @@ with `VITE_SERVER_URL=http://127.0.0.1:8787 npm run dev`.
       starting
 - [x] **Leaving a table** (decision 028) — a leave control per row, local to
       the device, and rejoining a seat you already hold now works
+- [x] **Every line shows the board it was said over** (decision 029) — each
+      message carries the move it was said at, and opens that position beneath
+      itself. The move log was already the only source of truth, so a past
+      board is a replay of a prefix of it rather than anything stored
 - [x] **The demo removed** (decision 025) — no invented servers, channels or
       conversation; starting a table is a row where the tables are, and the
       shell stays put while a table is set up
@@ -86,7 +91,8 @@ Nothing is in flight right now. These are shipped features with a hole in
 them, which makes them cheaper to close than the candidates below.
 
 - [ ] **Play-by-play in an online table.** The move events already exist where
-      the conversation is kept, so the table can narrate itself; nothing does
+      the conversation is kept, and every line is now anchored to a move, so
+      narrating the game into the thread is a rendering job. Nothing does it
       yet, so the thread holds people and table notes only.
 - [ ] **Timestamps on messages**, without which asynchronous play cannot read
       right (decision 024).

@@ -4,6 +4,7 @@ import {
   MAX_NAME_LENGTH,
   parseJoinRequest,
   parseMessageRequest,
+  parseMoveNumber,
   parseMoveRequest,
   parseTableRequest,
 } from './requests.js';
@@ -256,5 +257,44 @@ describe('parseMoveRequest', () => {
     it('a missing move', () => {
       expect(refusal(parseMoveRequest({ player: 'Alex' }))).toMatch(/move/);
     });
+  });
+});
+
+describe('parseMoveNumber', () => {
+  it('reads a whole number of moves', () => {
+    expect(parseMoveNumber('12')).toEqual({ ok: true, value: 12 });
+  });
+
+  it('reads the opening position', () => {
+    expect(parseMoveNumber('0')).toEqual({ ok: true, value: 0 });
+  });
+
+  it('treats a missing number as the opening position', () => {
+    expect(parseMoveNumber(null)).toEqual({ ok: true, value: 0 });
+  });
+
+  it('treats an empty number as the opening position', () => {
+    expect(parseMoveNumber('')).toEqual({ ok: true, value: 0 });
+  });
+
+  it('refuses a negative number of moves', () => {
+    const parsed = parseMoveNumber('-1');
+
+    expect(parsed.ok).toBe(false);
+    expect(parsed.ok === false && parsed.reason).toBe(
+      '"at" must be a whole number of moves, counting from zero.',
+    );
+  });
+
+  it('refuses a fraction of a move', () => {
+    expect(parseMoveNumber('2.5').ok).toBe(false);
+  });
+
+  it('refuses something that is not a number at all', () => {
+    expect(parseMoveNumber('twelve').ok).toBe(false);
+  });
+
+  it('refuses an infinite number of moves', () => {
+    expect(parseMoveNumber('Infinity').ok).toBe(false);
   });
 });

@@ -13,6 +13,13 @@ export interface TableMessage {
   readonly kind: 'said' | 'joined';
   readonly author?: string;
   readonly text: string;
+  /** How many moves had been played when this was said (decision 029). */
+  readonly atMove: number;
+}
+
+/** A board, as the plugin that draws it expects to be handed one. */
+export interface BoardView {
+  readonly shared: unknown;
 }
 
 export interface TableSnapshot {
@@ -67,6 +74,31 @@ export class Tables {
 
   play(code: string, player: string, move: unknown): Promise<Answer<TableSnapshot>> {
     return this.table(`/api/tables/${code}/moves`, { method: 'POST', body: { player, move } });
+  }
+
+  /**
+   * The board as it stood after `at` moves.
+   *
+   * Asked of the server rather than folded here, because what a viewer may
+   * see is the game's decision and the move log is not the client's to hold
+   * (decision 029).
+   */
+  async board(code: string, at: number, viewer: string | null): Promise<Answer<BoardView>> {
+    const query = new URLSearchParams({ at: String(at) });
+    if (viewer !== null) {
+      query.set('viewer', viewer);
+    }
+
+    const answered = await this.send(`/api/tables/${code}/board?${query}`, { method: 'GET' });
+    if (!answered.ok) {
+      return answered;
+    }
+
+    const board = boardIn(answered.value);
+    if (board === null) {
+      return { ok: false, reason: 'The server answered without a board.' };
+    }
+    return { ok: true, value: board };
   }
 
   private async table(
@@ -135,6 +167,21 @@ function tableIn(payload: unknown): TableSnapshot | null {
     return null;
   }
   return (payload as { table?: TableSnapshot }).table ?? null;
+}
+
+/**
+ * The board in a successful answer, if there is one.
+ *
+ * Needs no outer guard of its own, unlike `tableIn`: a board has to be an
+ * object with a `shared` on it, and asking that of whatever `view` turned out
+ * to be rejects a page, a primitive and a missing body alike.
+ */
+function boardIn(payload: unknown): BoardView | null {
+  const view = (payload as { view?: unknown } | null)?.view;
+  if (typeof view !== 'object' || view === null || !('shared' in view)) {
+    return null;
+  }
+  return view as BoardView;
 }
 
 function errorIn(payload: unknown): string | null {

@@ -70,6 +70,22 @@ export class Session<Shared, Secret, Move> {
     return this.game.view(this.state, viewerId);
   }
 
+  /**
+   * What a viewer would have seen once `moveNumber` moves had been played.
+   *
+   * Every past position is a fold of a prefix of the log, so the board beside
+   * a line someone typed costs a replay rather than a stored snapshot. This is
+   * what lets the conversation carry the game it was about (decision 029).
+   *
+   * A number past either end names a real position — nothing played yet, or
+   * everything played so far — so it is clamped rather than refused.
+   */
+  viewAt(moveNumber: number, viewerId: PlayerId | null) {
+    const played = Math.min(Math.max(moveNumber, 0), this.log.length);
+    const position = replay(this.game, this.seed, this.players, this.log.slice(0, played)).state;
+    return this.game.view(position, viewerId);
+  }
+
   get moveCount(): number {
     return this.log.length;
   }

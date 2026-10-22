@@ -135,6 +135,7 @@ POST /api/tables/:code/start                  -> 200 {table}   close the seats
 GET  /api/tables/:code       ?viewer=<name>   -> 200 {table}
 POST /api/tables/:code/moves {player, move}   -> 200 {events, table} | 409
 POST /api/tables/:code/messages {author, text} -> 200 {table}
+GET  /api/tables/:code/board ?at=<n>&viewer=<name> -> 200 {at, view} | 409
 GET  /api/games                               -> 200 {games}
 ```
 
@@ -163,6 +164,34 @@ separately. That is wasteful and deliberate: a table's conversation is small,
 one round trip beats two, and a since-cursor is worth adding when a table's
 history is long enough to notice.
 
+### A line carries the board it was said over
+
+Every message records how many moves had been played when it was said — its
+**move anchor** (decision 029). That single integer is enough, because state
+is never stored: the board a line was said over is the fold of that many
+moves, and `Session.viewAt(n, viewer)` replays that prefix and projects it
+through the game's own `view`.
+
+```
+message #5  at_move 12 ─┐
+                        └─► replay(log[0..12]) ─► view(state, viewer) ─► board
+```
+
+The store fills the anchor in from the log at insert time rather than taking
+it from the caller, so a line cannot be written against a board it was not
+said over.
+
+The table computes the board, not the browser. Folding it client-side would
+be cheaper — the shell already has the reducer, since it draws the board — but
+it would mean shipping the whole move log to every reader, and for a game with
+hidden information the log *is* the hidden information. Asking the table costs
+one request and keeps `view(state, viewerId)` the only way state is ever
+narrowed.
+
+A past board is always read-only. The shell mounts it with `viewerId` null,
+which is what makes the plugin draw no die and no movable token: it is a
+record, not a turn.
+
 What is built: opening a table, claiming a seat, starting, playing, chatting,
 reading a view, and durability of both logs. What is not:
 
@@ -170,8 +199,9 @@ reading a view, and durability of both logs. What is not:
   speak — for them. Two friends sharing a link is fine; strangers is not. A
   seat needs a token the server issued at claim time before this can face
   anyone untrusted.
-- **No play-by-play online.** The demo narrates moves into its chat; an online
-  table does not yet, so the thread holds people and table notes only.
+- **No play-by-play online.** Moves are not narrated into the thread, so it
+  holds people and table notes only. The anchors are already there, so a line
+  per move is a rendering job rather than a storage one.
 - **No timestamps.** Lines are ordered but not dated, which will not survive
   asynchronous play — "your turn" from three days ago must look like it.
 - **Nothing expires.** Tables are kept forever, which is wrong at any real

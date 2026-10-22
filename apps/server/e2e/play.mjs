@@ -250,6 +250,89 @@ check('the log survived the whole game', tableIn(reread).moveCount === moves, {
 const winner = tableIn(reread).view?.shared?.winner;
 check('records a winner', winner === 'Alex' || winner === 'Mia', winner);
 
+// The board a line was said over (decision 029).
+const everyLineAnchored = tableIn(reread).messages.every((line) => typeof line.atMove === 'number');
+check('every message carries the move it was said at', everyLineAnchored, tableIn(reread).messages);
+check(
+  'the lobby chatter was anchored before any move',
+  tableIn(reread).messages.every((line) => line.atMove === 0),
+  tableIn(reread).messages.map((line) => line.atMove),
+);
+
+const afterTheGame = await post(`/api/tables/${code}/messages`, {
+  author: 'Alex',
+  text: 'good game',
+});
+check(
+  'a message said after the game is anchored at the whole log',
+  tableIn(afterTheGame).messages.at(-1)?.atMove === moves,
+  { anchored: tableIn(afterTheGame).messages.at(-1)?.atMove, moves },
+);
+
+const opening = await call(`/api/tables/${code}/board?at=0`);
+check('serves the board before the first move', opening.status === 200, opening.body);
+check(
+  'the opening board has no winner on it',
+  opening.body?.view?.shared?.winner === null,
+  opening.body?.view?.shared,
+);
+check('the board it serves says which move it is', opening.body?.at === 0, opening.body);
+
+const atTheEnd = await call(`/api/tables/${code}/board?at=${moves}`);
+check(
+  'the board at the whole log is the board the game ended on',
+  JSON.stringify(atTheEnd.body?.view?.shared) === JSON.stringify(tableIn(reread).view?.shared),
+  { at: atTheEnd.body?.view?.shared?.winner, now: tableIn(reread).view?.shared?.winner },
+);
+
+const midway = await call(`/api/tables/${code}/board?at=${Math.floor(moves / 2)}`);
+check(
+  'a board partway through is not the board now',
+  JSON.stringify(midway.body?.view?.shared) !== JSON.stringify(atTheEnd.body?.view?.shared),
+  { halfway: Math.floor(moves / 2), moves },
+);
+
+check(
+  'a move number past the log reads as the board now',
+  JSON.stringify((await call(`/api/tables/${code}/board?at=99999`)).body?.view?.shared) ===
+    JSON.stringify(atTheEnd.body?.view?.shared),
+);
+check(
+  'a board asked for without a move number is the opening one',
+  JSON.stringify((await call(`/api/tables/${code}/board`)).body?.view?.shared) ===
+    JSON.stringify(opening.body?.view?.shared),
+);
+check(
+  'serves a seated player their own view of a past board',
+  (await call(`/api/tables/${code}/board?at=1&viewer=Alex`)).status === 200,
+);
+check(
+  'a board asked for at half a move is 400',
+  (await call(`/api/tables/${code}/board?at=1.5`)).status === 400,
+);
+check(
+  'a board asked for at a negative move is 400',
+  (await call(`/api/tables/${code}/board?at=-1`)).status === 400,
+);
+check(
+  'a board asked for at something that is not a number is 400',
+  (await call(`/api/tables/${code}/board?at=twelve`)).status === 400,
+);
+
+const lobbyOnly = await post('/api/tables', { game: 'ludo', seats: 2 });
+check(
+  'a table that has not started has no past board to serve',
+  (await call(`/api/tables/${tableIn(lobbyOnly).code}/board?at=0`)).status === 409,
+);
+check(
+  'a board at a code nobody is at is 404',
+  (await call('/api/tables/ZZZZZ/board?at=0')).status === 404,
+);
+check(
+  'a past board cannot be asked for with a write',
+  (await post(`/api/tables/${code}/board`, {})).status === 404,
+);
+
 // Failure modes.
 check('unknown code is 404', (await call('/api/tables/ZZZZZ')).status === 404);
 check('malformed code is 404', (await call('/api/tables/nope')).status === 404);

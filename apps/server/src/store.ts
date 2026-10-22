@@ -15,9 +15,23 @@ export interface Message {
   readonly kind: 'said' | 'joined';
   readonly author?: string;
   readonly text: string;
+  /**
+   * How many moves had been played when this was said.
+   *
+   * The board it was said over is the fold of that many moves, so this one
+   * number is the whole of what a line needs to carry its game with it
+   * (decision 029).
+   */
+  readonly atMove: number;
 }
 
-export type NewMessage = Omit<Message, 'id'>;
+/**
+ * A line as a caller offers it.
+ *
+ * The move anchor is not here: the store reads it from the log at insert time,
+ * so no caller can say something and get the board it was said over wrong.
+ */
+export type NewMessage = Omit<Message, 'id' | 'atMove'>;
 
 export interface TableRecord {
   readonly gameId: string;
@@ -58,7 +72,8 @@ const SCHEMA = `
     number INTEGER PRIMARY KEY AUTOINCREMENT,
     kind TEXT NOT NULL,
     author TEXT,
-    text TEXT NOT NULL
+    text TEXT NOT NULL,
+    at_move INTEGER NOT NULL
   );
 `;
 
@@ -78,9 +93,9 @@ const DROP_EVERYTHING = `
  * that anyone would miss: a move log is the product's memory, and throwing one
  * away must stop being acceptable the moment real players exist. When that
  * day comes this becomes a real migration and this comment becomes a lie —
- * see `docs/DECISIONS.md`, entry 022.
+ * see `docs/DECISIONS.md`, entry 023.
  */
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 export class TableStore {
   constructor(private readonly sql: SqlStorage) {
@@ -165,7 +180,8 @@ export class TableStore {
    */
   say(line: NewMessage): void {
     this.sql.exec(
-      'INSERT INTO messages (kind, author, text) VALUES (?, ?, ?)',
+      `INSERT INTO messages (kind, author, text, at_move)
+       VALUES (?, ?, ?, (SELECT COUNT(*) FROM moves))`,
       line.kind,
       line.author ?? null,
       line.text,
@@ -174,12 +190,13 @@ export class TableStore {
 
   messages(): Message[] {
     return [
-      ...this.sql.exec('SELECT number, kind, author, text FROM messages ORDER BY number'),
+      ...this.sql.exec('SELECT number, kind, author, text, at_move FROM messages ORDER BY number'),
     ].map((row) => ({
       id: Number(row.number),
       kind: row.kind === 'joined' ? 'joined' : 'said',
       ...(row.author === null ? {} : { author: String(row.author) }),
       text: String(row.text),
+      atMove: Number(row.at_move),
     }));
   }
 

@@ -19,6 +19,11 @@ export interface ChatLine {
   /** Who spoke, or who the event is about. Absent for channel-level notes. */
   readonly author?: string;
   readonly text: string;
+  /**
+   * How many moves had been played when this was said, so the line can show
+   * the board it was said over (decision 029).
+   */
+  readonly atMove: number;
 }
 
 /** A trimmed message, or null if there was nothing but whitespace. */

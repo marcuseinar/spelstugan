@@ -228,3 +228,95 @@ describe('Session', () => {
     expect(rebuilt.state.shared).toEqual(game.viewFor(null).shared);
   });
 });
+
+/** A game with something to hide, so a past view is shown to be projected. */
+interface Hoard {
+  readonly kept: number;
+}
+
+const hoarding: Game<Tally, Hoard, Move> = {
+  id: 'hoarding',
+  name: 'Hoarding',
+  minPlayers: 1,
+  maxPlayers: 4,
+
+  setup: ({ players }) => ({
+    shared: { total: 0 },
+    secret: Object.fromEntries(players.map((player) => [player, { kept: 0 }])),
+  }),
+
+  applyMove: (state, move, playerId) => {
+    const amount = move.type === 'roll' ? 1 : move.amount;
+    const kept = state.secret[playerId]?.kept ?? 0;
+    return {
+      accepted: true,
+      state: {
+        shared: { total: state.shared.total + amount },
+        secret: { ...state.secret, [playerId]: { kept: kept + 1 } },
+      },
+      events: [],
+    };
+  },
+
+  view: defaultView,
+  isFinished: () => false,
+};
+
+describe('Session.viewAt', () => {
+  function counted() {
+    const game = session();
+    game.attempt({ type: 'add', amount: 3 }, 'alice');
+    game.attempt({ type: 'add', amount: 4 }, 'bob');
+    game.attempt({ type: 'add', amount: 5 }, 'alice');
+    return game;
+  }
+
+  it('gives the opening position before any move', () => {
+    expect(counted().viewAt(0, null).shared.total).toBe(0);
+  });
+
+  it('gives the position each move left behind', () => {
+    const game = counted();
+
+    expect(game.viewAt(1, null).shared.total).toBe(3);
+    expect(game.viewAt(2, null).shared.total).toBe(7);
+    expect(game.viewAt(3, null).shared.total).toBe(12);
+  });
+
+  it('reads the whole log as the position now', () => {
+    const game = counted();
+
+    expect(game.viewAt(game.moveCount, null).shared).toEqual(game.viewFor(null).shared);
+  });
+
+  it('treats a number below the log as the opening position', () => {
+    expect(counted().viewAt(-1, null).shared.total).toBe(0);
+  });
+
+  it('treats a number past the log as the position now', () => {
+    expect(counted().viewAt(99, null).shared.total).toBe(12);
+  });
+
+  it('leaves the session on its own latest position', () => {
+    const game = counted();
+
+    game.viewAt(1, null);
+
+    expect(game.viewFor(null).shared.total).toBe(12);
+  });
+
+  it('shows a past position through the viewer it is asked for', () => {
+    const game = new Session({ game: hoarding, seed: 'seed', players: PLAYERS });
+    game.attempt({ type: 'add', amount: 3 }, 'alice');
+    game.attempt({ type: 'add', amount: 4 }, 'alice');
+
+    expect(game.viewAt(1, 'alice').own).toEqual({ kept: 1 });
+  });
+
+  it('hides what a spectator may not see in a past position', () => {
+    const game = new Session({ game: hoarding, seed: 'seed', players: PLAYERS });
+    game.attempt({ type: 'add', amount: 3 }, 'alice');
+
+    expect(game.viewAt(1, null).own).toBeUndefined();
+  });
+});

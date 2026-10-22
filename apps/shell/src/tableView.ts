@@ -12,7 +12,8 @@
 
 import type { TableSnapshot } from './api.js';
 import { chatLinesOf, invitationTo, lobbyStatus, readyToStart, seatsFree } from './table.js';
-import { element, renderChatLines, renderComposer } from './view.js';
+import type { BoardOpener } from './view.js';
+import { element, renderChatList, renderComposer } from './view.js';
 
 export interface OpeningOptions {
   readonly onOpen: (name: string, seats: number) => void;
@@ -21,6 +22,16 @@ export interface OpeningOptions {
 export interface JoiningOptions {
   readonly code: string;
   readonly onJoin: (name: string) => void;
+}
+
+export interface TableChatOptions {
+  readonly table: TableSnapshot;
+  readonly onSay: (text: string) => void;
+  /**
+   * How a line shows the board it was said over. Absent in a lobby, where
+   * there is no board to look back at yet.
+   */
+  readonly openBoard?: BoardOpener;
 }
 
 export interface LobbyOptions {
@@ -140,7 +151,7 @@ export function renderLobby(options: LobbyOptions): LivePart {
   body.append(start);
 
   // Waiting for someone is exactly when there is something to say.
-  const talk = renderTableChat(table, options.onSay);
+  const talk = renderTableChat({ table, onSay: options.onSay });
   body.append(talk.element);
 
   pane.append(body);
@@ -201,22 +212,25 @@ export function renderNotice(message: string): HTMLElement {
  * table can change while someone is typing into it, and taking the field away
  * takes the keyboard with it (decision 027).
  */
-export function renderTableChat(table: TableSnapshot, onSay: (text: string) => void): LivePart {
+export function renderTableChat(options: TableChatOptions): LivePart {
   const chat = element('div', 'tablechat');
-  const lines = renderChatLines(chatLinesOf(table));
-  lines.classList.add('chat--compact');
-  chat.append(lines);
-  chat.append(renderComposer({ placeholder: 'Message the table…', onSend: onSay }));
+  const list = renderChatList(
+    options.openBoard === undefined ? {} : { openBoard: options.openBoard },
+  );
+  list.element.classList.add('chat--compact');
+  list.show(chatLinesOf(options.table));
+  chat.append(list.element);
+  chat.append(renderComposer({ placeholder: 'Message the table…', onSend: options.onSay }));
 
   return {
     element: chat,
     refresh: (next) => {
-      const wasAtBottom = atBottom(lines);
-      lines.replaceChildren(...renderChatLines(chatLinesOf(next)).childNodes);
+      const wasAtBottom = atBottom(list.element);
+      list.show(chatLinesOf(next));
       // Follow the conversation only for someone already at the end of it:
       // yanking a reader back down mid-scroll is its own kind of rude.
       if (wasAtBottom) {
-        lines.scrollTop = lines.scrollHeight;
+        list.element.scrollTop = list.element.scrollHeight;
       }
     },
   };

@@ -13,6 +13,7 @@ export type Route =
   | { readonly kind: 'games' }
   | { readonly kind: 'openTable' }
   | { readonly kind: 'readTable'; readonly code: string }
+  | { readonly kind: 'readBoard'; readonly code: string }
   | { readonly kind: 'joinTable'; readonly code: string }
   | { readonly kind: 'startTable'; readonly code: string }
   | { readonly kind: 'playMove'; readonly code: string }
@@ -59,6 +60,11 @@ function tableRoute(method: string, segments: readonly string[]): Route {
   }
   if (action === undefined) {
     return method === 'GET' ? { kind: 'readTable', code } : UNKNOWN;
+  }
+  // The only readable thing below a table is a past board; everything else
+  // under a code asks the table to do something.
+  if (action === 'board') {
+    return method === 'GET' ? { kind: 'readBoard', code } : UNKNOWN;
   }
   if (method !== 'POST') {
     return UNKNOWN;

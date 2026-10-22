@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { TableSnapshot } from './api.js';
 import {
+  boardLabelAt,
   chatLinesOf,
   codeInvitedTo,
   invitationTo,
@@ -140,25 +141,27 @@ describe('lobbyStatus', () => {
 
 describe('chatLinesOf', () => {
   it('carries a said line through with its author', () => {
-    const table = messages([{ id: 3, kind: 'said', author: 'Alex', text: 'your turn' }]);
+    const table = messages([{ id: 3, kind: 'said', author: 'Alex', text: 'your turn', atMove: 7 }]);
 
     expect(chatLinesOf(table)).toEqual([
-      { id: 3, kind: 'said', author: 'Alex', text: 'your turn' },
+      { id: 3, kind: 'said', author: 'Alex', text: 'your turn', atMove: 7 },
     ]);
   });
 
   it('carries a note through without inventing an author for it', () => {
-    const table = messages([{ id: 1, kind: 'joined', text: 'Alex sat down' }]);
+    const table = messages([{ id: 1, kind: 'joined', text: 'Alex sat down', atMove: 0 }]);
 
     // Strictly: a note has no author at all, rather than an empty one. The
     // renderer would survive either, but the type says one of them.
-    expect(chatLinesOf(table)).toStrictEqual([{ id: 1, kind: 'joined', text: 'Alex sat down' }]);
+    expect(chatLinesOf(table)).toStrictEqual([
+      { id: 1, kind: 'joined', text: 'Alex sat down', atMove: 0 },
+    ]);
   });
 
   it('keeps the order the table said things in', () => {
     const table = messages([
-      { id: 1, kind: 'joined', text: 'Alex sat down' },
-      { id: 2, kind: 'said', author: 'Alex', text: 'hello' },
+      { id: 1, kind: 'joined', text: 'Alex sat down', atMove: 0 },
+      { id: 2, kind: 'said', author: 'Alex', text: 'hello', atMove: 0 },
     ]);
 
     expect(chatLinesOf(table).map((line) => line.id)).toEqual([1, 2]);
@@ -169,12 +172,26 @@ describe('chatLinesOf', () => {
   });
 });
 
+describe('boardLabelAt', () => {
+  it('names the opening position for something said before anyone moved', () => {
+    expect(boardLabelAt(0)).toBe('Board before the first move');
+  });
+
+  it('counts a single move in the singular', () => {
+    expect(boardLabelAt(1)).toBe('Board after 1 move');
+  });
+
+  it('counts several moves in the plural', () => {
+    expect(boardLabelAt(12)).toBe('Board after 12 moves');
+  });
+});
+
 describe('latestLineOf', () => {
   it('shows the newest thing said, with who said it', () => {
     const shown = latestLineOf(
       messages([
-        { id: 1, kind: 'said', author: 'Alex', text: 'first' },
-        { id: 2, kind: 'said', author: 'Mia', text: 'second' },
+        { id: 1, kind: 'said', author: 'Alex', text: 'first', atMove: 0 },
+        { id: 2, kind: 'said', author: 'Mia', text: 'second', atMove: 2 },
       ]),
     );
 
@@ -182,9 +199,9 @@ describe('latestLineOf', () => {
   });
 
   it('shows a note as itself, since nobody said it', () => {
-    expect(latestLineOf(messages([{ id: 1, kind: 'joined', text: 'The game started' }]))).toBe(
-      'The game started',
-    );
+    expect(
+      latestLineOf(messages([{ id: 1, kind: 'joined', text: 'The game started', atMove: 0 }])),
+    ).toBe('The game started');
   });
 
   it('says so when nothing has been said', () => {

@@ -800,3 +800,61 @@ stays closed.
 way back to it, and no account exists to recover it. That is the price of a
 list with no server behind it, and it is why the sidebar says out loud that
 tables are remembered on this device only.
+
+
+---
+
+## 029 — A line carries the board it was said over
+
+**Status:** accepted
+
+**Context:** The owner's requirement: *a chat needs to be able to show the
+board state at every message.* Without it a conversation about a game is a
+conversation about nothing — "move 12 was luck" is unanswerable three days
+later, and asynchronous play is mostly conversation about a board nobody is
+looking at.
+
+Nothing stored the connection. Messages and moves sat in the same Durable
+Object (decision 024) but in two tables with no relation between them, so the
+only thing a line knew about the game was that it happened at the same table.
+
+**Decision:** Every message records **how many moves had been played when it
+was said** — one integer, `at_move`. The board it was said over is the fold of
+that many moves, which the move log already makes available: `Session.viewAt`
+replays a prefix and projects it through the game's own `view`.
+
+The store writes the anchor itself, from the log, rather than taking it from
+whoever is saying something. A caller cannot forget it and cannot get it
+wrong.
+
+The board is computed **by the table, not the browser**:
+`GET /api/tables/:code/board?at=<n>&viewer=<name>`. What a viewer may see is
+the game's decision and only the table can be trusted to make it — handing a
+client the whole log so it could fold the log itself would hand it every
+secret in the log too.
+
+In the shell, each line carries a control that opens that board beneath it.
+The board is fetched when first asked for: a conversation is mostly read, and
+a board nobody opened is a board nobody should have paid for.
+
+**Consequences:** This makes the pure reducer over a logged move stream
+**load-bearing rather than optional**. A game that keeps its own state cannot
+have its past positions reconstructed by the platform, so it cannot have this
+feature. Opt-in platform services still stand, but the price of opting out is
+now explicit and large.
+
+A past board is mounted as a spectator's — `viewerId` null — because it is a
+record rather than a turn, and nothing on it should offer a die to roll or a
+token to move. A game that keeps secrets and wants a player's own past hand
+shown would need the plugin UI contract to say "read-only" out loud. Ludo
+keeps no secrets, so that is not needed yet.
+
+The conversation on screen is now **append-only**: lines are drawn once and
+added to, never replaced. Replacing them every poll would close an open board
+every two and a half seconds, which is decision 027's mistake in a new place.
+
+Anchors are counted in moves, not time. There are still no timestamps
+(decision 024), so "board after 12 moves" is what a line can honestly say.
+
+The schema changed, so stored tables were emptied rather than migrated
+(decision 023).

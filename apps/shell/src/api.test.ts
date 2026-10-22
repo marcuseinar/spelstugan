@@ -245,3 +245,106 @@ describe('when things go wrong', () => {
     });
   });
 });
+
+describe('reading a past board', () => {
+  const BOARD = { shared: { total: 3 } };
+
+  it('asks for the board at a move, for a named viewer', async () => {
+    const { api, calls } = tables(200, { at: 7, view: BOARD });
+    await api.board('ABCDE', 7, 'Alex');
+
+    expect(calls[0]?.url).toBe('https://server.test/api/tables/ABCDE/board?at=7&viewer=Alex');
+    expect(calls[0]?.init?.method).toBe('GET');
+  });
+
+  it('asks as a spectator when there is no viewer', async () => {
+    const { api, calls } = tables(200, { at: 0, view: BOARD });
+    await api.board('ABCDE', 0, null);
+
+    expect(calls[0]?.url).toBe('https://server.test/api/tables/ABCDE/board?at=0');
+  });
+
+  it('escapes a viewer whose name would otherwise change the query', async () => {
+    const { api, calls } = tables(200, { at: 1, view: BOARD });
+    await api.board('ABCDE', 1, 'Alex & Mia');
+
+    expect(calls[0]?.url).toContain('viewer=Alex+%26+Mia');
+  });
+
+  it('answers with the board', async () => {
+    const { api } = tables(200, { at: 7, view: BOARD });
+
+    expect(await api.board('ABCDE', 7, 'Alex')).toEqual({ ok: true, value: BOARD });
+  });
+
+  it('reports a table that has not started as the server explains it', async () => {
+    const { api } = tables(409, { error: 'This game has not started yet.' });
+
+    expect(await api.board('ABCDE', 0, 'Alex')).toEqual({
+      ok: false,
+      reason: 'This game has not started yet.',
+    });
+  });
+
+  it('refuses an answer carrying no board at all', async () => {
+    const { api } = tables(200, { at: 7 });
+
+    expect(await api.board('ABCDE', 7, 'Alex')).toEqual({
+      ok: false,
+      reason: 'The server answered without a board.',
+    });
+  });
+
+  it('refuses a board that is not a board', async () => {
+    const { api } = tables(200, { view: 'a board, honestly' });
+
+    expect(await api.board('ABCDE', 7, 'Alex')).toEqual({
+      ok: false,
+      reason: 'The server answered without a board.',
+    });
+  });
+
+  it('refuses a view with nothing shared in it', async () => {
+    const { api } = tables(200, { view: { secret: {} } });
+
+    expect(await api.board('ABCDE', 7, 'Alex')).toEqual({
+      ok: false,
+      reason: 'The server answered without a board.',
+    });
+  });
+
+  it('refuses a view that is explicitly nothing', async () => {
+    const { api } = tables(200, { view: null });
+
+    expect(await api.board('ABCDE', 7, 'Alex')).toEqual({
+      ok: false,
+      reason: 'The server answered without a board.',
+    });
+  });
+
+  it('refuses a page where a board was expected', async () => {
+    const { api } = tables(200, 'a captive portal');
+
+    expect(await api.board('ABCDE', 7, 'Alex').then((answer) => answer.ok)).toBe(false);
+  });
+
+  it('refuses an answer with no body at all', async () => {
+    const api = new Tables('https://server.test', () =>
+      Promise.resolve(new Response('not json', { status: 200 })),
+    );
+
+    expect(await api.board('ABCDE', 7, 'Alex')).toEqual({
+      ok: false,
+      reason: 'The server answered without a board.',
+    });
+  });
+
+  it('reports a server it could not reach', async () => {
+    const api = new Tables('https://server.test', () => Promise.reject(new Error('offline')));
+
+    expect(await api.board('ABCDE', 7, 'Alex')).toEqual({
+      ok: false,
+      reason: 'Could not reach the server. Check your connection.',
+    });
+  });
+});

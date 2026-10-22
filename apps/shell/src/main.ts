@@ -36,6 +36,7 @@ import {
   renderTableChat,
 } from './tableView.js';
 import type { LivePart } from './tableView.js';
+import type { BoardOpener } from './view.js';
 import { element, renderHeader, renderSheetHandle, renderSidebar } from './view.js';
 
 /**
@@ -390,7 +391,7 @@ function renderGame(playing: TableSnapshot): LivePart {
     }),
   );
 
-  const talk = renderTableChat(playing, say);
+  const talk = renderTableChat({ table: playing, onSay: say, openBoard: pastBoards(playing.code) });
   // The sheet holds the chat directly rather than in a box of its own.
   side.append(...talk.element.children);
   pane.append(side);
@@ -404,6 +405,49 @@ function renderGame(playing: TableSnapshot): LivePart {
       }
       summary.textContent = latestLineOf(next);
       talk.refresh(next);
+    },
+  };
+}
+
+/**
+ * How a line in the conversation shows the board it was said over.
+ *
+ * The past board is mounted as a spectator's — `viewerId` null — because it is
+ * a record rather than a turn: nothing on it should offer a die to roll or a
+ * token to move. A game that keeps secrets and wants a player's own past hand
+ * shown would need the plugin UI contract to say "read-only" out loud; Ludo
+ * keeps none, so this is enough (decision 029).
+ */
+function pastBoards(code: string): BoardOpener {
+  return {
+    open: (panel, atMove) => {
+      let mounted: MountedGameUi<LudoShared, LudoSecret> | null = null;
+      let wanted = true;
+
+      panel.replaceChildren(element('p', 'chat__board-note', 'Fetching the board…'));
+
+      void (async () => {
+        const answered = await tables.board(code, atMove, name);
+        if (!wanted) {
+          return;
+        }
+        if (!answered.ok) {
+          panel.replaceChildren(element('p', 'chat__board-note', answered.reason));
+          return;
+        }
+        panel.replaceChildren();
+        mounted = ludoUi.mount(panel, {
+          view: answered.value as { shared: LudoShared },
+          viewerId: null,
+          dispatch: () => {},
+        });
+      })();
+
+      return () => {
+        wanted = false;
+        mounted?.destroy();
+        panel.replaceChildren();
+      };
     },
   };
 }

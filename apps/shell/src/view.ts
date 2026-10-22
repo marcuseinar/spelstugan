@@ -10,6 +10,7 @@
 
 import type { ChatLine } from './chat.js';
 import type { RememberedTable } from './remembered.js';
+import { boardLabelAt } from './table.js';
 
 export function element(tag: string, className: string, text?: string): HTMLElement {
   const created = document.createElement(tag);
@@ -249,21 +250,57 @@ function initials(name: string): string {
   return name.slice(0, 2);
 }
 
-export function renderChatLines(lines: readonly ChatLine[]): HTMLElement {
-  const list = element('div', 'chat');
-
-  if (lines.length === 0) {
-    list.append(element('p', 'chat__empty', 'Nothing here yet. Say something.'));
-    return list;
-  }
-
-  for (const line of lines) {
-    list.append(renderChatLine(line));
-  }
-  return list;
+/** How a line shows the board it was said over. */
+export interface BoardOpener {
+  /**
+   * Draws the board as it stood after `atMove` moves into `panel`, and hands
+   * back a way to take it down again.
+   */
+  readonly open: (panel: HTMLElement, atMove: number) => () => void;
 }
 
-function renderChatLine(line: ChatLine): HTMLElement {
+export interface ChatListOptions {
+  /** Absent in a lobby, where there is no board to look back at yet. */
+  readonly openBoard?: BoardOpener;
+}
+
+/** A conversation on screen, which grows rather than being redrawn. */
+export interface ChatList {
+  readonly element: HTMLElement;
+  /** Draws whatever is new and leaves everything already drawn alone. */
+  readonly show: (lines: readonly ChatLine[]) => void;
+}
+
+/**
+ * The conversation, drawn once and then only added to.
+ *
+ * Lines are append-only — nothing is edited and nothing is withdrawn — so a
+ * refresh appends and never replaces. Replacing them would take away an open
+ * board, the scroll position and the selection, which is the same mistake
+ * decision 027 was written about.
+ */
+export function renderChatList(options: ChatListOptions = {}): ChatList {
+  const list = element('div', 'chat');
+  const nothingYet = element('p', 'chat__empty', 'Nothing here yet. Say something.');
+  list.append(nothingYet);
+
+  let drawn = 0;
+
+  return {
+    element: list,
+    show: (lines) => {
+      if (lines.length > 0) {
+        nothingYet.remove();
+      }
+      for (const line of lines.slice(drawn)) {
+        list.append(renderChatLine(line, options.openBoard));
+      }
+      drawn = lines.length;
+    },
+  };
+}
+
+function renderChatLine(line: ChatLine, openBoard?: BoardOpener): HTMLElement {
   if (line.kind === 'joined') {
     return element('p', 'chat__note', line.text);
   }
@@ -290,9 +327,45 @@ function renderChatLine(line: ChatLine): HTMLElement {
   head.append(element('span', 'chat__author', author));
   body.append(head);
   body.append(element('div', 'chat__text', line.text));
+  if (openBoard !== undefined) {
+    body.append(renderBoardToggle(line.atMove, openBoard));
+  }
   row.append(body);
 
   return row;
+}
+
+/**
+ * The control that shows the board a line was said over.
+ *
+ * The board is fetched when it is first asked for rather than with the line:
+ * a conversation is mostly read, and a board nobody opened is a board nobody
+ * should have paid for.
+ */
+function renderBoardToggle(atMove: number, openBoard: BoardOpener): HTMLElement {
+  const panel = element('div', 'chat__board');
+  const toggle = element('button', 'chat__board-toggle') as HTMLButtonElement;
+  toggle.type = 'button';
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.textContent = boardLabelAt(atMove);
+
+  let close: (() => void) | null = null;
+  toggle.addEventListener('click', () => {
+    if (close !== null) {
+      close();
+      close = null;
+      panel.classList.remove('chat__board--open');
+      toggle.setAttribute('aria-expanded', 'false');
+      return;
+    }
+    close = openBoard.open(panel, atMove);
+    panel.classList.add('chat__board--open');
+    toggle.setAttribute('aria-expanded', 'true');
+  });
+
+  const wrapper = element('div', 'chat__aside');
+  wrapper.append(toggle, panel);
+  return wrapper;
 }
 
 /**

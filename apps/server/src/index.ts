@@ -15,6 +15,7 @@ import { asJson } from './json.js';
 import {
   parseJoinRequest,
   parseMessageRequest,
+  parseMoveNumber,
   parseMoveRequest,
   parseTableRequest,
 } from './requests.js';
@@ -57,6 +58,8 @@ export default {
         return await openTable(request, env);
       case 'readTable':
         return await readTable(route.code, url.searchParams.get('viewer'), env);
+      case 'readBoard':
+        return await readBoard(route.code, url.searchParams, env);
       case 'joinTable':
         return await joinTable(route.code, request, env);
       case 'startTable':
@@ -158,6 +161,29 @@ async function sayAtTable(code: string, request: Request, env: Env): Promise<Res
 
 async function readTable(code: string, viewer: string | null, env: Env): Promise<Response> {
   return await answerWith(env, code, { kind: 'read', code, viewer });
+}
+
+/**
+ * The board as it stood at a point in the log.
+ *
+ * What the conversation needs to show the game a line was said over: the
+ * client sends the line's anchor and gets back the board, already projected
+ * for whoever is reading (decision 029).
+ */
+async function readBoard(code: string, query: URLSearchParams, env: Env): Promise<Response> {
+  const at = parseMoveNumber(query.get('at'));
+  if (!at.ok) {
+    return problem(400, at.reason);
+  }
+
+  const answer = await ask(env, code, {
+    kind: 'board',
+    code,
+    at: at.value,
+    viewer: query.get('viewer'),
+  });
+
+  return answer.outcome === 'board' ? json({ at: answer.at, view: answer.view }) : httpFor(answer);
 }
 
 async function playMove(code: string, request: Request, env: Env): Promise<Response> {

@@ -111,6 +111,17 @@ describe('routeFor', () => {
       expect(routeFor('GET', '/api/tables/not-a-code')).toEqual({ kind: 'unknown' });
     });
 
+    it('a past board, read by move number', () => {
+      expect(routeFor('GET', '/api/tables/ABCDE/board')).toEqual({
+        kind: 'readBoard',
+        code: 'ABCDE',
+      });
+    });
+
+    it('a past board asked for with a write', () => {
+      expect(routeFor('POST', '/api/tables/ABCDE/board')).toEqual({ kind: 'unknown' });
+    });
+
     it('an action a table does not have', () => {
       expect(routeFor('POST', '/api/tables/ABCDE/undo')).toEqual({ kind: 'unknown' });
     });

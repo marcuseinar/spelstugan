@@ -76,7 +76,22 @@ export function chatLinesOf(table: TableSnapshot): ChatLine[] {
     kind: message.kind,
     ...(message.author === undefined ? {} : { author: message.author }),
     text: message.text,
+    atMove: message.atMove,
   }));
+}
+
+/**
+ * What the control that opens a line's board says.
+ *
+ * Counted in moves rather than dressed up as a time, because a move log is
+ * what the board is rebuilt from and there are no timestamps yet (decision
+ * 024).
+ */
+export function boardLabelAt(atMove: number): string {
+  if (atMove === 0) {
+    return 'Board before the first move';
+  }
+  return atMove === 1 ? 'Board after 1 move' : `Board after ${atMove} moves`;
 }
 
 /** The newest line, for the collapsed sheet on a phone. */

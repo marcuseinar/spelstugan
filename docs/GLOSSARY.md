@@ -26,6 +26,15 @@ not a player. Use `playerId` only where seat identity is meant.
 **Spectator** — someone viewing a Session without a seat. Receives the public
 view only (`view(state, null)`).
 
+**Move anchor** — the number of moves that had been played when a message was
+said (`atMove`, stored as `at_move`). It is what lets a line show the board it
+was said over (decision 029). Say "anchor", not "timestamp": it counts moves,
+not time.
+
+**Past board** — the position a Session was in after a given number of moves,
+rebuilt by replaying that prefix of the move log. Always read-only — it is a
+record, not a turn.
+
 **Server** — a social space containing Channels. Three flavors, one concept:
 a global per-game lobby, a private friend group, or a two-person DM. Do not
 introduce a separate "DM" type (decision 007).

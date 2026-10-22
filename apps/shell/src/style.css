@@ -498,6 +498,62 @@ button {
   overflow-wrap: anywhere;
 }
 
+/* ---------- the board a line was said over ---------- */
+
+.chat__aside {
+  margin-top: 5px;
+}
+
+.chat__board-toggle {
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--accent);
+  background: none;
+  border: 0;
+  padding: 2px 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.chat__board-toggle:hover {
+  color: var(--accent-strong);
+  text-decoration: underline;
+}
+
+.chat__board {
+  display: none;
+}
+
+.chat__board--open {
+  display: block;
+  margin-top: 7px;
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.chat__board-note {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+/*
+ * A past board is read beside the line it belongs to, not played at. One
+ * column rather than board-and-panel, so the message above it stays on screen.
+ */
+.chat__board .ludo {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: none;
+  gap: 10px;
+}
+
+.chat__board .ludo__panel {
+  gap: 8px;
+}
+
 /* ---------- composer ---------- */
 
 .composer {

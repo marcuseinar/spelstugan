@@ -46,6 +46,13 @@ export type TableCommand =
   | { readonly kind: 'read'; readonly code: string; readonly viewer: string | null }
   /** Which build this table is running, which can lag the Worker's. */
   | { readonly kind: 'version' }
+  /** The board as it stood after `at` moves, for showing a line's game. */
+  | {
+      readonly kind: 'board';
+      readonly code: string;
+      readonly at: number;
+      readonly viewer: string | null;
+    }
   | {
       readonly kind: 'say';
       readonly code: string;
@@ -64,6 +71,7 @@ export type TableAnswer =
   | { readonly outcome: 'code-taken' }
   | { readonly outcome: 'no-table' }
   | { readonly outcome: 'table'; readonly table: TableSummary }
+  | { readonly outcome: 'board'; readonly at: number; readonly view: Json }
   | { readonly outcome: 'refused'; readonly reason: string }
   | {
       readonly outcome: 'played';
@@ -91,6 +99,8 @@ export class GameTable extends DurableObject<Env> {
         return this.start(command.code);
       case 'read':
         return this.read(command.code, command.viewer);
+      case 'board':
+        return this.board(command.at, command.viewer);
       case 'version':
         return { outcome: 'version', build: this.env.BUILD ?? 'unknown' };
       case 'say':
@@ -160,6 +170,32 @@ export class GameTable extends DurableObject<Env> {
       return { outcome: 'no-table' };
     }
     return { outcome: 'table', table: this.summarize(code, seating, viewer) };
+  }
+
+  /**
+   * The board as it stood after a given number of moves.
+   *
+   * Asked of the table rather than folded in the browser, because what a
+   * viewer may see is the game's decision and only the table can be trusted
+   * to make it: handing a client the whole log would hand it every secret in
+   * the log too (decision 029).
+   */
+  private board(at: number, viewer: string | null): TableAnswer {
+    const seating = this.store.seating();
+    if (seating === null) {
+      return { outcome: 'no-table' };
+    }
+    if (!this.store.started()) {
+      return { outcome: 'refused', reason: 'This game has not started yet.' };
+    }
+
+    const session = this.sessionFor(seating);
+    const seated = viewer !== null && this.store.players().includes(viewer);
+    return {
+      outcome: 'board',
+      at,
+      view: asJson(session.viewAt(at, seated ? viewer : null)),
+    };
   }
 
   /**

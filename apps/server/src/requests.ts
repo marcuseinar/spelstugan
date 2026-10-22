@@ -97,6 +97,22 @@ export function parseMoveRequest(body: unknown): Validated<MoveRequest> {
   return { ok: true, value: { player, move: body.move } };
 }
 
+/**
+ * The move count in `?at=`, which names the board a line was said over.
+ *
+ * A missing or empty one means the opening position, and needs no case of its
+ * own: `Number` already reads both as zero, which is that position. A number
+ * that is not a whole count of moves is a mistake, and says so rather than
+ * quietly rounding to a board nobody asked for.
+ */
+export function parseMoveNumber(raw: string | null): Validated<number> {
+  const at = Number(raw);
+  if (!Number.isInteger(at) || at < 0) {
+    return rejected('"at" must be a whole number of moves, counting from zero.');
+  }
+  return { ok: true, value: at };
+}
+
 function isName(candidate: unknown): candidate is string {
   return (
     typeof candidate === 'string' && candidate.length > 0 && candidate.length <= MAX_NAME_LENGTH
