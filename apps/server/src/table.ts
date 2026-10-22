@@ -123,15 +123,19 @@ export class GameTable extends DurableObject<Env> {
     if (seating === null) {
       return { outcome: 'no-table' };
     }
-    if (this.store.started()) {
-      return { outcome: 'refused', reason: 'This game has already started.' };
-    }
     // Already seated under this name: hand the table back rather than refusing.
     // A player who closed the tab and followed the link again is the common
     // case, and a name is already the whole of the credential here — someone
     // who could take this seat could already move and speak from it.
+    //
+    // Asked before the game's own state, because a player reloading mid-game
+    // is exactly when this matters: refusing them there strands them outside a
+    // game they are seated at.
     if (this.store.players().includes(name)) {
       return { outcome: 'table', table: this.summarize(code, seating, name) };
+    }
+    if (this.store.started()) {
+      return { outcome: 'refused', reason: 'This game has already started.' };
     }
     if (this.store.players().length >= seating.seats) {
       return { outcome: 'refused', reason: 'This table is full.' };

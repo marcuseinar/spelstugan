@@ -165,6 +165,10 @@ check(
   'refuses a latecomer once started',
   (await post(`/api/tables/${code}/players`, { name: 'Late' })).status === 409,
 );
+check(
+  'lets a seated player back in after the game has started',
+  (await post(`/api/tables/${code}/players`, { name: 'Alex' })).status === 200,
+);
 
 // Play until someone wins, or we run out of patience.
 let moves = 0;
